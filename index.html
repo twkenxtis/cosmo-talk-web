@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>COSMO TALK STATIC</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<section class="login-page" id="login-page">
+  <div class="login-card">
+    <h1 class="login-title">COSMO LOGIN</h1>
+    <p class="login-subtitle">存入 IndexedDB</p>
+
+    <div class="login-group">
+      <label class="login-label" for="jwt-login-input"></label>
+      <input type="password" id="jwt-login-input" placeholder="貼上 JWT Access Token、Refresh Token 或 JSON" autocomplete="off">
+      <button type="button" class="btn primary" id="jwt-login-btn">儲存並進入聊天</button>
+    </div>
+
+    <div class="login-status" id="login-status"></div>
+  </div>
+</section>
+
+<section class="chat-shell sidebar-collapsed" id="chat-shell">
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">MEMBERS</div>
+      <button type="button" class="icon-btn" id="sidebar-toggle-inner" aria-label="折疊側邊欄">✕</button>
+    </div>
+    <div id="member-list"></div>
+  </aside>
+
+  <main class="main-pane">
+    <div class="chat-header" id="chat-header"></div>
+    <nav class="timeline-rail empty" id="timeline-rail" aria-label="時間軸快速定位"></nav>
+    <div id="chat"></div>
+  </main>
+</section>
+
+<script src="./storage.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
