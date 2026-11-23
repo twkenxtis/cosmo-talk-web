@@ -19,7 +19,7 @@
 
 <h2>Quick Start</h2>
 
-<p>使用 Cosmo Talk Web 前，需要先取得一組 <strong>Cosmo 登入憑證（RefreshToken / JWT）</strong>作為登入憑證。</p>
+<p>使用 Cosmo Talk Web 前，需要先取得一組 <strong>Cosmo 登入憑證（RefreshToken / JWT）</strong>作為登入憑證</p>
 
 <p>請根據使用的裝置，選擇對應的方式取得憑證：</p>
 
@@ -107,10 +107,10 @@ pkg install python curl -y</code></pre>
 
 <hr />
 
-<p>取得憑證後，填入網頁中的登入欄位即可開始使用 Cosmo Talk Web。</p>
+<p>取得憑證後，填入網頁中的登入欄位即可開始使用 Cosmo Talk Web</p>
 
 <p>
-    建議手機使用者將網站<strong>新增到主畫面（Add to Home Screen）</strong>，方便日後快速開啟。
+    建議手機使用者將網站<strong>新增到主畫面（Add to Home Screen）</strong>，讓JWT Session保存得更久
 </p>
 
 <p align="center">
