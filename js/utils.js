@@ -1,5 +1,5 @@
 const CosmoUtils = (() => {
-  const MEDIA_EXT_RE = /\.(mp4|m4a|m4v|m4s)(?:[?#]|$)/i;
+  const MEDIA_EXT_RE = /\.(mp4|m4a|m4v|m4s|aac|ogg)(?:[?#]|$)/i;
   const CODEPOINT_RE = /^(?:\\u|u\+|0x)?\{?([0-9a-fA-F]{4,6})\}?$/i;
 
   function nfc(v) {
