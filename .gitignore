@@ -265,3 +265,7 @@ yarn-error.log*
 /mock
 close.json
 *.py
+.gas-sync
+jsconfig
+.vscode
+jsconfig.json

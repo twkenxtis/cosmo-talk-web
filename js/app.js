@@ -270,6 +270,15 @@
       return;
     }
 
+    if ((typeof window !== 'undefined' && window.IS_DEMO_MODE)) {
+      if (dom.jwtLoginInput) {
+        dom.jwtLoginInput.value = '';
+        resizeJwtLoginTextarea(dom.jwtLoginInput);
+      }
+      await enterChatSession();
+      return;
+    }
+
     try {
       await CosmoStorage.saveTokens(parsed);
       if (!parsed.accessToken && parsed.refreshToken) {
@@ -291,8 +300,10 @@
 
     CosmoComposer.reset();
 
-    await CosmoStorage.clearTokens().catch(() => {});
-    await CosmoStorage.clearNdjsonCache().catch(() => {});
+    if (!(typeof window !== 'undefined' && window.IS_DEMO_MODE)) {
+      await CosmoStorage.clearTokens().catch(() => {});
+      await CosmoStorage.clearNdjsonCache().catch(() => {});
+    }
 
     state.membersData = [];
     state.activeMemberId = null;
@@ -396,6 +407,15 @@
 
     if (typeof CosmoStorage === 'undefined' || typeof CosmoStorage.getTokens !== 'function') {
       showLoginPage(tr('storage_missing'));
+      return;
+    }
+
+    if ((typeof window !== 'undefined' && window.IS_DEMO_MODE)) {
+      try {
+        await enterChatSession();
+      } catch (err) {
+        showLoginPage(err?.message || tr('login_retry'));
+      }
       return;
     }
 

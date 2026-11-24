@@ -63,6 +63,8 @@ const CosmoI18n = (() => {
       stickers_load_failed: 'Failed to load stickers',
       stickers_load_error: 'Error loading stickers',
       request_failed: 'Request failed (HTTP {status})',
+
+      gasLoginMethod: "Google Apps Script Login Method"
     },
 
     ja: {
@@ -115,6 +117,8 @@ const CosmoI18n = (() => {
       stickers_load_failed: 'スタンプの読み込みに失敗しました',
       stickers_load_error: 'スタンプ読み込み中にエラーが発生しました',
       request_failed: 'リクエスト失敗 (HTTP {status})',
+
+      gasLoginMethod: "Google Apps Script ログイン方法"
     },
 
     ko: {
@@ -167,6 +171,8 @@ const CosmoI18n = (() => {
       stickers_load_failed: '스티커 불러오기 실패',
       stickers_load_error: '스티커 불러오기 중 오류 발생',
       request_failed: '요청 실패 (HTTP {status})',
+
+      gasLoginMethod: "Google Apps Script 로그인 방법"
     },
 
     zht: {
@@ -219,6 +225,8 @@ const CosmoI18n = (() => {
       stickers_load_failed: '貼圖載入失敗',
       stickers_load_error: '貼圖載入發生錯誤',
       request_failed: '請求失敗 (HTTP {status})',
+
+      gasLoginMethod: "Google app script 登入方法"
     },
 
     zhc: {
@@ -271,6 +279,8 @@ const CosmoI18n = (() => {
       stickers_load_failed: '贴图加载失败',
       stickers_load_error: '贴图加载發生错误',
       request_failed: '请求失败 (HTTP {status})',
+
+      gasLoginMethod: "Google app script 登入方法"
     },
   };
 

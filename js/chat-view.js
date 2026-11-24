@@ -1,3 +1,35 @@
+if (typeof window !== 'undefined' && !window.__DEMO_CHAT_VIEW_GUARD__) {
+  window.__DEMO_CHAT_VIEW_GUARD__ = true;
+  window.__DEMO_ENSURE_MEMBER_MESSAGES__ = async function (member) {
+    if (!(typeof window !== 'undefined' && window.IS_DEMO_MODE) || !member || typeof member !== 'object') return member;
+    const existing = Array.isArray(member.messages)
+      ? member.messages
+      : Array.isArray(member.items)
+        ? member.items
+        : null;
+    if (existing && existing.length > 0) return member;
+
+    try {
+      const res = await fetch('demo/last.json', { cache: 'no-store' });
+      if (!res.ok) return member;
+      const json = await res.json();
+      const rawList = Array.isArray(json?.messages) ? json.messages : [];
+      const mid = member.artistMemberId ?? member.id ?? 3;
+      const normalized = rawList.map((entry, idx) => {
+        const m = entry?.message && typeof entry.message === 'object' ? entry.message : entry;
+        return {
+          ...m,
+          artistMemberId: mid,
+          syncId: `${m.syncId || 'demo_msg'}_${mid}_${idx}`,
+          cursor: entry?.cursor || m.cursor || String(idx + 1),
+        };
+      });
+      member.messages = normalized;
+    } catch (_) {}
+    return member;
+  };
+}
+
 const CosmoChatView = (() => {
   'use strict';
 
@@ -206,6 +238,7 @@ const CosmoChatView = (() => {
   }
 
   function renderChat(member) {
+  if ((typeof window !== 'undefined' && window.IS_DEMO_MODE) && arguments[0] && !Array.isArray(arguments[0].messages)) { window.__DEMO_ENSURE_MEMBER_MESSAGES__(arguments[0]); }
     if (!dom.chatHeader || !dom.chat || !dom.timelineRail) return;
 
     dom.chatHeader.replaceChildren();

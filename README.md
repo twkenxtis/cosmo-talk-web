@@ -2,7 +2,7 @@
 
 <p align="center">
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
-        <strong>在網頁上瀏覽 Cosmo Talk</strong>
+        <strong>在網頁上傳送訊息或查看 Cosmo Talk</strong>
     </a>
 </p>
 
@@ -15,13 +15,48 @@
     </a>
 </p>
 
-<hr />
 
 <h2>Quick Start</h2>
 
 <p>使用 Cosmo Talk Web 前，需要先取得一組 <strong>Cosmo 登入憑證（RefreshToken / JWT）</strong>作為登入憑證</p>
 
 <p>請根據使用的裝置，選擇對應的方式取得憑證：</p>
+
+
+<h3>透過 GAS 網頁自行登入</h3>
+
+<p>
+  <a
+    id="gasLoginBtn"
+    href="https://script.google.com/macros/s/AKfycby4CuBXmASIPl8uVfmZtW-u6a2atvfDqlBQ-Tu4ZnN6WIp4Db7eA8Sl3f9iN1_98wUFZQ/exec"
+    target="_blank"
+    rel="noopener noreferrer"
+    style="
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 16px;
+      text-align: center;
+      text-decoration: none;
+      color: #ffffff;
+      background-color: #9576be;
+      border: 1px solid #6d42a6;
+      border-radius: 8px;
+      font-weight: 600;
+    "
+  >
+    Google Apps Script 登入方法
+  </a>
+</p>
+
+<p>
+  <img
+    src="https://i.ibb.co/ksxNYW3d/Cosmo-Refresh-Token.png"
+    alt="Google Apps Script 登入教學"
+    width="480"
+  />
+</p>
+<span>1. 完成後自行點選複製，得到憑證跳轉到 Cosmo Talk web 自行貼上</span>
 
 <hr />
 
@@ -116,23 +151,5 @@ pkg install python curl -y</code></pre>
 <p align="center">
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
         <strong>https://twkenxtis.github.io/cosmo-talk-web/</strong>
-    </a>
-</p>
-
-<hr />
-
-<h2>我的其他專案</h2>
-
-<p><em>自我託管 Cosmo Talk Web，實現完整功能，並可在電腦上回覆 Artist 訊息</em></p>
-
-<p>
-    <a href="https://github.com/twkenxtis/cosmo-talk-web-server">
-        <strong>Cosmo Talk Web Server</strong>
-    </a>
-</p>
-
-<p>
-    <a href="https://github.com/twkenxtis/cosmo-talk-web-server">
-        <img src="https://i.ibb.co/Mk0PvwhM/Ji-Woo-COSMO-TALK-WEB.png" alt="Cosmo Talk Web Server Preview" width="720" />
     </a>
 </p>

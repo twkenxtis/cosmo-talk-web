@@ -1,0 +1,340 @@
+{
+    "channels": [
+        {
+            "artistMemberId": 1,
+            "artistMemberName": "윤서연",
+            "originalName": "SeoYeon",
+            "profileImageUrl": "https://i.ibb.co/LDjKn5cR/media-58be23bb30c25717e3ca8e74da4458e4.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 2,
+            "artistMemberName": "혠니",
+            "originalName": "HyeRin",
+            "profileImageUrl": "https://i.ibb.co/8grgsfs5/media-1671d4383b7ca0e929edd9b4212b99c0.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 3,
+            "artistMemberName": "쥬🤍",
+            "originalName": "JiWoo",
+            "profileImageUrl": "https://i.ibb.co/N2s9VNQz/c2c587d88f9c4b67bead30d3357ba18420261108054048326.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 4,
+            "artistMemberName": "김채연",
+            "originalName": "ChaeYeon",
+            "profileImageUrl": "https://i.ibb.co/SXhNW03m/media-3c89cc485f8b18ca6916fa126234b217.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 5,
+            "artistMemberName": "김유연♥️",
+            "originalName": "YooYeon",
+            "profileImageUrl": "https://i.ibb.co/3JpyVzL/media-e696b2a405a6926d2026e786e94e2bc9.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 6,
+            "artistMemberName": "공주",
+            "originalName": "SooMin",
+            "profileImageUrl": "https://i.ibb.co/NdyPRHpL/media-e858c535bb058457eb4e441afbe1a537.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 7,
+            "artistMemberName": "김NAKY",
+            "originalName": "NaKyoung",
+            "profileImageUrl": "https://i.ibb.co/gbNggsB9/media-4b56e7255bd398161567098119e24110.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 8,
+            "artistMemberName": "공유빈",
+            "originalName": "YuBin",
+            "profileImageUrl": "https://i.ibb.co/N2s9VNQz/c2c587d88f9c4b67bead30d3357ba18420261108054048326.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 9,
+            "artistMemberName": "Kaede",
+            "originalName": "Kaede",
+            "profileImageUrl": "https://i.ibb.co/mCDN8mkB/media-8ef845c2a4c4b4df8857d7d7b56942bf.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 10,
+            "artistMemberName": "서다현",
+            "originalName": "DaHyun",
+            "profileImageUrl": "https://i.ibb.co/nMFZ7mzc/media-8880e747b46dbdd653b905402a10e8c2.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 11,
+            "artistMemberName": "琴音♡",
+            "originalName": "Kotone",
+            "profileImageUrl": "https://i.ibb.co/99D5ZP6k/media-3007dd48cb558e16ffb055f925d71d4b.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 12,
+            "artistMemberName": "콱욘지",
+            "originalName": "YeonJi",
+            "profileImageUrl": "https://i.ibb.co/cS7YBcXn/media-e7d5d1a0104a91088e94f8e0f9fc12d2.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 13,
+            "artistMemberName": "honey니엔🍯",
+            "originalName": "Nien",
+            "profileImageUrl": "https://i.ibb.co/3HvTCQL/media-40bdffd6a64ba0e95c360a085fa09021.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 14,
+            "artistMemberName": "소현",
+            "originalName": "SoHyun",
+            "profileImageUrl": "https://i.ibb.co/Kpdf72Fm/media-a77865d03dfd38a8640e2a53021630a9.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 15,
+            "artistMemberName": "Xinyu",
+            "originalName": "Xinyu",
+            "profileImageUrl": "https://i.ibb.co/5XStVcmx/media-fdd051607d8bae2bffe03134e3ff80e1.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 16,
+            "artistMemberName": "유짱♡",
+            "originalName": "Mayu",
+            "profileImageUrl": "https://i.ibb.co/XZPXf8L1/media-420d6aa1d497184928f3d2910ec22980.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 17,
+            "artistMemberName": "Lynn",
+            "originalName": "Lynn",
+            "profileImageUrl": "https://i.ibb.co/DP150pYZ/media-f65547be05379bb03b221e4dff59f677.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 18,
+            "artistMemberName": "빈이♡",
+            "originalName": "JooBin",
+            "profileImageUrl": "https://i.ibb.co/nNwd1TvT/media-960bd23bf0e0b64e045538a47d5de745.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 19,
+            "artistMemberName": "애기😘",
+            "originalName": "HaYeon",
+            "profileImageUrl": "https://i.ibb.co/MDTLp9NY/media-55a7f5b9827c5af209950c9740e00287.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 20,
+            "artistMemberName": "쇼니♡",
+            "originalName": "ShiOn",
+            "profileImageUrl": "https://i.ibb.co/FbVpyHqk/media-28492327b38f83a4212725379566803e.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 21,
+            "artistMemberName": "김채원",
+            "originalName": "ChaeWon",
+            "profileImageUrl": "https://i.ibb.co/1JPY11w4/media-9e06c949d37b37699a2a9f71145a94cb.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 22,
+            "artistMemberName": "𝒮𝓊𝓁𝓁𝒾𝓃",
+            "originalName": "Sullin",
+            "profileImageUrl": "https://i.ibb.co/VYwdjdYr/media-31c54dc8639eae0cc9b7af93eaf68baa.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 23,
+            "artistMemberName": "정해리니",
+            "originalName": "SeoAh",
+            "profileImageUrl": "https://i.ibb.co/4wbY5nTf/media-8b4f7652094016b725504eb67e71e9f8.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        },
+        {
+            "artistMemberId": 24,
+            "artistMemberName": "JiYeon",
+            "originalName": "JiYeon",
+            "profileImageUrl": "https://i.ibb.co/KpH78m76/media-434d6d44cf2ed87e36bc742c385b44cc.jpg",
+            "isConnected": true,
+            "firstUnreadSyncId": null,
+            "lastMessage": {
+                "id": "2588846",
+                "content": "",
+                "type": "text",
+                "createdAt": "2026-11-24T12:56:34.973Z"
+            }
+        }
+    ]
+}

@@ -202,10 +202,23 @@ body.is-login-view {
   background-color: transparent;
 }
 
+.login-gas-btn {
+  width: 100%;
+  color: var(--text-color);
+  background-color: #9576be;
+  border-color: #6d42a6;
+}
+
+.login-gas-btn:hover {
+  background-color: rgba(178, 138, 255, 0.08);
+  border-color: var(--purple-text);
+}
+
 .login-guide-btn:hover {
   background-color: rgba(178, 138, 255, 0.08);
   border-color: var(--purple-text);
 }
+
 
 .login-status {
   min-height: 18px;
@@ -1223,4 +1236,19 @@ body.is-login-view {
     width: calc(100% - 24px);
     bottom: 10px;
   }
+}
+
+/* --- SIDEBAR SCROLL FIX (AUTO-INJECTED) --- */
+#sidebar,
+.sidebar,
+#member-list,
+.member-list,
+#channel-list,
+.channel-list,
+.sidebar-list,
+.sidebar-scroll,
+.sidebar-body {
+  min-height: 0;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }

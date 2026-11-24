@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cosmo RefreshToken 取得工具</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      border-radius: 0 !important;
+    }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+      color: #000000;
+      font-family: Arial, "Microsoft JhengHei", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 520px;
+      margin: auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #000000;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .desc {
+      margin: 10px 0 14px;
+      font-size: 13px;
+      color: #333333;
+    }
+    .block {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #000000;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .lang-wrap label {
+      display: inline;
+      margin: 0 4px 0 0;
+      font-size: 12px;
+      font-weight: normal;
+    }
+    input[type="email"],
+    input[type="text"],
+    select,
+    textarea {
+      border: 1px solid #000000;
+      background: #ffffff;
+      color: #000000;
+      font-size: 14px;
+      padding: 5px 7px;
+    }
+    input[type="email"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+    }
+    select {
+      font-size: 12px;
+      padding: 3px 6px;
+    }
+    button {
+      margin-top: 8px;
+      margin-right: 6px;
+      padding: 5px 12px;
+      border: 1px solid #000000;
+      background: #000000;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.sub {
+      background: #ffffff;
+      color: #000000;
+    }
+    button:disabled {
+      border-color: #999999;
+      background: #eeeeee;
+      color: #888888;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed #000000;
+      font-size: 13px;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status.show {
+      display: block;
+    }
+    .status.err {
+      font-weight: bold;
+    }
+    #resultBox {
+      display: none;
+    }
+    #resultBox.show {
+      display: block;
+    }
+    textarea {
+      min-height: 80px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+    .warn {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #333333;
+    }
+
+    .header-actions { display:flex; align-items:center; gap:10px; }
+    .github-button {
+      display:inline-flex; flex:0 0 36px; width:36px; height:36px;
+      align-items:center; justify-content:center; border:1px solid #000;
+      background:#fff; color:#000; text-decoration:none;
+    }
+    .github-button svg { display:block; width:22px; height:22px; }
+    .trust-warning {
+      display:flex; flex-direction:column; gap:3px; margin:12px 0 14px;
+      padding:10px 12px; border:1px solid #b45309; border-left:4px solid #d97706;
+      background:#fff7ed; color:#9a3412; font-size:13px;
+    }
+    .return-button {
+      display:block; width:100%; margin:8px 0; padding:8px 12px;
+      border:1px solid #000; background:#000; color:#fff; font-size:13px;
+      font-weight:bold; text-align:center; text-decoration:none;
+    }
+    .return-button:hover { background:#333; }
+    @media (max-width:420px) {
+      .header { align-items:flex-start; }
+      .header-actions { gap:6px; }
+      .github-button { flex-basis:34px; width:34px; height:34px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1 data-i18n="heading">Cosmo RefreshToken 工具</h1>
+      <div class="header-actions">
+        <a class="github-button" href="https://github.com/twkenxtis/cosmo-talk-web"
+           target="_blank" rel="noopener noreferrer" aria-label="GitHub repository" title="GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.08c-3.1.67-3.76-1.32-3.76-1.32-.5-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 .1.76 2.03 3.18 1.55.1-.72.39-1.22.7-1.5-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.11-1.45 3.05-1.15 3.05-1.15.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.24-5.1 5.51.4.35.75 1.03.75 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/>
+          </svg>
+        </a>
+        <div class="lang-wrap">
+          <label for="langSelect" data-i18n="langLabel">語言 / 地區</label>
+          <select id="langSelect" aria-label="Language selector"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="desc" data-i18n="desc">步驟 1：輸入 Email 發送驗證碼 → 步驟 2：輸入驗證碼取得 RefreshToken。</div>
+
+    <div class="trust-warning" role="alert">
+      <strong>安全警語</strong>
+      <span>你應該只在信任的開發者使用這個網站。如果不信任或無法識別是否為真實網站，請回退到其他方法。</span>
+    </div>
+
+    <div>
+      <label for="emailInput" data-i18n="emailLabel">帳號 Email</label>
+      <input id="emailInput" type="email" placeholder="name@example.com" data-i18n-placeholder="emailPlaceholder" autocomplete="email" />
+      <button id="sendOtpBtn" type="button" onclick="handleSendOtp()" data-i18n="sendOtpBtn">1. 發送驗證碼</button>
+      <button id="resetBtn" class="sub" type="button" onclick="handleReset()" data-i18n="resetBtn">重設</button>
+    </div>
+
+    <div class="block">
+      <label for="otpInput" data-i18n="otpLabel">OTP 驗證碼（1～6 碼）</label>
+      <input id="otpInput" type="text" maxlength="6" placeholder="輸入收到的驗證碼" data-i18n-placeholder="otpPlaceholder" inputmode="numeric" />
+      <button id="loginBtn" type="button" onclick="handleLogin()" disabled data-i18n="loginBtn">2. 取得 RefreshToken</button>
+    </div>
+
+    <div id="statusBox" class="status"></div>
+
+    <div id="resultBox" class="block">
+      <label for="tokenOutput" data-i18n="tokenLabel">RefreshToken</label>
+      <textarea id="tokenOutput" readonly></textarea>
+      <button id="copyBtn" type="button" onclick="handleCopy()" data-i18n="copyBtn">一鍵複製</button>
+      <a class="return-button" href="https://twkenxtis.github.io/cosmo-talk-web/"
+         target="_blank" rel="noopener noreferrer">點我回到 Cosmo Talk WEB</a>
+      <button id="clearTokenBtn" class="sub" type="button" onclick="handleClearToken()" data-i18n="clearBtn">清除顯示</button>
+      <div class="warn" data-i18n="warnNote">請妥善保管此 RefreshToken，勿公開分享或洩漏。</div>
+    </div>
+  </div>
+
+  <script>
+    const I18N_OPTIONS = [
+      { value: "zh-CN", label: "中国（简体中文）" },
+      { value: "zh-HK", label: "香港（繁體中文）" },
+      { value: "zh-TW", label: "臺灣（繁體中文）" },
+      { value: "en", label: "English" },
+      { value: "ja", label: "日本語" },
+      { value: "ko", label: "한국어" }
+    ];
+
+    const TRANSLATIONS = {
+      "zh-TW": {
+        pageTitle: "Cosmo RefreshToken 取得工具",
+        heading: "Cosmo RefreshToken 工具",
+        desc: "步驟 1：輸入 Email 發送驗證碼 → 步驟 2：輸入驗證碼取得 RefreshToken。",
+        langLabel: "語言 / 地區",
+        emailLabel: "帳號 Email",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. 發送驗證碼",
+        resetBtn: "重設",
+        otpLabel: "OTP 驗證碼（1～6 碼）",
+        otpPlaceholder: "輸入收到的驗證碼",
+        loginBtn: "2. 取得 RefreshToken",
+        tokenLabel: "RefreshToken",
+        copyBtn: "一鍵複製",
+        clearBtn: "清除顯示",
+        warnNote: "請妥善保管此 RefreshToken，勿公開分享或洩漏。",
+        errEmptyEmail: "請先輸入 Email。",
+        errMissingFields: "請確認 Email 與 OTP 驗證碼皆已填寫。",
+        errSendOtp: "發送驗證碼失敗。",
+        errLogin: "取得 RefreshToken 失敗。",
+        errSystem: "系統錯誤：",
+        errCopyFallback: "無法自動複製，請手動選取文字複製。",
+        infoSendingOtp: "正在發送驗證碼，請稍候...",
+        infoLoggingIn: "正在驗證 OTP 並加密請求 Cosmo 憑證...",
+        infoCleared: "已清除畫面上的 RefreshToken。",
+        okOtpSent: "驗證碼已發送，請至信箱查收。",
+        okLogin: "已成功取得 RefreshToken！",
+        okCopied: "已複製 RefreshToken 至剪貼簿。"
+      },
+      "zh-HK": {
+        pageTitle: "Cosmo RefreshToken 取得工具",
+        heading: "Cosmo RefreshToken 工具",
+        desc: "步驟 1：輸入電郵發送驗證碼 → 步驟 2：輸入驗證碼取得 RefreshToken。",
+        langLabel: "語言 / 地區",
+        emailLabel: "帳戶電郵",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. 發送驗證碼",
+        resetBtn: "重設",
+        otpLabel: "OTP 驗證碼（1～6 位）",
+        otpPlaceholder: "輸入收到的驗證碼",
+        loginBtn: "2. 取得 RefreshToken",
+        tokenLabel: "RefreshToken",
+        copyBtn: "一鍵複製",
+        clearBtn: "清除顯示",
+        warnNote: "請妥善保管此 RefreshToken，切勿公開分享或外洩。",
+        errEmptyEmail: "請先輸入電郵地址。",
+        errMissingFields: "請確認電郵與 OTP 驗證碼均已填寫。",
+        errSendOtp: "發送驗證碼失敗。",
+        errLogin: "取得 RefreshToken 失敗。",
+        errSystem: "系統錯誤：",
+        errCopyFallback: "未能自動複製，請手動選取文字複製。",
+        infoSendingOtp: "正在發送驗證碼，請稍候...",
+        infoLoggingIn: "正在驗證 OTP 並加密請求 Cosmo 憑證...",
+        infoCleared: "已清除畫面上的 RefreshToken。",
+        okOtpSent: "驗證碼已發送，請查收電郵。",
+        okLogin: "已成功取得 RefreshToken！",
+        okCopied: "已複製 RefreshToken 至剪貼簿。"
+      },
+      "zh-CN": {
+        pageTitle: "Cosmo RefreshToken 获取工具",
+        heading: "Cosmo RefreshToken 工具",
+        desc: "步骤 1：输入邮箱发送验证码 → 步骤 2：输入验证码获取 RefreshToken。",
+        langLabel: "语言 / 地区",
+        emailLabel: "账号邮箱",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. 发送验证码",
+        resetBtn: "重置",
+        otpLabel: "OTP 验证码（1～6 位）",
+        otpPlaceholder: "输入收到的验证码",
+        loginBtn: "2. 获取 RefreshToken",
+        tokenLabel: "RefreshToken",
+        copyBtn: "一键复制",
+        clearBtn: "清除显示",
+        warnNote: "请妥善保管此 RefreshToken，勿公开分享或泄露。",
+        errEmptyEmail: "请先输入邮箱。",
+        errMissingFields: "请确认邮箱与 OTP 验证码均已填写。",
+        errSendOtp: "发送验证码失败。",
+        errLogin: "获取 RefreshToken 失败。",
+        errSystem: "系统错误：",
+        errCopyFallback: "无法自动复制，请手动选取文字复制。",
+        infoSendingOtp: "正在发送验证码，请稍候...",
+        infoLoggingIn: "正在验证 OTP 并加密请求 Cosmo 凭证...",
+        infoCleared: "已清除界面上的 RefreshToken。",
+        okOtpSent: "验证码已发送，请前往邮箱查收。",
+        okLogin: "已成功获取 RefreshToken！",
+        okCopied: "已复制 RefreshToken 至剪贴板。"
+      },
+      "en": {
+        pageTitle: "Cosmo RefreshToken Utility",
+        heading: "Cosmo RefreshToken Utility",
+        desc: "Step 1: Enter your email to send a code → Step 2: Enter the code to get your RefreshToken.",
+        langLabel: "Language / Region",
+        emailLabel: "Account Email",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. Send Code",
+        resetBtn: "Reset",
+        otpLabel: "OTP Code (1–6 chars)",
+        otpPlaceholder: "Enter verification code",
+        loginBtn: "2. Get RefreshToken",
+        tokenLabel: "RefreshToken",
+        copyBtn: "Copy",
+        clearBtn: "Clear",
+        warnNote: "Keep this RefreshToken private and never share or expose it.",
+        errEmptyEmail: "Please enter an email address first.",
+        errMissingFields: "Please enter both email and OTP code.",
+        errSendOtp: "Failed to send verification code.",
+        errLogin: "Failed to retrieve RefreshToken.",
+        errSystem: "System error: ",
+        errCopyFallback: "Auto-copy unavailable; please select and copy manually.",
+        infoSendingOtp: "Sending verification code, please wait...",
+        infoLoggingIn: "Verifying OTP and requesting Cosmo credentials...",
+        infoCleared: "Cleared RefreshToken from screen.",
+        okOtpSent: "Verification code sent. Please check your inbox.",
+        okLogin: "Successfully retrieved RefreshToken!",
+        okCopied: "RefreshToken copied to clipboard."
+      },
+      "ja": {
+        pageTitle: "Cosmo RefreshToken 取得ツール",
+        heading: "Cosmo RefreshToken ツール",
+        desc: "手順 1：メールアドレスを入力して認証コードを送信 → 手順 2：コードを入力して RefreshToken を取得。",
+        langLabel: "言語 / 地域",
+        emailLabel: "アカウントメール",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. 認証コードを送信",
+        resetBtn: "リセット",
+        otpLabel: "OTP コード（1〜6文字）",
+        otpPlaceholder: "受信したコードを入力",
+        loginBtn: "2. RefreshToken を取得",
+        tokenLabel: "RefreshToken",
+        copyBtn: "コピー",
+        clearBtn: "非表示にする",
+        warnNote: "RefreshToken は厳重に管理し、公開や漏洩にご注意ください。",
+        errEmptyEmail: "先にメールアドレスを入力してください。",
+        errMissingFields: "メールアドレスと OTP コードの両方を入力してください。",
+        errSendOtp: "認証コードの送信に失敗しました。",
+        errLogin: "RefreshToken の取得に失敗しました。",
+        errSystem: "システムエラー：",
+        errCopyFallback: "自動コピーできませんでした。手動でコピーしてください。",
+        infoSendingOtp: "認証コードを送信しています...",
+        infoLoggingIn: "OTP を検証し Cosmo 認証情報を取得しています...",
+        infoCleared: "画面上の RefreshToken を消去しました。",
+        okOtpSent: "認証コードを送信しました。メールをご確認ください。",
+        okLogin: "RefreshToken の取得に成功しました！",
+        okCopied: "RefreshToken をクリップボードにコピーしました。"
+      },
+      "ko": {
+        pageTitle: "Cosmo RefreshToken 발급 도구",
+        heading: "Cosmo RefreshToken 도구",
+        desc: "1단계: 이메일 입력 후 인증코드 발송 → 2단계: 인증코드 입력 후 RefreshToken 발급.",
+        langLabel: "언어 / 지역",
+        emailLabel: "계정 이메일",
+        emailPlaceholder: "name@example.com",
+        sendOtpBtn: "1. 인증코드 발송",
+        resetBtn: "초기화",
+        otpLabel: "OTP 코드 (1~6자리)",
+        otpPlaceholder: "받은 인증코드 입력",
+        loginBtn: "2. RefreshToken 발급",
+        tokenLabel: "RefreshToken",
+        copyBtn: "복사",
+        clearBtn: "화면 지우기",
+        warnNote: "RefreshToken은 외부에 공개하거나 유출되지 않도록 안전하게 보관하세요.",
+        errEmptyEmail: "먼저 이메일을 입력하세요.",
+        errMissingFields: "이메일과 OTP 코드를 모두 입력하세요.",
+        errSendOtp: "인증코드 발송에 실패했습니다.",
+        errLogin: "RefreshToken 발급에 실패했습니다.",
+        errSystem: "시스템 오류: ",
+        errCopyFallback: "자동 복사에 실패했습니다. 직접 선택하여 복사하세요.",
+        infoSendingOtp: "인증코드를 발송하는 중입니다...",
+        infoLoggingIn: "OTP를 확인하고 Cosmo 인증 정보를 요청하는 중입니다...",
+        infoCleared: "화면에 표시된 RefreshToken을 지웠습니다.",
+        okOtpSent: "인증코드가 발송되었습니다. 메일함을 확인하세요.",
+        okLogin: "RefreshToken 발급에 성공했습니다!",
+        okCopied: "RefreshToken이 클립보드에 복사되었습니다."
+      }
+    };
+
+    const LANG_STORAGE_KEY = "cosmo_gas_ui_lang";
+    let currentLang = "zh-TW";
+    let isBusy = false;
+    let otpSent = false;
+
+    function t(key) {
+      const dict = TRANSLATIONS[currentLang] || TRANSLATIONS["zh-TW"];
+      return dict[key] || TRANSLATIONS["zh-TW"][key] || key;
+    }
+
+    function applyLanguage(lang, persist) {
+      currentLang = TRANSLATIONS[lang] ? lang : "zh-TW";
+      document.documentElement.lang = currentLang;
+      document.title = t("pageTitle");
+
+      const selectEl = document.getElementById("langSelect");
+      if (selectEl && selectEl.value !== currentLang) {
+        selectEl.value = currentLang;
+      }
+
+      if (persist) {
+        try {
+          localStorage.setItem(LANG_STORAGE_KEY, currentLang);
+        } catch (_) {}
+      }
+
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        const key = el.getAttribute("data-i18n");
+        if (key) el.textContent = t(key);
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (key) el.setAttribute("placeholder", t(key));
+      });
+    }
+
+    function initLangSelector(defaultLang) {
+      const selectEl = document.getElementById("langSelect");
+      selectEl.innerHTML = "";
+      I18N_OPTIONS.forEach(function (opt) {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.label;
+        selectEl.appendChild(option);
+      });
+
+      let saved = null;
+      try {
+        saved = localStorage.getItem(LANG_STORAGE_KEY);
+      } catch (_) {}
+
+      selectEl.addEventListener("change", function (e) {
+        applyLanguage(e.target.value, true);
+      });
+
+      applyLanguage(saved || defaultLang || "zh-TW", false);
+    }
+
+    function setStatus(type, msg) {
+      const box = document.getElementById("statusBox");
+      box.className = "status show " + type;
+      box.textContent = msg;
+    }
+
+    function clearStatus() {
+      const box = document.getElementById("statusBox");
+      box.className = "status";
+      box.textContent = "";
+    }
+
+    function syncButtons() {
+      const email = document.getElementById("emailInput").value.trim();
+      const otp = document.getElementById("otpInput").value.trim();
+      document.getElementById("sendOtpBtn").disabled = isBusy || !email;
+      document.getElementById("resetBtn").disabled = isBusy;
+      document.getElementById("loginBtn").disabled = isBusy || !otpSent || !email || !otp;
+    }
+
+    function handleSendOtp() {
+      if (isBusy) return;
+      const email = document.getElementById("emailInput").value.trim();
+      if (!email) {
+        setStatus("err", t("errEmptyEmail"));
+        return;
+      }
+
+      isBusy = true;
+      syncButtons();
+      setStatus("info", t("infoSendingOtp"));
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          isBusy = false;
+          if (res && res.ok) {
+            otpSent = true;
+            setStatus("ok", t("okOtpSent"));
+            document.getElementById("otpInput").focus();
+          } else {
+            setStatus("err", (res && res.error) || t("errSendOtp"));
+          }
+          syncButtons();
+        })
+        .withFailureHandler(function (err) {
+          isBusy = false;
+          setStatus("err", t("errSystem") + (err && err.message ? err.message : String(err)));
+          syncButtons();
+        })
+        .sendOtpCode(email);
+    }
+
+    function handleLogin() {
+      if (isBusy) return;
+      const email = document.getElementById("emailInput").value.trim();
+      const code = document.getElementById("otpInput").value.trim();
+      if (!email || !code) {
+        setStatus("err", t("errMissingFields"));
+        return;
+      }
+
+      isBusy = true;
+      syncButtons();
+      setStatus("info", t("infoLoggingIn"));
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          isBusy = false;
+          if (res && res.ok && res.refreshToken) {
+            document.getElementById("tokenOutput").value = res.refreshToken;
+            document.getElementById("resultBox").classList.add("show");
+            setStatus("ok", t("okLogin"));
+          } else {
+            setStatus("err", (res && res.error) || t("errLogin"));
+          }
+          syncButtons();
+        })
+        .withFailureHandler(function (err) {
+          isBusy = false;
+          setStatus("err", t("errSystem") + (err && err.message ? err.message : String(err)));
+          syncButtons();
+        })
+        .verifyOtpAndGetRefreshToken(email, code);
+    }
+
+    function handleCopy() {
+      const ta = document.getElementById("tokenOutput");
+      const val = ta.value;
+      if (!val) return;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(
+          function () {
+            setStatus("ok", t("okCopied"));
+          },
+          function () {
+            fallbackCopy(ta);
+          }
+        );
+      } else {
+        fallbackCopy(ta);
+      }
+    }
+
+    function fallbackCopy(ta) {
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      try {
+        document.execCommand("copy");
+        setStatus("ok", t("okCopied"));
+      } catch (_) {
+        setStatus("err", t("errCopyFallback"));
+      }
+    }
+
+    function handleClearToken() {
+      document.getElementById("tokenOutput").value = "";
+      document.getElementById("resultBox").classList.remove("show");
+      setStatus("info", t("infoCleared"));
+    }
+
+    function handleReset() {
+      if (isBusy) return;
+      otpSent = false;
+      document.getElementById("emailInput").value = "";
+      document.getElementById("otpInput").value = "";
+      document.getElementById("tokenOutput").value = "";
+      document.getElementById("resultBox").classList.remove("show");
+      clearStatus();
+      syncButtons();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("emailInput").addEventListener("input", syncButtons);
+      document.getElementById("otpInput").addEventListener("input", function (e) {
+        e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 6);
+        syncButtons();
+      });
+
+      initLangSelector("zh-TW");
+      syncButtons();
+    });
+  </script>
+</body>
+</html>

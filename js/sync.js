@@ -1,3 +1,87 @@
+if (typeof window !== 'undefined' && !window.__DEMO_PATCH_SYNC_PAYLOAD__) {
+  window.__DEMO_PATCH_SYNC_PAYLOAD__ = true;
+  window.__DEMO_EXPAND_SHARED_PAYLOAD__ = function (data, memberId) {
+    if (!(typeof window !== 'undefined' && window.IS_DEMO_MODE) || !data || typeof data !== 'object') return data;
+    const rawList = Array.isArray(data.messages)
+      ? data.messages
+      : Array.isArray(data.events)
+        ? data.events
+        : [];
+    if (!rawList.length) return data;
+
+    const midNum = Number(memberId);
+    const resolvedMid = Number.isFinite(midNum) && midNum > 0 ? midNum : (memberId ?? 3);
+
+    const expanded = rawList.map((entry, i) => {
+      const item = entry && typeof entry === 'object' ? { ...entry } : {};
+      const msg = item.message && typeof item.message === 'object'
+        ? { ...item.message }
+        : { ...item };
+
+      const uniqueSuffix = `${resolvedMid}_${i + 1}_${Math.random().toString(36).slice(2, 7)}`;
+      msg.artistMemberId = resolvedMid;
+      if (msg.syncId) {
+        msg.syncId = `${String(msg.syncId)}__demo_${uniqueSuffix}`;
+      }
+      item.message = msg;
+      if (item.cursor !== undefined) {
+        item.cursor = String(Number(item.cursor || 0) + i + 1);
+      }
+      return item;
+    });
+
+    return {
+      ...data,
+      messages: expanded,
+      eof: true,
+    };
+  };
+}
+
+if (typeof window !== 'undefined' && !window.__DEMO_SHARED_MSG_TRANSFORM__) {
+  window.__DEMO_SHARED_MSG_TRANSFORM__ = true;
+  window.__DEMO_SHARED_MSG_TRANSFORM__ = function (eventObj, memberId) {
+    if (!(typeof window !== 'undefined' && window.IS_DEMO_MODE)) return eventObj;
+    const copy = eventObj && typeof eventObj === 'object' ? { ...eventObj } : {};
+    const msg = copy.message && typeof copy.message === 'object' ? { ...copy.message } : {};
+    if (memberId !== undefined && memberId !== null) {
+      msg.artistMemberId = memberId;
+    }
+    copy.message = msg;
+    return copy;
+  };
+}
+
+// --- DEMO SHARED LAST.JSON HELPER ---
+if (typeof window !== 'undefined' && !window.__DEMO_SHARE_LAST_JSON_PATCHED__) {
+  window.__DEMO_SHARE_LAST_JSON_PATCHED__ = true;
+  window.__DEMO_NORMALIZE_SHARED_MESSAGES__ = function (rawData, targetMemberId) {
+    const list = Array.isArray(rawData)
+      ? rawData
+      : Array.isArray(rawData?.messages)
+        ? rawData.messages
+        : Array.isArray(rawData?.events)
+          ? rawData.events
+          : [];
+
+    return list.map((item, idx) => {
+      const base = item && typeof item === 'object' && item.message && typeof item.message === 'object'
+        ? { ...item, message: { ...item.message } }
+        : { cursor: String(idx + 1), op: 'upsert', message: { ...(item || {}) } };
+
+      if ((typeof window !== 'undefined' && window.IS_DEMO_MODE) && targetMemberId !== undefined && targetMemberId !== null) {
+        base.message.artistMemberId = targetMemberId;
+      }
+      return base;
+    });
+  };
+}
+
+// --- DEMO MODE GUARD (AUTO-INJECTED) ---
+if (typeof window !== "undefined" && window.IS_DEMO_MODE) {
+  window.__DEMO_NO_POST__ = true;
+}
+
 const CosmoSync = (() => {
   const tr = (key, vars) =>
   typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
