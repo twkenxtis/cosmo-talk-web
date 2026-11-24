@@ -8,10 +8,10 @@
 
 <p align="center">
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
-        <img src="https://i.ibb.co/whbXjQkY/COSMO-TALK-STATIC.png" alt="Cosmo Talk Web Preview" width="480" />
+        <img src="https://i.ibb.co/WNfPknck/COSMO-TALK-STATIC-1.png" alt="Cosmo Talk Web Preview" width="480" />
     </a>
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
-        <img src="https://i.ibb.co/rfd9HsfZ/COSMO-TALK-STATIC.png" alt="Cosmo Talk Web Preview" width="480" />
+        <img src="https://i.ibb.co/G4z5LDzw/COSMO-TALK-STATIC-2.png" alt="Cosmo Talk Web Preview" width="480" />
     </a>
 </p>
 
@@ -148,7 +148,7 @@ pkg install python curl -y</code></pre>
     建議手機使用者將網站<strong>新增到主畫面（Add to Home Screen）</strong>，讓JWT Session保存得更久
 </p>
 
-<p align="center">
+<p>
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
         <strong>https://twkenxtis.github.io/cosmo-talk-web/</strong>
     </a>

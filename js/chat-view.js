@@ -238,6 +238,7 @@ const CosmoChatView = (() => {
   }
 
   function renderChat(member) {
+  if (typeof window !== 'undefined' && window.CosmoTranslate && typeof window.CosmoTranslate.setMemberContext === 'function') { window.CosmoTranslate.setMemberContext(member); }
   if ((typeof window !== 'undefined' && window.IS_DEMO_MODE) && arguments[0] && !Array.isArray(arguments[0].messages)) { window.__DEMO_ENSURE_MEMBER_MESSAGES__(arguments[0]); }
     if (!dom.chatHeader || !dom.chat || !dom.timelineRail) return;
 
@@ -323,7 +324,9 @@ const CosmoChatView = (() => {
       const wrap = document.createElement('div');
       wrap.className = 'msg-wrapper' + (isGroupedWithPrev ? ' grouped-next' : '');
       const anchorId = `msg-${member.artistMemberId}-${count}`;
-      wrap.id = anchorId;
+    const __srcId = (msg && (msg.sourceId || (typeof msg.syncId === 'string' && msg.syncId.includes(':') ? msg.syncId.split(':').pop() : ''))) || '';
+    const __mid = (msg && msg.artistMemberId) ?? member.artistMemberId ?? '';
+      wrap.id = anchorId; if (__srcId) wrap.dataset.sourceId = String(__srcId); if (__mid !== '') wrap.dataset.artistMemberId = String(__mid);
       if (!other) wrap.style.flexDirection = 'row-reverse';
 
       if (other) {
@@ -482,4 +485,66 @@ const CosmoChatView = (() => {
     renderSidebar,
     renderChat,
   };
+})();
+
+/* --- TRANSLATION BUBBLE & CONTINUOUS SCROLL UP INTEGRATION (V6) --- */
+(() => {
+  if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
+  if (window.__COSMO_TRANSLATE_CHAT_HOOK_V6__) return;
+  window.__COSMO_TRANSLATE_CHAT_HOOK_V6__ = true;
+
+  if (typeof CosmoChatView !== 'undefined' && typeof CosmoChatView.renderChat === 'function') {
+    window.CosmoChatView = CosmoChatView;
+    const origRenderChat = CosmoChatView.renderChat.bind(CosmoChatView);
+    CosmoChatView.renderChat = function (member, ...rest) {
+      const res = origRenderChat(member, ...rest);
+      CosmoTranslate.setMemberContext(member);
+      if (CosmoTranslate.isEnabled()) {
+        CosmoTranslate.renderCachedForCurrentView();
+      }
+      return res;
+    };
+  }
+
+  // 只要向上捲動（包含 window、#chat 或任何可捲動容器）就漸進觸發下一批 30 筆（無最大請求限制）
+  const lastTopByEl = new WeakMap();
+
+  function triggerIfScrollingUp(el) {
+    if (!CosmoTranslate.isEnabled()) return;
+    const scroller =
+      el && el !== document && el.scrollHeight > el.clientHeight
+        ? el
+        : document.scrollingElement || document.documentElement;
+    const curTop = Number(scroller.scrollTop || 0);
+    const prevTop = lastTopByEl.get(scroller);
+    lastTopByEl.set(scroller, curTop);
+
+    if (prevTop !== undefined && curTop < prevTop) {
+      CosmoTranslate.requestNextBatch();
+    }
+  }
+
+  window.addEventListener('scroll', (ev) => {
+    triggerIfScrollingUp(ev?.target);
+  }, { passive: true, capture: true });
+
+  window.addEventListener('wheel', (ev) => {
+    if (!CosmoTranslate.isEnabled()) return;
+    if (typeof ev.deltaY === 'number' && ev.deltaY < 0) {
+      CosmoTranslate.requestNextBatch();
+    }
+  }, { passive: true, capture: true });
+
+  // 時間軸跳轉後補齊可視區快取與下一批
+  document.addEventListener('click', (ev) => {
+    const tBtn = ev.target?.closest?.('.timeline-btn');
+    if (tBtn && CosmoTranslate.isEnabled()) {
+      setTimeout(() => {
+        if (CosmoTranslate.isEnabled()) {
+          CosmoTranslate.renderCachedForCurrentView();
+          CosmoTranslate.requestNextBatch();
+        }
+      }, 200);
+    }
+  }, { passive: true, capture: true });
 })();

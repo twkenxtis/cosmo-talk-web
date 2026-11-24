@@ -166,6 +166,26 @@ body.is-login-view {
   border-color: var(--purple-text);
 }
 
+.bubble .cosmo-orig-text {
+  text-shadow: 0 1px 1px #6c7175;
+}
+
+.bubble .cosmo-translated-text {
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: #b49dff;
+  text-shadow: 2px 2px 0 #6c6398;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre-line;
+}
+
+#btn-toggle-translate.is-active,
+#btn-toggle-translate[aria-pressed="true"] {
+  color: #b49dff;
+}
+
 .btn {
   border: 1px solid #3a3a42;
   background-color: var(--accent-btn);

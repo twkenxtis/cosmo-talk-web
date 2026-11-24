@@ -512,3 +512,88 @@
 
   bootstrap();
 })();
+
+/* --- TOPBAR TABLER TRANSLATE TOGGLE BUTTON (V4) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_TRANSLATE_TOPBAR_V4__) return;
+  window.__COSMO_TRANSLATE_TOPBAR_V4__ = true;
+
+  const TABLER_LANGUAGE_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+    'class="icon icon-tabler icons-tabler-outline icon-tabler-language" aria-hidden="true">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
+    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
+    '<path d="M19.1 18h-6.2" /></svg>';
+
+  function getClassString(el) {
+    if (!el || !el.className) return '';
+    if (typeof el.className === 'string') return el.className;
+    if (typeof el.className.baseVal === 'string') return el.className.baseVal;
+    return String(el.className);
+  }
+
+  function findExportBtn() {
+    const btns = Array.from(document.querySelectorAll('button, [role="button"], a.icon-btn'));
+    return btns.find((el) => {
+      if (!el || el.id === 'btn-toggle-translate') return false;
+      const cls = getClassString(el);
+      const meta = `${el.id || ''} ${cls} ${el.getAttribute('title') || ''} ${el.getAttribute('aria-label') || ''} ${el.textContent || ''}`.toLowerCase();
+      return meta.includes('export') || meta.includes('download') || meta.includes('匯出') || meta.includes('下載');
+    }) || null;
+  }
+
+  function syncVisual(btn, isOn) {
+    btn.dataset.translateOn = isOn ? '1' : '0';
+    btn.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+    btn.classList.toggle('is-active', isOn);
+    btn.classList.toggle('active', isOn);
+  }
+
+  function ensureBtn() {
+    const exportBtn = findExportBtn();
+    if (!exportBtn || !exportBtn.parentElement) return;
+
+    let btn = document.getElementById('btn-toggle-translate');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'btn-toggle-translate';
+      btn.className = getClassString(exportBtn) || 'icon-btn';
+      btn.title = 'Translate (ON/OFF)';
+      btn.setAttribute('aria-label', 'Translate (ON/OFF)');
+      btn.innerHTML = TABLER_LANGUAGE_SVG;
+      exportBtn.parentElement.insertBefore(btn, exportBtn);
+    }
+
+    if (!btn.dataset.boundV4) {
+      btn.dataset.boundV4 = '1';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const nextOn = typeof CosmoTranslate !== 'undefined'
+          ? CosmoTranslate.toggle()
+          : btn.dataset.translateOn !== '1';
+        syncVisual(btn, nextOn);
+      });
+    }
+
+    if (typeof CosmoTranslate !== 'undefined' && !btn.dataset.stateBoundV4) {
+      btn.dataset.stateBoundV4 = '1';
+      CosmoTranslate.onStateChange((isOn) => syncVisual(btn, isOn));
+    }
+
+    const curOn = typeof CosmoTranslate !== 'undefined' ? CosmoTranslate.isEnabled() : btn.dataset.translateOn === '1';
+    syncVisual(btn, curOn);
+  }
+
+  const mo = new MutationObserver(() => ensureBtn());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureBtn, { once: true });
+  } else {
+    ensureBtn();
+  }
+})();
