@@ -21,6 +21,10 @@
     const nativeFetch = window.fetch.bind(window);
 
     window.fetch = async function (input, init = {}) {
+      if (window.__FORCE_PROD_SESSION__ === true) {
+        window.IS_DEMO_MODE = false;
+        return nativeFetch(input, init);
+      }
       const urlStr = typeof input === 'string' ? input : (input && input.url) || '';
       const method = (
         (init && init.method) ||

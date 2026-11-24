@@ -79,6 +79,56 @@
     el.style.height = `${nextHeight}px`;
   }
 
+  function syncCleanAppUrl() {
+    try {
+      const targetUrl =
+        window.location.hostname === 'twkenxtis.github.io'
+          ? 'https://twkenxtis.github.io/cosmo-talk-web/'
+          : `${window.location.origin}${window.location.pathname}`;
+      if (window.location.href !== targetUrl) {
+        window.history.replaceState(null, '', targetUrl);
+      }
+    } catch (_) {}
+  }
+
+  function prepareRealLoginSession() {
+    if (typeof window !== 'undefined') {
+      if (typeof window.enableProdSessionMode === 'function') {
+        window.enableProdSessionMode();
+      } else {
+        window.FORCE_DEMO_MODE = false;
+        window.__FORCE_PROD_SESSION__ = true;
+        window.IS_DEMO_MODE = false;
+        window.__DEMO_NO_POST__ = false;
+      }
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('demo')) {
+          url.searchParams.delete('demo');
+          window.history.replaceState(null, '', url.toString());
+        }
+      } catch (_) {}
+    }
+  }
+
+  function forceProdModeNow() {
+    if (typeof window === 'undefined') return;
+    window.FORCE_DEMO_MODE = false;
+    window.__FORCE_PROD_SESSION__ = true;
+    window.IS_DEMO_MODE = false;
+    window.__DEMO_NO_POST__ = false;
+    if (typeof window.enableProdSessionMode === 'function') {
+      try { window.enableProdSessionMode(); } catch (_) {}
+    }
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('demo')) {
+        url.searchParams.delete('demo');
+        window.history.replaceState(null, '', url.toString());
+      }
+    } catch (_) {}
+  }
+
   function setLoginStatus(msg) {
     if (dom.loginStatus) {
       dom.loginStatus.textContent = nfc(msg || '');
@@ -218,6 +268,21 @@
     }
   }
 
+  function switchToProdSession() {
+    if (typeof window === 'undefined') return;
+    window.FORCE_DEMO_MODE = false;
+    window.__FORCE_PROD_SESSION__ = true;
+    window.IS_DEMO_MODE = false;
+    window.__DEMO_NO_POST__ = false;
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('demo')) {
+        url.searchParams.delete('demo');
+        window.history.replaceState(null, '', url.toString());
+      }
+    } catch (_) {}
+  }
+
   async function enterChatSession({ showOverlay = true } = {}) {
     const syncGen = ++state.activeSyncGeneration;
     if (showOverlay) {
@@ -276,10 +341,18 @@
         resizeJwtLoginTextarea(dom.jwtLoginInput);
       }
       await enterChatSession();
+      syncCleanAppUrl();
       return;
     }
 
+    prepareRealLoginSession();
+    await CosmoStorage.clearNdjsonCache().catch(() => {});
+
     try {
+      forceProdModeNow();
+      await CosmoStorage.clearNdjsonCache().catch(() => {});
+      switchToProdSession();
+      await CosmoStorage.clearNdjsonCache().catch(() => {});
       await CosmoStorage.saveTokens(parsed);
       if (!parsed.accessToken && parsed.refreshToken) {
         await CosmoAuth.ensureFreshTokens({ force: true });
@@ -295,6 +368,9 @@
   }
 
   async function logoutToLoginPage(statusMsg = tr('logged_out_cleared')) {
+    forceProdModeNow();
+    await CosmoStorage.clearNdjsonCache().catch(() => {});
+    syncCleanAppUrl();
     state.activeSyncGeneration++;
     state.lastProgressPercent = 0;
 

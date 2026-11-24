@@ -158,7 +158,7 @@ const CosmoAuth = (() => {
   }
 
   async function ensureFreshTokens({ force = false } = {}) {
-    if ((typeof window !== 'undefined' && window.IS_DEMO_MODE)) {
+    if ((typeof window !== 'undefined' && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
       return window.DEMO_TOKENS || { accessToken: 'demo', refreshToken: 'demo' };
     }
     const tokens = await CosmoStorage.getTokens();
@@ -185,7 +185,7 @@ const CosmoAuth = (() => {
   }
 
   async function authorizedFetch(url, init = {}, allowRetryOn401 = true) {
-    if ((typeof window !== 'undefined' && window.IS_DEMO_MODE)) {
+    if ((typeof window !== 'undefined' && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
       return fetch(url, { ...init, referrerPolicy: 'no-referrer' });
     }
     let tokens = await ensureFreshTokens({ force: false });
