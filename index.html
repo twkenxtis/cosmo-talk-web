@@ -4,20 +4,94 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="referrer" content="no-referrer">
+<meta name="description" content="COSMO TALK STATIC - Cosmo Talk 聊天紀錄檢視與匯出工具">
+<meta property="og:type" content="website">
+<meta property="og:title" content="COSMO TALK STATIC">
+<meta property="og:description" content="COSMO TALK STATIC - Cosmo Talk 聊天紀錄檢視與匯出工具">
+<meta property="og:site_name" content="COSMO TALK STATIC">
+<link rel="icon" href="/assets/favicon.png" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 <title>COSMO TALK STATIC</title>
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 </head>
 <body>
 
+  <div class="loading-overlay" id="loading-overlay" aria-live="polite" aria-busy="true">
+  <div id="loading-progress-text">0%</div>
+  <div> </div>
+  <svg class="loading-spinner" viewBox="0 0 50 50" aria-label="載入中">
+    <circle
+      class="loading-track"
+      cx="25"
+      cy="25"
+      r="20"
+      fill="none"
+      stroke-width="4"
+    />
+    <circle
+      class="loading-arc"
+      cx="25"
+      cy="25"
+      r="20"
+      fill="none"
+      stroke-width="4"
+      stroke-linecap="round"
+    />
+  </svg>
+</div>
+
 <section class="login-page" id="login-page">
   <div class="login-card">
-    <h1 class="login-title">COSMO LOGIN</h1>
-    <p class="login-subtitle">存入 IndexedDB</p>
+    <div class="login-header-row">
+      <h1 class="login-title">COSMO LOGIN - Cosmo Talk Web</h1>
+      <div class="login-lang-switcher">
+        <button
+          type="button"
+          id="login-lang-btn"
+          class="icon-btn"
+          data-i18n-title="language"
+          data-i18n-aria-label="language"
+          aria-label="語言"
+        >
+          <i class="ti ti-language" aria-hidden="true"></i>
+        </button>
+        <select
+          id="login-lang-select"
+          class="login-lang-select"
+          data-i18n-aria-label="language"
+          aria-label="語言"
+        >
+        <option value="zht">繁體中文</option>
+        <option value="zhc">簡體中文</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="login-subtitle" data-i18n="login_prompt">貼上 JWT Access Token、Refresh Token 或 JSON <br> 存入 IndexedDB</p>
 
     <div class="login-group">
       <label class="login-label" for="jwt-login-input"></label>
-      <input type="password" id="jwt-login-input" placeholder="貼上 JWT Access Token、Refresh Token 或 JSON" autocomplete="off">
-      <button type="button" class="btn primary" id="jwt-login-btn">儲存並進入聊天</button>
+      <textarea
+        id="jwt-login-input"
+        rows="2"
+        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzIiwiaWF0IjowLCJleHAiOjE3MDAwMDAwMDAsInN1YiI6Im5vbmUifQ==.SldUU0lHTmhlUmVTZWNyZXRQYXNzV29yRA=="
+        autocomplete="off"
+        spellcheck="false"
+      ></textarea>
+      <button type="button" class="btn primary" data-i18n="login_btn" id="jwt-login-btn">儲存並進入聊天</button>
+      <a
+        href="https://github.com/twkenxtis/cosmo-talk-web"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn login-guide-btn"
+        data-i18n="jwt_guide_btn"
+        id="jwt-guide-btn"
+      >如何取得JWT？</a>
     </div>
 
     <div class="login-status" id="login-status"></div>
@@ -28,7 +102,7 @@
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">MEMBERS</div>
+      <div class="sidebar-title"></div>
       <button type="button" class="icon-btn" id="sidebar-toggle-inner" aria-label="折疊側邊欄">✕</button>
     </div>
     <div id="member-list"></div>
@@ -38,14 +112,85 @@
     <div class="chat-header" id="chat-header"></div>
     <nav class="timeline-rail empty" id="timeline-rail" aria-label="時間軸快速定位"></nav>
     <div id="chat"></div>
+
+    <div class="chat-composer-wrapper" id="chat-composer-wrapper">
+      <div class="sticker-picker-panel" id="sticker-picker-panel" aria-label="貼圖選擇器">
+        <div class="sticker-picker-header">
+          <span id="sticker-picker-status">貼圖列表</span>
+          <button type="button" class="sticker-clear-btn" id="sticker-clear-btn">清除已選貼圖</button>
+        </div>
+        <div class="sticker-grid" id="sticker-grid"></div>
+      </div>
+
+      <div class="selected-sticker-bar" id="selected-sticker-bar" style="display: none;">
+        <img id="selected-sticker-img" alt="selected sticker">
+
+        <button type="button" class="sticker-clear-btn" id="selected-sticker-remove">✕</button>
+      </div>
+
+      <div class="composer-bar">
+        <div class="composer-pill">
+          <input
+            type="text"
+            id="chat-input"
+            class="composer-input"
+            placeholder="可發送 ... 次訊息"
+            autocomplete="off"
+          >
+          <button
+            type="button"
+            id="sticker-toggle-btn"
+            class="sticker-toggle-btn"
+            aria-label="sticker"
+            title="sticker"
+          >
+            <img
+              src="https://i.ibb.co/F4J7dzTt/sticker-regular-icon-203243.png"
+              alt="S"
+              class="sticker-toggle-img"
+              referrerpolicy="no-referrer"
+            >
+          </button>
+        </div>
+        <button
+          type="button"
+          id="send-msg-btn"
+          class="send-msg-btn"
+          aria-label="發送訊息"
+          title="發送訊息"
+        >
+          <svg
+            class="send-arrow-svg"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <circle class="send-arrow-bg" cx="50" cy="50" r="46" fill="#464E54" />
+            <g
+              class="send-arrow-icon"
+              stroke="#7A8187"
+              stroke-width="6.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="none"
+            >
+              <line x1="50" y1="68" x2="50" y2="33" />
+              <polyline points="35,47 50,33 65,47" />
+            </g>
+          </svg>
+        </button>
+      </div>
+    </div>
   </main>
 </section>
 
-<script src="./storage.js"></script>
-<script src="./utils.js"></script>
-<script src="./auth.js"></script>
-<script src="./sync.js"></script>
-<script src="./export.js"></script>
-<script src="./app.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/settings-modal.js"></script>
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
