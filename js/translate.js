@@ -16,6 +16,26 @@ const CosmoTranslate = (() => {
   let isBatchRunning = false;
   let stateListeners = [];
 
+  let demoDictPromise = null;
+
+  function isDemoTranslateMode() {
+    return (
+      typeof window !== 'undefined' &&
+      window.__FORCE_PROD_SESSION__ !== true &&
+      window.IS_DEMO_MODE === true
+    );
+  }
+
+  async function loadDemoTranslations() {
+    if (!demoDictPromise) {
+      demoDictPromise = fetch('demo/demo_translate.json', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : { translations: {} }))
+        .then((json) => (json && typeof json.translations === 'object' ? json.translations : {}))
+        .catch(() => ({}));
+    }
+    return demoDictPromise;
+  }
+
   function notifyErrorToast(errText) {
     const msg = String(errText || 'Unknown error');
     if (typeof CosmoToast !== 'undefined') {
@@ -217,6 +237,25 @@ const CosmoTranslate = (() => {
 
     inflightKeys.add(key);
     attemptedKeys.add(key);
+
+    if (isDemoTranslateMode()) {
+      try {
+        const dict = await loadDemoTranslations();
+        const entry = dict[sid] || dict[String(Number(sid))] || null;
+        if (!entry || !entry.translatedContent) {
+          return null;
+        }
+        const responseMsgId = String(entry.messageId ?? sid);
+        const translatedContent = String(entry.translatedContent ?? '');
+        const record = storeInBlob(mid, responseMsgId, translatedContent);
+        if (enabled) {
+          applyTranslationToDom(mid, responseMsgId, translatedContent);
+        }
+        return record;
+      } finally {
+        inflightKeys.delete(key);
+      }
+    }
 
     const url = `${API_BASE}/bff/v3/channels/messages/${encodeURIComponent(mid)}/${encodeURIComponent(sid)}/translated-contents`;
 

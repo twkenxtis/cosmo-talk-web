@@ -1,0 +1,69 @@
+{
+  "translations": {
+    "5": {
+      "messageId": "5",
+      "translatedContent": "[Demo Translation] Message showcase started. Hello everyone, WAV!",
+      "detectedSourceLanguage": "ZH"
+    },
+    "3827": {
+      "messageId": "3827",
+      "translatedContent": "We will make a comeback very soon.",
+      "detectedSourceLanguage": "ZH"
+    },
+    "3828": {
+      "messageId": "3828",
+      "translatedContent": "Hmm ... We'll be back really soon.",
+      "detectedSourceLanguage": "ZH"
+    },
+    "129980": {
+      "messageId": "129980",
+      "translatedContent": "First paragraph of translated text.",
+      "detectedSourceLanguage": "ZH"
+    },
+    "129981": {
+      "messageId": "129981",
+      "translatedContent": "Second paragraph of translated text.",
+      "detectedSourceLanguage": "ZH"
+    },
+    "129982": {
+      "messageId": "129982",
+      "translatedContent": "Third paragraph of translated text.",
+      "detectedSourceLanguage": "ZH"
+    },
+    "2800017": {
+      "messageId": "2800017",
+      "translatedContent": "Good morning everyone, the weather is really nice today!",
+      "detectedSourceLanguage": "ZH"
+    },
+    "2800018": {
+      "messageId": "2800018",
+      "translatedContent": "今天行程結束後要做什麼呢？",
+      "detectedSourceLanguage": "KO"
+    },
+    "2800019": {
+      "messageId": "2800019",
+      "translatedContent": "今天也別忘了多喝水喔！",
+      "detectedSourceLanguage": "EN"
+    },
+    "2800020": {
+      "messageId": "2800020",
+      "translatedContent": "Rehearsal just went super smoothly, can't wait for the stage!",
+      "detectedSourceLanguage": "ZH"
+    },
+    "2800021": {
+      "messageId": "2800021",
+      "translatedContent": "肚子好餓，現在正在挑點心吃呢",
+      "detectedSourceLanguage": "KO"
+    },
+    "2800022": {
+      "messageId": "2800022",
+      "translatedContent": "待會見，WAV！",
+      "detectedSourceLanguage": "EN"
+    },
+    "0101": {
+      "messageId": "0101",
+      "translatedContent": "This is a puppy sticker.",
+      "detectedSourceLanguage": "ZH"
+    }
+  }
+}
