@@ -887,3 +887,188 @@ const CosmoChatView = (() => {
   const mo = new MutationObserver(() => syncChatViewExtras());
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true, characterData: true });
 })();
+/* --- TOPBAR SEARCH BUTTON (#cosmo-member-search-btn) & SEARCH BAR --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_CHAT_VIEW_SEARCH_INIT__) return;
+  window.__COSMO_CHAT_VIEW_SEARCH_INIT__ = true;
+
+  const BTN_ID = 'cosmo-member-search-btn';
+  const BAR_ID = 'cosmo-search-bar';
+  const INPUT_ID = 'cosmo-search-input';
+  const COUNT_ID = 'cosmo-search-count';
+
+  let matches = [];
+  let currentIdx = -1;
+
+  function getSearchPlaceholder() {
+    if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function') {
+      const val = CosmoI18n.t('search_member_placeholder');
+      if (val && val !== 'search_member_placeholder') return val;
+    }
+    return '搜尋目前成員（包含翻譯內容）...';
+  }
+
+  function clearHits() {
+    document.querySelectorAll('.cosmo-search-hit').forEach((el) => {
+      el.classList.remove('cosmo-search-hit');
+    });
+  }
+
+  function jumpToMatch(idx) {
+    clearHits();
+    const countEl = document.getElementById(COUNT_ID);
+    if (!matches.length) {
+      if (countEl) countEl.textContent = '0 / 0';
+      return;
+    }
+    currentIdx = ((idx % matches.length) + matches.length) % matches.length;
+    const target = matches[currentIdx];
+    target.classList.add('cosmo-search-hit');
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (countEl) countEl.textContent = `${currentIdx + 1} / ${matches.length}`;
+  }
+
+  function runSearch(rawQuery) {
+    const q = String(rawQuery || '').trim().toLowerCase();
+    matches = [];
+    currentIdx = -1;
+    clearHits();
+
+    const countEl = document.getElementById(COUNT_ID);
+    if (!q) {
+      if (countEl) countEl.textContent = '0 / 0';
+      return;
+    }
+
+    const chatEl = document.getElementById('chat');
+    if (!chatEl) return;
+
+    const wrappers = Array.from(chatEl.querySelectorAll('.msg-wrapper'));
+    for (const w of wrappers) {
+      if (w.offsetParent === null) continue;
+      const text = String(w.textContent || '').toLowerCase();
+      if (text.includes(q)) {
+        matches.push(w);
+      }
+    }
+    jumpToMatch(0);
+  }
+
+  function ensureSearchUi() {
+    const header = document.getElementById('chat-header') || document.querySelector('.chat-header');
+    if (!header) return;
+
+    const actions = header.querySelector('.header-actions') || header;
+    let btn = document.getElementById(BTN_ID);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = BTN_ID;
+      btn.className = 'icon-btn';
+      btn.innerHTML = '<i class="ti ti-search" aria-hidden="true"></i>';
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const bar = document.getElementById(BAR_ID);
+        if (!bar) return;
+        bar.classList.toggle('open');
+        if (bar.classList.contains('open')) {
+          document.getElementById(INPUT_ID)?.focus();
+        } else {
+          clearHits();
+        }
+      });
+    }
+
+    const placeholderText = getSearchPlaceholder();
+    const cleanLabel = placeholderText.replace(/\.{3,}$/, '').trim();
+    btn.title = cleanLabel;
+    btn.setAttribute('aria-label', cleanLabel);
+    btn.style.display = 'inline-flex';
+
+    if (btn.parentElement !== actions) {
+      actions.prepend(btn);
+    }
+
+    let bar = document.getElementById(BAR_ID);
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = BAR_ID;
+      bar.className = 'cosmo-search-bar';
+
+      const input = document.createElement('input');
+      input.type = 'search';
+      input.id = INPUT_ID;
+      input.className = 'cosmo-search-input';
+      input.placeholder = placeholderText;
+      input.setAttribute('aria-label', cleanLabel);
+
+      const countSpan = document.createElement('span');
+      countSpan.id = COUNT_ID;
+      countSpan.className = 'cosmo-search-count';
+      countSpan.textContent = '0 / 0';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.type = 'button';
+      prevBtn.className = 'icon-btn';
+      prevBtn.title = '上一筆';
+      prevBtn.textContent = '↑';
+      prevBtn.addEventListener('click', () => jumpToMatch(currentIdx - 1));
+
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'icon-btn';
+      nextBtn.title = '下一筆';
+      nextBtn.textContent = '↓';
+      nextBtn.addEventListener('click', () => jumpToMatch(currentIdx + 1));
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'icon-btn';
+      closeBtn.title = '關閉搜尋';
+      closeBtn.textContent = '✕';
+      closeBtn.addEventListener('click', () => {
+        bar.classList.remove('open');
+        clearHits();
+      });
+
+      input.addEventListener('input', () => runSearch(input.value));
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          jumpToMatch(e.shiftKey ? currentIdx - 1 : currentIdx + 1);
+        } else if (e.key === 'Escape') {
+          bar.classList.remove('open');
+          clearHits();
+        }
+      });
+
+      bar.appendChild(input);
+      bar.appendChild(countSpan);
+      bar.appendChild(prevBtn);
+      bar.appendChild(nextBtn);
+      bar.appendChild(closeBtn);
+    } else {
+      const input = document.getElementById(INPUT_ID);
+      if (input && input.placeholder !== placeholderText) {
+        input.placeholder = placeholderText;
+        input.setAttribute('aria-label', cleanLabel);
+      }
+    }
+
+    if (header.nextElementSibling !== bar) {
+      header.insertAdjacentElement('afterend', bar);
+    }
+  }
+
+  ensureSearchUi();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureSearchUi, { once: true });
+  }
+  if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
+    CosmoI18n.onChange(ensureSearchUi);
+  }
+  const mo = new MutationObserver(() => ensureSearchUi());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();
