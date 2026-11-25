@@ -1,60 +1,77 @@
 (() => {
   'use strict';
 
-  const params = new URLSearchParams(window.location.search);
-  const isDemo =
-    window.FORCE_DEMO_MODE === true ||
-    params.get('demo') === '1' ||
-    params.get('demo') === 'true';
+  function computeIsDemo() {
+    if (window.__FORCE_PROD_SESSION__ === true) return false;
+    if (window.FORCE_DEMO_MODE === true) return true;
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('demo');
+    return v === '1' || v === 'true';
+  }
 
-  window.IS_DEMO_MODE = isDemo;
-  if (!isDemo) return;
+  window.IS_DEMO_MODE = computeIsDemo();
+  window.__DEMO_NO_POST__ = window.IS_DEMO_MODE;
 
-  window.__DEMO_NO_POST__ = true;
-  window.DEMO_TOKENS = {
-    accessToken: 'demo.eyJzdWIiOiJkZW1vIiwiZXhwIjo5OTk5OTk5OTk5fQ.demo',
-    refreshToken: 'demo-refresh-token',
-  };
+  if (!window.DEMO_TOKENS) {
+    window.DEMO_TOKENS = {
+      accessToken: 'demo.eyJzdWIiOiJkZW1vIiwiZXhwIjo5OTk5OTk5OTk5fQ.demo',
+      refreshToken: 'demo-refresh-token',
+    };
+  }
 
-  const nativeFetch = window.fetch.bind(window);
+  if (typeof window.fetch === 'function' && !window.__DEMO_FETCH_INTERCEPTOR__) {
+    window.__DEMO_FETCH_INTERCEPTOR__ = true;
+    const nativeFetch = window.fetch.bind(window);
 
-  window.fetch = async function (input, init = {}) {
-    const urlStr = typeof input === 'string' ? input : (input && input.url) || '';
-    const method = (
-      (init && init.method) ||
-      (typeof input !== 'string' && input && input.method) ||
-      'GET'
-    ).toUpperCase();
+    window.fetch = async function (input, init = {}) {
+      if (!window.IS_DEMO_MODE || window.__FORCE_PROD_SESSION__ === true) {
+        return nativeFetch(input, init);
+      }
 
-    const isCosmoApi =
-      urlStr.includes('api.cosmo.fans') || urlStr.startsWith('/bff/');
+      const urlStr = typeof input === 'string' ? input : (input && input.url) || '';
+      const method = (
+        (init && init.method) ||
+        (typeof input !== 'string' && input && input.method) ||
+        'GET'
+      ).toUpperCase();
 
-    if (!isCosmoApi) {
-      return nativeFetch(input, init);
-    }
+      const isCosmoApi =
+        urlStr.includes('api.cosmo.fans') || urlStr.startsWith('/bff/');
 
-    if (method !== 'GET' && method !== 'HEAD') {
-      return new Response(
-        JSON.stringify({ ok: false, demo: true, message: 'DEMO mode blocks POST/write requests.' }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+      if (!isCosmoApi) {
+        return nativeFetch(input, init);
+      }
 
-    if (urlStr.includes('/bff/v4/channels/messages')) {
-      return nativeFetch('demo/artistId.json', { cache: 'no-store' });
-    }
+      if (method !== 'GET' && method !== 'HEAD') {
+        return new Response(
+          JSON.stringify({ ok: false, demo: true, message: 'DEMO mode blocks POST/write requests.' }),
+          { status: 403, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
 
-    if (urlStr.includes('/sync-events/')) {
-      return nativeFetch('demo/last.json', { cache: 'no-store' });
-    }
+      if (urlStr.includes('/bff/v4/channels/messages')) {
+        return nativeFetch('demo/artistId.json', { cache: 'no-store' });
+      }
 
-    if (urlStr.toLowerCase().includes('sticker')) {
-      return nativeFetch('demo/sticker.json', { cache: 'no-store' });
-    }
+      if (urlStr.includes('/sync-events/')) {
+        return nativeFetch('demo/last.json', { cache: 'no-store' });
+      }
 
-    return new Response(JSON.stringify({}), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+      if (urlStr.toLowerCase().includes('sticker')) {
+        return nativeFetch('demo/sticker.json', { cache: 'no-store' });
+      }
+
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+  }
+
+  window.enableProdSessionMode = function () {
+    window.FORCE_DEMO_MODE = false;
+    window.__FORCE_PROD_SESSION__ = true;
+    window.IS_DEMO_MODE = false;
+    window.__DEMO_NO_POST__ = false;
   };
 })();

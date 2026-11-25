@@ -269,3 +269,13 @@ close.json
 jsconfig
 .vscode
 jsconfig.json
+# Pages / local & dev exclusions
+.gas-sync/
+.git/
+.github/
+.vscode/
+google app script/
+google_app_script/
+mock/
+*.ps1
+README.md
