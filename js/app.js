@@ -759,3 +759,176 @@
     ensureJwtPasteButton();
   }
 })();
+
+/* --- HARDCODED ORIGINAL_NAME -> MEMBER COLOR MAP & SIDEBAR 3PX AVATAR RING --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SIDEBAR_ORIGINAL_NAME_COLOR_INIT__) return;
+  window.__COSMO_SIDEBAR_ORIGINAL_NAME_COLOR_INIT__ = true;
+
+  // 依你提供的 MEMBERS 硬編碼建立 originalName -> HEX 色碼映射（含大小寫標準化查找）
+  const ORIGINAL_NAME_COLORS = {
+    "SeoYeon": "#22AEFF",
+    "HyeRin": "#9200FF",
+    "JiWoo": "#FFF800",
+    "ChaeYeon": "#98F21D",
+    "YooYeon": "#DB0C74",
+    "SooMin": "#FC83A4",
+    "NaKyoung": "#6799A0",
+    "YuBin": "#FFE3E2",
+    "Kaede": "#FFC935",
+    "DaHyun": "#FF9AD6",
+    "Kotone": "#FFDE00",
+    "YeonJi": "#5974FF",
+    "Nien": "#FF953F",
+    "SoHyun": "#1222B5",
+    "Xinyu": "#D51313",
+    "Mayu": "#FE8E76",
+    "Lynn": "#AC62B7",
+    "JooBin": "#B7F54C",
+    "HaYeon": "#52D9BB",
+    "ShiOn": "#FF428A",
+    "ChaeWon": "#C7A3E0",
+    "Sullin": "#7BBA8D",
+    "SeoAh": "#CFF3FF",
+    "JiYeon": "#FFAB62",
+    "tripleS": "#333333",
+  };
+
+  const LOWER_NAME_COLORS = Object.fromEntries(
+    Object.entries(ORIGINAL_NAME_COLORS).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  function resolveColorByOriginalName(originalName) {
+    if (!originalName || typeof originalName !== 'string') return null;
+    const trimmed = originalName.trim();
+    if (!trimmed) return null;
+    if (ORIGINAL_NAME_COLORS[trimmed]) return ORIGINAL_NAME_COLORS[trimmed];
+    const lower = trimmed.toLowerCase();
+    if (LOWER_NAME_COLORS[lower]) return LOWER_NAME_COLORS[lower];
+    // 支援例如 "SeoYeon (S1)" 或包含成員英文名的字串比對
+    for (const [key, hex] of Object.entries(LOWER_NAME_COLORS)) {
+      if (lower.includes(key)) return hex;
+    }
+    return null;
+  }
+
+  function extractChannelsFromPayload(payload) {
+    if (!payload) return [];
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.Channels)) return payload.Channels;
+    if (Array.isArray(payload.channels)) return payload.channels;
+    if (payload.data) {
+      if (Array.isArray(payload.data.Channels)) return payload.data.Channels;
+      if (Array.isArray(payload.data.channels)) return payload.data.channels;
+    }
+    return [];
+  }
+
+  function ingestChannels(payload) {
+    const list = extractChannelsFromPayload(payload);
+    if (!list.length) return;
+    const byId = window.__COSMO_CHANNEL_COLOR_BY_ID__ || (window.__COSMO_CHANNEL_COLOR_BY_ID__ = {});
+    const byName = window.__COSMO_CHANNEL_COLOR_BY_NAME__ || (window.__COSMO_CHANNEL_COLOR_BY_NAME__ = {});
+
+    for (const ch of list) {
+      if (!ch || typeof ch !== 'object') continue;
+      const origName = ch.originalName ?? ch.original_name ?? ch.name ?? '';
+      const color = resolveColorByOriginalName(origName);
+      if (!color) continue;
+
+      for (const idCandidate of [ch.id, ch.channelId, ch.artistMemberId, ch.memberId, ch.artistId]) {
+        if (idCandidate !== undefined && idCandidate !== null && String(idCandidate).trim() !== '') {
+          byId[String(idCandidate).trim()] = color;
+        }
+      }
+      if (origName) {
+        byName[String(origName).trim().toLowerCase()] = color;
+      }
+    }
+    applySidebarThumbBorders();
+  }
+
+  function hookFetchForChannels() {
+    if (typeof window.fetch !== 'function' || window.__COSMO_FETCH_CHANNEL_HOOKED__) return;
+    window.__COSMO_FETCH_CHANNEL_HOOKED__ = true;
+    const origFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const res = await origFetch(...args);
+      try {
+        const clone = res.clone();
+        const ct = clone.headers.get('content-type') || '';
+        if (ct.includes('application/json') || ct.includes('+json')) {
+          clone.json().then((data) => ingestChannels(data)).catch(() => {});
+        }
+      } catch (_) {}
+      return res;
+    };
+  }
+
+  function applyThumbRing(imgEl, color) {
+    if (!imgEl || !color) return;
+    imgEl.style.borderRadius = '50%';
+    imgEl.style.border = `2.5px solid ${color}`;
+    imgEl.style.boxSizing = 'border-box';
+  }
+
+  function applySidebarThumbBorders() {
+    const byId = window.__COSMO_CHANNEL_COLOR_BY_ID__ || {};
+    const byName = window.__COSMO_CHANNEL_COLOR_BY_NAME__ || {};
+
+    const items = document.querySelectorAll(
+      '#sidebar .member-item, .sidebar .member-item, #member-list .member-item, #member-list button, #member-list [data-member-id], #member-list [data-channel-id]'
+    );
+
+    items.forEach((item) => {
+      const thumb =
+        item.querySelector('.member-thumb') ||
+        item.querySelector('img');
+      if (!thumb) return;
+
+      const idAttr =
+        item.dataset.memberId ||
+        item.dataset.channelId ||
+        item.dataset.artistId ||
+        item.getAttribute('data-id') ||
+        '';
+      const labelText =
+        (item.querySelector('.member-label')?.textContent || item.textContent || '').trim();
+
+      let color = (idAttr && byId[String(idAttr).trim()]) || null;
+      if (!color && labelText) {
+        color =
+          byName[labelText.toLowerCase()] ||
+          resolveColorByOriginalName(labelText);
+      }
+      if (color) {
+        applyThumbRing(thumb, color);
+      }
+    });
+  }
+
+  window.CosmoOriginalNameColors = {
+    map: ORIGINAL_NAME_COLORS,
+    resolve: resolveColorByOriginalName,
+    ingestChannels,
+    applySidebarThumbBorders,
+  };
+
+  function init() {
+    hookFetchForChannels();
+    applySidebarThumbBorders();
+
+    const mo = new MutationObserver(() => applySidebarThumbBorders());
+    mo.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();

@@ -419,10 +419,12 @@ body.is-login-view {
 
 .member-thumb {
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
+  border: 2.5px solid transparent;
+  box-sizing: border-box;
   object-fit: cover;
   object-position: center;
   background-color: #333;
@@ -1255,4 +1257,95 @@ body.is-login-view {
   min-height: 0;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+}
+
+/* --- UNIFIED SIDEBAR STYLE & MOBILE BOTTOM SCROLL FIX --- */
+.sidebar {
+  background-color: var(--sidebar-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.sidebar-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 6px;
+}
+
+#member-list,
+.member-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 6px calc(88px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #34343c transparent;
+}
+
+#member-list::-webkit-scrollbar,
+.member-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+#member-list::-webkit-scrollbar-thumb,
+.member-list::-webkit-scrollbar-thumb {
+  background-color: #34343c;
+  border-radius: 999px;
+}
+
+.member-item {
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.member-item:hover {
+  background-color: var(--sidebar-hover);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.member-item.active {
+  background-color: var(--sidebar-active);
+  border-color: rgba(178, 138, 255, 0.35);
+  color: var(--text-color);
+}
+
+.member-item.active .member-label {
+  color: var(--purple-text);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    width: min(272px, 82vw);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+  }
+
+  .chat-shell.sidebar-collapsed .sidebar {
+    width: min(272px, 82vw);
+  }
+
+  .member-item {
+    min-height: 46px;
+    padding: 9px 10px;
+    font-size: 14px;
+    touch-action: manipulation;
+  }
+
+  #member-list,
+  .member-list {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
