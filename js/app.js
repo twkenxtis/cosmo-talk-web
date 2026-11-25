@@ -368,6 +368,13 @@
   }
 
   async function logoutToLoginPage(statusMsg = tr('logged_out_cleared')) {
+    if (window.__COSMO_LOGGING_OUT__) return;
+    window.__COSMO_LOGGING_OUT__ = true;
+    const wasDemo = Boolean(
+      window.IS_DEMO_MODE ||
+      window.FORCE_DEMO_MODE ||
+      new URLSearchParams(window.location.search).get('demo')
+    );
     forceProdModeNow();
     await CosmoStorage.clearNdjsonCache().catch(() => {});
     syncCleanAppUrl();
@@ -386,6 +393,11 @@
     CosmoChatView.renderSidebar(state.membersData, null);
     CosmoChatView.renderChat(null);
     showLoginPage(statusMsg);
+    if (typeof window.__cosmoCleanLogoutRedirect === 'function') {
+      window.__cosmoCleanLogoutRedirect(wasDemo);
+    } else {
+      window.__COSMO_LOGGING_OUT__ = false;
+    }
   }
 
   function bindEvents() {
@@ -931,4 +943,77 @@
   } else {
     init();
   }
+})();
+
+/* --- SAFE DEMO LOGOUT & MUTATION OBSERVER LOOP GUARD --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_LOGOUT_GUARD_INIT__) return;
+  window.__COSMO_LOGOUT_GUARD_INIT__ = true;
+
+  window.__COSMO_LOGGING_OUT__ = false;
+
+  function getCleanTargetUrl() {
+    if (window.location.hostname === 'twkenxtis.github.io') {
+      return 'https://twkenxtis.github.io/cosmo-talk-web/';
+    }
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  // 在頁面卸載前清掉可能殘留的 demo 查詢參數
+  window.addEventListener('pagehide', () => {
+    window.__COSMO_LOGGING_OUT__ = false;
+  });
+
+  // 包裝原生 MutationObserver，避免同步遞迴與登出期間狂刷 DOM
+  const NativeMO = window.MutationObserver;
+  if (typeof NativeMO === 'function') {
+    window.MutationObserver = function WrappedMutationObserver(callback) {
+      let scheduled = false;
+      let pendingMutations = [];
+      let pendingTarget = null;
+
+      const wrappedCb = (mutations, observer) => {
+        if (window.__COSMO_LOGGING_OUT__) return;
+        pendingMutations.push(...mutations);
+        pendingTarget = observer;
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+          scheduled = false;
+          if (window.__COSMO_LOGGING_OUT__) {
+            pendingMutations = [];
+            return;
+          }
+          const batch = pendingMutations;
+          const obs = pendingTarget;
+          pendingMutations = [];
+          if (batch.length > 0) {
+            callback(batch, obs);
+          }
+        });
+      };
+
+      return new NativeMO(wrappedCb);
+    };
+    window.MutationObserver.prototype = NativeMO.prototype;
+  }
+
+  window.__cosmoCleanLogoutRedirect = function __cosmoCleanLogoutRedirect(wasDemo) {
+    const cleanUrl = getCleanTargetUrl();
+    try {
+      window.sessionStorage.removeItem('cosmo_demo_mode');
+      window.localStorage.removeItem('cosmo_demo_mode');
+    } catch (_) {}
+
+    if (wasDemo || window.location.search.includes('demo')) {
+      window.__COSMO_LOGGING_OUT__ = true;
+      if (window.location.href !== cleanUrl) {
+        window.location.replace(cleanUrl);
+        return true;
+      }
+    }
+    window.__COSMO_LOGGING_OUT__ = false;
+    return false;
+  };
 })();
