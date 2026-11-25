@@ -548,3 +548,248 @@ const CosmoChatView = (() => {
     }
   }, { passive: true, capture: true });
 })();
+
+/* --- FLOATING SCROLL-TO-BOTTOM BUTTON (RELATIVE ABOVE SEND BTN) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SCROLL_BOTTOM_BTN_INIT__) return;
+  window.__COSMO_SCROLL_BOTTOM_BTN_INIT__ = true;
+
+  const TI_CHEVRON_HTML = '<i class="ti ti-chevron-down" aria-hidden="true"></i>';
+
+  const SVG_CHEVRON_HTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="#ffffff" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" ' +
+    'class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down" aria-hidden="true" ' +
+    'style="width:22px;height:22px;min-width:22px;min-height:22px;display:block;flex-shrink:0;">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M6 9l6 6l6 -6" /></svg>';
+
+  let useSvgFallback = false;
+
+  function ensureScopedStyle() {
+    if (document.getElementById('cosmo-scroll-bottom-style')) return;
+    const style = document.createElement('style');
+    style.id = 'cosmo-scroll-bottom-style';
+    style.textContent = `
+      #btn-scroll-to-bottom {
+        position: relative;
+        align-self: flex-end;
+        margin-right: 1px;
+        margin-bottom: 2px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background-color: #343f45;
+        color: #ffffff;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        line-height: 1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.38);
+        cursor: pointer;
+        z-index: 24;
+        flex-shrink: 0;
+        transition: transform 0.16s ease, background-color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #btn-scroll-to-bottom.visible {
+        display: inline-flex;
+      }
+      #btn-scroll-to-bottom:hover {
+        background-color: #3e4b52;
+      }
+      #btn-scroll-to-bottom:active {
+        transform: scale(0.94);
+      }
+      #btn-scroll-to-bottom i.ti {
+        color: #ffffff;
+        font-size: 22px;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      @media (max-width: 768px) {
+        #btn-scroll-to-bottom {
+          width: 40px;
+          height: 40px;
+          min-width: 40px;
+          min-height: 40px;
+        }
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  async function detectFontFallback() {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      const probe = document.createElement('i');
+      probe.className = 'ti ti-chevron-down';
+      probe.style.position = 'fixed';
+      probe.style.left = '-9999px';
+      probe.style.visibility = 'hidden';
+      document.body.appendChild(probe);
+      const w = probe.getBoundingClientRect().width;
+      probe.remove();
+      if (w < 8) {
+        useSvgFallback = true;
+      }
+    } catch (_) {
+      useSvgFallback = true;
+    }
+    const btn = document.getElementById('btn-scroll-to-bottom');
+    if (btn) {
+      const desired = useSvgFallback ? SVG_CHEVRON_HTML : TI_CHEVRON_HTML;
+      if (btn.innerHTML !== desired) btn.innerHTML = desired;
+    }
+  }
+
+  function isChatScreenActive() {
+    const shell = document.getElementById('chat-shell');
+    if (!shell || !shell.classList.contains('active')) return false;
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay && overlay.classList.contains('active')) return false;
+    const loginPage = document.getElementById('login-page');
+    if (loginPage && getComputedStyle(loginPage).display !== 'none') return false;
+    return true;
+  }
+
+  function getScrollMetrics() {
+    const docEl = document.scrollingElement || document.documentElement || document.body;
+    const chatEl = document.getElementById('chat');
+    if (chatEl && chatEl.scrollHeight > chatEl.clientHeight + 20) {
+      const maxTop = Math.max(0, chatEl.scrollHeight - chatEl.clientHeight);
+      const distFromBottom = Math.max(0, maxTop - chatEl.scrollTop);
+      return { scroller: chatEl, isWindow: false, maxTop, distFromBottom };
+    }
+    const viewH = window.innerHeight || docEl.clientHeight || 0;
+    const scrollH = Math.max(docEl.scrollHeight || 0, document.body?.scrollHeight || 0);
+    const curTop = window.scrollY ?? window.pageYOffset ?? docEl.scrollTop ?? 0;
+    const maxTop = Math.max(0, scrollH - viewH);
+    const distFromBottom = Math.max(0, maxTop - curTop);
+    return { scroller: docEl, isWindow: true, maxTop, distFromBottom };
+  }
+
+  function scrollToAbsoluteBottom() {
+    const { scroller, isWindow } = getScrollMetrics();
+    if (isWindow) {
+      const targetTop = Math.max(
+        document.documentElement?.scrollHeight || 0,
+        document.body?.scrollHeight || 0
+      );
+      window.scrollTo({ top: targetTop, behavior: 'smooth' });
+      setTimeout(() => {
+        const finalTop = Math.max(
+          document.documentElement?.scrollHeight || 0,
+          document.body?.scrollHeight || 0
+        );
+        window.scrollTo({ top: finalTop, behavior: 'smooth' });
+      }, 320);
+    } else if (scroller) {
+      scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+      setTimeout(() => {
+        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
+      }, 320);
+    }
+  }
+
+  function alignAboveSendButton(btn) {
+    const wrapper = document.querySelector('.chat-composer-wrapper');
+    const sendBtn = document.getElementById('send-msg-btn') || document.querySelector('.send-msg-btn');
+    if (!wrapper || !btn) return;
+
+    if (btn.parentElement !== wrapper) {
+      wrapper.appendChild(btn);
+    }
+
+    // 確保位於 .composer-bar 正上方，並依發送按鈕寬度微調右側對齊
+    const composerBar = wrapper.querySelector('.composer-bar');
+    if (composerBar && btn.nextElementSibling !== composerBar) {
+      wrapper.insertBefore(btn, composerBar);
+    }
+
+    if (sendBtn && wrapper.getBoundingClientRect) {
+      const wRect = wrapper.getBoundingClientRect();
+      const sRect = sendBtn.getBoundingClientRect();
+      if (wRect.width > 0 && sRect.width > 0) {
+        const offsetRight = Math.max(0, Math.round(wRect.right - sRect.right + (sRect.width - btn.offsetWidth) / 2));
+        btn.style.marginRight = `${offsetRight}px`;
+      }
+    }
+  }
+
+  function updateVisibility() {
+    const btn = ensureButton();
+    if (!btn) return;
+
+    if (!isChatScreenActive()) {
+      btn.classList.remove('visible');
+      return;
+    }
+
+    alignAboveSendButton(btn);
+    const { distFromBottom } = getScrollMetrics();
+    const thresholdPx = (window.innerHeight || document.documentElement.clientHeight || 600) * 1.5;
+    const shouldShow = distFromBottom >= thresholdPx;
+    btn.classList.toggle('visible', shouldShow);
+    if (shouldShow) {
+      alignAboveSendButton(btn);
+    }
+  }
+
+  function ensureButton() {
+    const wrapper = document.querySelector('.chat-composer-wrapper');
+    if (!wrapper) return null;
+    ensureScopedStyle();
+
+    let btn = document.getElementById('btn-scroll-to-bottom');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'btn-scroll-to-bottom';
+      btn.title = 'Scroll to bottom';
+      btn.setAttribute('aria-label', 'Scroll to bottom');
+      btn.innerHTML = useSvgFallback ? SVG_CHEVRON_HTML : TI_CHEVRON_HTML;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToAbsoluteBottom();
+      });
+      wrapper.appendChild(btn);
+    }
+    alignAboveSendButton(btn);
+    return btn;
+  }
+
+  function init() {
+    ensureButton();
+    detectFontFallback();
+    updateVisibility();
+
+    window.addEventListener('scroll', updateVisibility, { passive: true, capture: true });
+    window.addEventListener('resize', updateVisibility, { passive: true });
+
+    const mo = new MutationObserver(() => updateVisibility());
+    mo.observe(document.documentElement || document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();

@@ -22,10 +22,8 @@ const CosmoComposer = (() => {
     stickerPickerPanel: document.getElementById('sticker-picker-panel'),
     stickerGrid: document.getElementById('sticker-grid'),
     stickerPickerStatus: document.getElementById('sticker-picker-status'),
-    stickerClearBtn: document.getElementById('sticker-clear-btn'),
     selectedStickerBar: document.getElementById('selected-sticker-bar'),
     selectedStickerImg: document.getElementById('selected-sticker-img'),
-    selectedStickerRemove: document.getElementById('selected-sticker-remove'),
   };
 
   const state = {
@@ -153,6 +151,10 @@ const CosmoComposer = (() => {
       }
     }
     return nfc(str);
+  }
+
+  function clearSelectedSticker() {
+    setSelectedSticker(null);
   }
 
   function setSelectedSticker(sticker) {
@@ -438,20 +440,6 @@ const CosmoComposer = (() => {
       dom.stickerToggleBtn.onclick = loadAndToggleStickers;
     }
 
-    if (dom.stickerClearBtn) {
-      dom.stickerClearBtn.onclick = () => {
-        setSelectedSticker(null);
-        renderStickerGrid();
-      };
-    }
-
-    if (dom.selectedStickerRemove) {
-      dom.selectedStickerRemove.onclick = () => {
-        setSelectedSticker(null);
-        renderStickerGrid();
-      };
-    }
-
     if (dom.sendMsgBtn) {
       dom.sendMsgBtn.onclick = sendMessagePayload;
     }
@@ -482,9 +470,154 @@ const CosmoComposer = (() => {
   return {
     init,
     reset,
+    clearSelectedSticker,
     setVisible,
     ensureRemainingCountIfNeeded,
     onLanguageChanged,
     onWindowResize,
   };
+})();
+
+/* --- STICKER PICKER / SELECTED STICKER CLOSE (X) BUTTON (FIXED) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_STICKER_CLOSE_X_FIXED__) return;
+  window.__COSMO_STICKER_CLOSE_X_FIXED__ = true;
+
+  function hideSelectedStickerBar(bar) {
+    if (!bar) return;
+    bar.classList.remove('active');
+    bar.style.display = 'none';
+
+    const img =
+      document.getElementById('selected-sticker-img') ||
+      bar.querySelector('img');
+    if (img) {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+    }
+
+    document
+      .querySelectorAll('.sticker-grid-item.selected')
+      .forEach((item) => item.classList.remove('selected'));
+
+    const inputEl =
+      document.getElementById('chat-input') ||
+      document.querySelector('.composer-input');
+    if (inputEl) {
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  function restoreSelectedStickerBarWhenPicked(bar) {
+    if (!bar) return;
+    const img =
+      document.getElementById('selected-sticker-img') ||
+      bar.querySelector('img');
+    const hasSrc = Boolean(img && img.getAttribute('src') && img.getAttribute('src').trim());
+    if (hasSrc || bar.classList.contains('active')) {
+      bar.style.display = '';
+      if (img) img.style.display = '';
+    }
+  }
+
+  function ensureCloseButtons() {
+    const panel =
+      document.getElementById('sticker-picker-panel') ||
+      document.querySelector('.sticker-picker-panel');
+    if (panel && !panel.querySelector('.sticker-panel-close-x')) {
+      const header =
+        panel.querySelector('.sticker-picker-header') || panel.firstElementChild;
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'icon-btn sticker-panel-close-x';
+      closeBtn.title = 'Close';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.textContent = '✕';
+      closeBtn.style.marginLeft = 'auto';
+      closeBtn.style.width = '28px';
+      closeBtn.style.height = '28px';
+      closeBtn.style.minWidth = '28px';
+      closeBtn.style.minHeight = '28px';
+      closeBtn.style.fontSize = '15px';
+      closeBtn.style.color = '#e5e5ea';
+
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panel.classList.remove('open');
+      });
+
+      if (header) {
+        header.appendChild(closeBtn);
+      } else {
+        panel.insertBefore(closeBtn, panel.firstChild);
+      }
+    }
+
+    const bar =
+      document.getElementById('selected-sticker-bar') ||
+      document.querySelector('.selected-sticker-bar');
+    if (bar) {
+      restoreSelectedStickerBarWhenPicked(bar);
+
+      if (!bar.querySelector('.selected-sticker-close-x')) {
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'selected-sticker-close-x';
+        removeBtn.title = 'Remove sticker';
+        removeBtn.setAttribute('aria-label', 'Remove sticker');
+        removeBtn.textContent = '✕';
+        removeBtn.style.position = 'absolute';
+        removeBtn.style.top = '8px';
+        removeBtn.style.right = '8px';
+        removeBtn.style.width = '28px';
+        removeBtn.style.height = '28px';
+        removeBtn.style.padding = '0';
+        removeBtn.style.border = 'none';
+        removeBtn.style.borderRadius = '50%';
+        removeBtn.style.background = 'transparent';
+        removeBtn.style.color = 'rgba(255, 255, 255, 0.85)';
+        removeBtn.style.fontSize = '16px';
+        removeBtn.style.lineHeight = '1';
+        removeBtn.style.display = 'inline-flex';
+        removeBtn.style.alignItems = 'center';
+        removeBtn.style.justifyContent = 'center';
+        removeBtn.style.cursor = 'pointer';
+        removeBtn.style.zIndex = '2';
+
+        removeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof CosmoComposer !== 'undefined' && typeof CosmoComposer.clearSelectedSticker === 'function') {
+            CosmoComposer.clearSelectedSticker();
+          }
+          hideSelectedStickerBar(bar);
+          const inputEl =
+            document.getElementById('chat-input') ||
+            document.querySelector('.composer-input');
+          if (inputEl) {
+            inputEl.disabled = false;
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+
+        bar.appendChild(removeBtn);
+      }
+    }
+  }
+
+  const mo = new MutationObserver(() => ensureCloseButtons());
+  mo.observe(document.documentElement || document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'src', 'style'],
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureCloseButtons, { once: true });
+  } else {
+    ensureCloseButtons();
+  }
 })();

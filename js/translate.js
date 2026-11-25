@@ -1,7 +1,7 @@
 const CosmoTranslate = (() => {
   'use strict';
 
-  const BATCH_SIZE = 30;
+  const BATCH_SIZE = 130;
   const API_BASE = 'https://api.cosmo.fans';
 
   // 純記憶體 + Blob 快取（頁面重新整理即消失）

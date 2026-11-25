@@ -513,20 +513,65 @@
   bootstrap();
 })();
 
-/* --- TOPBAR TABLER TRANSLATE TOGGLE BUTTON (V4) --- */
+/* --- TOPBAR TABLER TRANSLATE TOGGLE BUTTON (STABLE) --- */
 (() => {
   if (typeof window === 'undefined') return;
-  if (window.__COSMO_TRANSLATE_TOPBAR_V4__) return;
-  window.__COSMO_TRANSLATE_TOPBAR_V4__ = true;
+  if (window.__COSMO_TRANSLATE_TOPBAR_STABLE__) return;
+  window.__COSMO_TRANSLATE_TOPBAR_STABLE__ = true;
 
-  const TABLER_LANGUAGE_SVG =
+  const TI_ICON_HTML = '<i class="ti ti-language" aria-hidden="true"></i>';
+
+  const SVG_ICON_HTML =
     '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
     'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-    'class="icon icon-tabler icons-tabler-outline icon-tabler-language" aria-hidden="true">' +
+    'class="icon icon-tabler icons-tabler-outline icon-tabler-language" aria-hidden="true" ' +
+    'style="width:20px;height:20px;min-width:20px;min-height:20px;display:block;flex-shrink:0;">' +
     '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
     '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
     '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
     '<path d="M19.1 18h-6.2" /></svg>';
+
+  let useSvgFallback = false;
+
+  async function detectIconFontIfNeeded() {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+        const loaded = Array.from(document.fonts).some(
+          (f) => f.status === 'loaded' && /tabler/i.test(f.family || '')
+        );
+        if (!loaded) {
+          // 檢查 .ti-copy 是否能實際撐開寬度；若不能代表 tabler icon 字型未載入
+          const probe = document.createElement('i');
+          probe.className = 'ti ti-copy';
+          probe.style.position = 'fixed';
+          probe.style.left = '-9999px';
+          probe.style.visibility = 'hidden';
+          document.body.appendChild(probe);
+          const w = probe.getBoundingClientRect().width;
+          probe.remove();
+          if (w < 8) {
+            useSvgFallback = true;
+          }
+        }
+      }
+    } catch (_) {
+      useSvgFallback = true;
+    }
+    const btn = document.getElementById('btn-toggle-translate');
+    if (btn) applyIcon(btn);
+  }
+
+  function applyIcon(btn) {
+    if (!btn) return;
+    btn.style.minWidth = '32px';
+    btn.style.minHeight = '32px';
+    btn.style.flexShrink = '0';
+    const desired = useSvgFallback ? SVG_ICON_HTML : TI_ICON_HTML;
+    if (btn.innerHTML !== desired) {
+      btn.innerHTML = desired;
+    }
+  }
 
   function getClassString(el) {
     if (!el || !el.className) return '';
@@ -564,12 +609,13 @@
       btn.className = getClassString(exportBtn) || 'icon-btn';
       btn.title = 'Translate (ON/OFF)';
       btn.setAttribute('aria-label', 'Translate (ON/OFF)');
-      btn.innerHTML = TABLER_LANGUAGE_SVG;
       exportBtn.parentElement.insertBefore(btn, exportBtn);
     }
 
-    if (!btn.dataset.boundV4) {
-      btn.dataset.boundV4 = '1';
+    applyIcon(btn);
+
+    if (!btn.dataset.boundStable) {
+      btn.dataset.boundStable = '1';
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -580,8 +626,8 @@
       });
     }
 
-    if (typeof CosmoTranslate !== 'undefined' && !btn.dataset.stateBoundV4) {
-      btn.dataset.stateBoundV4 = '1';
+    if (typeof CosmoTranslate !== 'undefined' && !btn.dataset.stateBoundStable) {
+      btn.dataset.stateBoundStable = '1';
       CosmoTranslate.onStateChange((isOn) => syncVisual(btn, isOn));
     }
 
@@ -592,8 +638,124 @@
   const mo = new MutationObserver(() => ensureBtn());
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureBtn, { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureBtn();
+      detectIconFontIfNeeded();
+    }, { once: true });
   } else {
     ensureBtn();
+    detectIconFontIfNeeded();
+  }
+})();
+
+/* --- JWT INPUT RIGHT-ALIGNED CLIPBOARD PASTE BUTTON --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_JWT_PASTE_BTN_HOOKED__) return;
+  window.__COSMO_JWT_PASTE_BTN_HOOKED__ = true;
+
+  const CLIPBOARD_ICON_HTML =
+    '<i class="ti ti-clipboard" aria-hidden="true" style="font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;pointer-events:none;"></i>';
+
+  async function readClipboardTextSafe() {
+    if (window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      try {
+        const txt = await navigator.clipboard.readText();
+        if (typeof txt === 'string') return txt;
+      } catch (_) {}
+    }
+    return '';
+  }
+
+  function triggerInputEvents(inputEl) {
+    if (!inputEl) return;
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function ensureJwtPasteButton() {
+    const inputEl = document.getElementById('jwt-login-input');
+    if (!inputEl || !inputEl.parentElement) return;
+
+    let wrap = inputEl.closest('.jwt-input-wrap');
+    if (!wrap) {
+      const parent = inputEl.parentElement;
+      wrap = document.createElement('div');
+      wrap.className = 'jwt-input-wrap';
+      wrap.style.position = 'relative';
+      wrap.style.display = 'flex';
+      wrap.style.alignItems = 'center';
+      wrap.style.width = '100%';
+      parent.insertBefore(wrap, inputEl);
+      wrap.appendChild(inputEl);
+    }
+
+    inputEl.style.width = '100%';
+    inputEl.style.paddingRight = '40px';
+    inputEl.style.position = 'relative';
+    inputEl.style.zIndex = '1';
+
+    let btn = document.getElementById('btn-paste-jwt');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'btn-paste-jwt';
+      btn.className = 'icon-btn jwt-paste-btn';
+      btn.title = 'Paste';
+      btn.setAttribute('aria-label', 'Paste');
+      btn.innerHTML = CLIPBOARD_ICON_HTML;
+
+      // 小於輸入框、靠右對齊、塞在框內最上層
+      btn.style.position = 'absolute';
+      btn.style.right = '6px';
+      btn.style.top = '50%';
+      btn.style.transform = 'translateY(-50%)';
+      btn.style.width = '28px';
+      btn.style.height = '28px';
+      btn.style.minWidth = '28px';
+      btn.style.minHeight = '28px';
+      btn.style.padding = '0';
+      btn.style.margin = '0';
+      btn.style.zIndex = '2';
+      btn.style.display = 'inline-flex';
+      btn.style.alignItems = 'center';
+      btn.style.justifyContent = 'center';
+      btn.style.borderRadius = '6px';
+      btn.style.cursor = 'pointer';
+
+      wrap.appendChild(btn);
+    }
+
+    if (!btn.dataset.boundPaste) {
+      btn.dataset.boundPaste = '1';
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        inputEl.focus();
+        const text = await readClipboardTextSafe();
+        if (text) {
+          inputEl.value = text.trim();
+          triggerInputEvents(inputEl);
+          return;
+        }
+
+        // 若瀏覽器限制直接 readText，嘗試 execCommand('paste') 作為備援
+        try {
+          if (typeof document.execCommand === 'function') {
+            document.execCommand('paste');
+            triggerInputEvents(inputEl);
+          }
+        } catch (_) {}
+      });
+    }
+  }
+
+  const mo = new MutationObserver(() => ensureJwtPasteButton());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureJwtPasteButton, { once: true });
+  } else {
+    ensureJwtPasteButton();
   }
 })();

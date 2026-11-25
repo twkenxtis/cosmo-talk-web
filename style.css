@@ -753,6 +753,8 @@ body.is-login-view {
   background-color: rgba(22, 22, 24, 0.96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  width: calc(100% - 52px);
+  max-width: calc(100% - 52px);
   border: 1px solid var(--border-color);
   border-radius: 18px;
   padding: 12px;
@@ -771,15 +773,6 @@ body.is-login-view {
   color: var(--text-muted);
   margin-bottom: 10px;
   padding: 0 4px;
-}
-
-.sticker-clear-btn {
-  border: 0.1px solid #161618;
-  background-color: var(--accent-btn);
-  color: var(--text-color);
-  padding: 6px 13px;
-  font-size: 14px;
-  cursor: pointer;
 }
 
 .sticker-grid {
@@ -869,27 +862,6 @@ body.is-login-view {
   object-fit: contain;
   border-radius: 5px;
   pointer-events: none;
-}
-
-.selected-sticker-bar .sticker-clear-btn,
-#selected-sticker-remove {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 16px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 2;
 }
 
 .selected-sticker-bar .sticker-clear-btn:hover,
