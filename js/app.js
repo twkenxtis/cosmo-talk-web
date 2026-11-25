@@ -2354,74 +2354,15 @@
   window.CosmoApplyEnglishDates = applyEnglishDates;
 })();
 
-/* --- THEME-SAFE PASTE BUTTON HANDLER --- */
+/* --- CONSOLIDATED JWT PASTE BUTTON (BESIDE #jwt-login-btn, DIRECT PASTE) --- */
 (() => {
   if (typeof window === 'undefined') return;
-  if (window.__COSMO_THEME_SAFE_PASTE_INIT__) return;
-  window.__COSMO_THEME_SAFE_PASTE_INIT__ = true;
+  if (window.__COSMO_CONSOLIDATED_PASTE_INIT__) return;
+  window.__COSMO_CONSOLIDATED_PASTE_INIT__ = true;
 
-  function findTargetInput(btn) {
-    const container =
-      btn.closest('form, .login-box, .login-card, .modal, .panel, [class*="login"], [id*="login"]') ||
-      document;
-    return (
-      container.querySelector('textarea[id*="jwt" i], input[id*="jwt" i], textarea[placeholder*="JWT" i], input[placeholder*="JWT" i]') ||
-      container.querySelector('textarea, input[type="text"], input[type="password"]') ||
-      document.querySelector('textarea, input[type="text"], input[type="password"]')
-    );
-  }
-
-  function applyPastedText(target, text) {
-    if (!target || typeof text !== 'string') return false;
-    target.focus();
-    target.value = text;
-    target.dispatchEvent(new Event('input', { bubbles: true }));
-    target.dispatchEvent(new Event('change', { bubbles: true }));
-    return true;
-  }
-
-  document.addEventListener(
-    'click',
-    async (ev) => {
-      const btn = ev.target?.closest?.(
-        '[id*="paste" i], [class*="paste" i], [data-action*="paste" i], button[aria-label*="paste" i], button[title*="paste" i]'
-      );
-      if (!btn) return;
-
-      const target = findTargetInput(btn);
-      if (!target) return;
-
-      if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-        try {
-          const clipText = await navigator.clipboard.readText();
-          if (clipText) {
-            ev.preventDefault();
-            ev.stopImmediatePropagation();
-            applyPastedText(target, clipText);
-            return;
-          }
-        } catch (_) {
-          // 權限被拒或非安全上下文時，focus 輸入框讓使用者可直接 Ctrl+V / 長按貼上
-          target.focus();
-        }
-      } else {
-        target.focus();
-      }
-    },
-    true
-  );
-})();
-
-/* --- STANDALONE SQUARE PASTE BUTTON HANDLER (THEME-INDEPENDENT) --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_STANDALONE_PASTE_BTN_INIT__) return;
-  window.__COSMO_STANDALONE_PASTE_BTN_INIT__ = true;
-
-  const PASTE_BTN_ID = 'jwt-paste-btn';
-  const PASTE_ROW_CLASS = 'jwt-paste-outer-row';
-
-  const CLIPBOARD_ICON_SVG =
+  const BTN_ID = 'jwt-paste-btn';
+  const ROW_CLASS = 'jwt-login-action-row';
+  const CLIPBOARD_SVG =
     '<svg viewBox="0 0 24 24" width="18" height="18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
     '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
     '<path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />' +
@@ -2435,523 +2376,10 @@
     );
   }
 
-  function findAnchorBeforeInput(jwtInput) {
-    const card = jwtInput?.closest?.('.login-card') || document.querySelector('.login-card');
-    if (!card) return null;
-
-    const langSwitcher = card.querySelector('.login-lang-switcher, #login-lang-select');
-    const headerRow = card.querySelector('.login-header-row');
-    const group = jwtInput?.closest?.('.login-group') || card.querySelector('.login-group');
-
-    return { card, langSwitcher, headerRow, group, jwtInput };
-  }
-
-  async function triggerPasteIntoJwt() {
+  function writeJwtValue(rawVal) {
     const input = getJwtInput();
-    if (!input) return;
-
-    input.focus();
-
-    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (typeof text === 'string' && text.length > 0) {
-          input.value = text;
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          return;
-        }
-      } catch (_) {
-        // 若瀏覽器阻擋直接讀取剪貼簿，保留 focus 並嘗試 execCommand('paste')
-        try {
-          document.execCommand('paste');
-        } catch (_) {}
-      }
-    }
-  }
-
-  function createPasteButton() {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.id = PASTE_BTN_ID;
-    btn.setAttribute('aria-label', 'Paste JWT');
-    btn.setAttribute('title', 'Paste JWT');
-    btn.innerHTML = CLIPBOARD_ICON_SVG;
-    btn.addEventListener('click', (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      triggerPasteIntoJwt();
-    });
-    return btn;
-  }
-
-  function ensureStandalonePasteButton() {
-    const input = getJwtInput();
-    if (!input) return;
-
-    const ctx = findAnchorBeforeInput(input);
-    if (!ctx || !ctx.group) return;
-
-    let row = ctx.card.querySelector(`.${PASTE_ROW_CLASS}`);
-    if (!row) {
-      row = document.createElement('div');
-      row.className = PASTE_ROW_CLASS;
-    }
-
-    let btn = document.getElementById(PASTE_BTN_ID);
-    if (!btn) {
-      btn = createPasteButton();
-    }
-
-    // 確保按鈕只有純 icon、無任何文字節點
-    Array.from(btn.childNodes).forEach((n) => {
-      if (n.nodeType === Node.TEXT_NODE) n.remove();
-    });
-    if (!btn.querySelector('svg')) {
-      btn.innerHTML = CLIPBOARD_ICON_SVG;
-    }
-
-    if (btn.parentElement !== row) {
-      row.appendChild(btn);
-    }
-
-    // 放在下拉選單下方、輸入框（.login-group）外面的右上角
-    if (row.nextElementSibling !== ctx.group) {
-      ctx.group.parentElement.insertBefore(row, ctx.group);
-    }
-  }
-
-  ensureStandalonePasteButton();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureStandalonePasteButton, { once: true });
-  }
-
-  let rafId = null;
-  const mo = new MutationObserver(() => {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      ensureStandalonePasteButton();
-    });
-  });
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  window.CosmoEnsureStandalonePasteButton = ensureStandalonePasteButton;
-})();
-
-/* --- POLISHED JWT PASTE ROW & REMOVE OLD INLINE CLIPBOARD ICON --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_POLISHED_PASTE_INIT__) return;
-  window.__COSMO_POLISHED_PASTE_INIT__ = true;
-
-  const PASTE_BTN_ID = 'jwt-paste-btn';
-  const PASTE_ROW_CLASS = 'jwt-paste-outer-row';
-
-  const CLIPBOARD_ICON_SVG =
-    '<svg viewBox="0 0 24 24" width="17" height="17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />' +
-    '<path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />' +
-    '</svg>';
-
-  function removeLegacyInlineClipboardIcons(card) {
-    if (!card) return;
-    const candidates = card.querySelectorAll('button, [role="button"], span, svg');
-    candidates.forEach((el) => {
-      if (el.id === PASTE_BTN_ID || el.closest(`#${PASTE_BTN_ID}`)) return;
-      if (el.id === 'jwt-login-btn' || el.id === 'jwt-guide-btn' || el.id === 'gasLoginBtn') return;
-      if (el.closest('.login-header-row')) return;
-
-      const cls = String(el.className || '').toLowerCase();
-      const id = String(el.id || '').toLowerCase();
-      const title = String(el.getAttribute?.('title') || el.getAttribute?.('aria-label') || '').toLowerCase();
-      const isPasteLike =
-        cls.includes('paste') ||
-        id.includes('paste') ||
-        title.includes('paste') ||
-        cls.includes('clipboard') ||
-        id.includes('clipboard') ||
-        title.includes('clipboard');
-
-      if (isPasteLike) {
-        el.remove();
-      }
-    });
-  }
-
-  function syncCaptionText(card, captionEl) {
-    if (!captionEl) return;
-    const sub = card?.querySelector('.login-subtitle');
-    const txt = (sub?.textContent || '').replace(/\s+/g, ' ').trim();
-    if (txt && captionEl.textContent !== txt) {
-      captionEl.textContent = txt;
-    }
-  }
-
-  function ensurePolishedLayout() {
-    const input =
-      document.getElementById('jwt-login-input') ||
-      document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]');
-    if (!input) return;
-
-    const card = input.closest('.login-card') || document.querySelector('.login-card');
-    const group = input.closest('.login-group') || card?.querySelector('.login-group');
-    if (!card || !group || !group.parentElement) return;
-
-    removeLegacyInlineClipboardIcons(card);
-
-    let row = card.querySelector(`.${PASTE_ROW_CLASS}`);
-    if (!row) {
-      row = document.createElement('div');
-      row.className = PASTE_ROW_CLASS;
-    }
-
-    let captionEl = row.querySelector('.jwt-paste-caption');
-    if (!captionEl) {
-      captionEl = document.createElement('span');
-      captionEl.className = 'jwt-paste-caption';
-      row.appendChild(captionEl);
-    }
-    syncCaptionText(card, captionEl);
-
-    let btn = document.getElementById(PASTE_BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = PASTE_BTN_ID;
-      btn.setAttribute('aria-label', 'Paste JWT');
-      btn.setAttribute('title', 'Paste JWT');
-      btn.innerHTML = CLIPBOARD_ICON_SVG;
-      btn.addEventListener('click', async (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        input.focus();
-        if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-          try {
-            const text = await navigator.clipboard.readText();
-            if (typeof text === 'string' && text.length > 0) {
-              input.value = text;
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-          } catch (_) {
-            try {
-              document.execCommand('paste');
-            } catch (_) {}
-          }
-        }
-      });
-    }
-
-    Array.from(btn.childNodes).forEach((n) => {
-      if (n.nodeType === Node.TEXT_NODE) n.remove();
-    });
-    if (!btn.querySelector('svg')) {
-      btn.innerHTML = CLIPBOARD_ICON_SVG;
-    }
-    if (btn.parentElement !== row) {
-      row.appendChild(btn);
-    }
-
-    // 緊貼在輸入框群組上方，左文字、右按鈕同一列對齊
-    if (row.nextElementSibling !== group) {
-      group.parentElement.insertBefore(row, group);
-    }
-  }
-
-  ensurePolishedLayout();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensurePolishedLayout, { once: true });
-  }
-
-  let rafId = null;
-  const mo = new MutationObserver(() => {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      ensurePolishedLayout();
-    });
-  });
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
-})();
-
-/* --- RELIABLE PASTE HANDLER & DEDUPLICATE CAPTION --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_CLEAN_PASTE_INIT__) return;
-  window.__COSMO_CLEAN_PASTE_INIT__ = true;
-
-  const PASTE_BTN_ID = 'jwt-paste-btn';
-  const PASTE_ROW_CLASS = 'jwt-paste-outer-row';
-
-  const CLIPBOARD_ICON_SVG =
-    '<svg viewBox="0 0 24 24" width="17" height="17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />' +
-    '<path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />' +
-    '</svg>';
-
-  function setStatusHint(msg) {
-    const statusEl = document.getElementById('login-status');
-    if (statusEl) {
-      statusEl.textContent = msg;
-    }
-  }
-
-  function applyValueToInput(input, text) {
-    input.focus();
-    input.value = text;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-
-  async function handlePasteClick(input) {
-    if (!input) return;
-    input.focus();
-
-    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (typeof text === 'string' && text.trim().length > 0) {
-          applyValueToInput(input, text.trim());
-          setStatusHint('');
-          return;
-        }
-      } catch (_) {
-        // 非 HTTPS 或瀏覽器阻擋 clipboard.readText 時改走 execCommand 與焦點提示
-      }
-    }
-
-    try {
-      const ok = document.execCommand && document.execCommand('paste');
-      if (ok && input.value.trim().length > 0) {
-        input.value = input.value.trim();
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        setStatusHint('');
-        return;
-      }
-    } catch (_) {}
-
-    setStatusHint('請按 Ctrl+V / Cmd+V 貼上 JWT');
-  }
-
-  function ensureCleanPasteUi() {
-    const input =
-      document.getElementById('jwt-login-input') ||
-      document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]');
-    if (!input) return;
-
-    const card = input.closest('.login-card') || document.querySelector('.login-card');
-    const group = input.closest('.login-group') || card?.querySelector('.login-group');
-    if (!card || !group || !group.parentElement) return;
-
-    let row = card.querySelector(`.${PASTE_ROW_CLASS}`);
-    if (!row) {
-      row = document.createElement('div');
-      row.className = PASTE_ROW_CLASS;
-    }
-
-    // 移除重複的文字節點/元素，只保留純 icon 按鈕
-    row.querySelectorAll('.jwt-paste-caption').forEach((el) => el.remove());
-
-    let btn = document.getElementById(PASTE_BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = PASTE_BTN_ID;
-      btn.setAttribute('aria-label', 'Paste JWT');
-      btn.setAttribute('title', 'Paste JWT');
-      btn.innerHTML = CLIPBOARD_ICON_SVG;
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        handlePasteClick(input);
-      });
-    }
-
-    Array.from(btn.childNodes).forEach((n) => {
-      if (n.nodeType === Node.TEXT_NODE) n.remove();
-    });
-    if (!btn.querySelector('svg')) {
-      btn.innerHTML = CLIPBOARD_ICON_SVG;
-    }
-    if (btn.parentElement !== row) {
-      row.appendChild(btn);
-    }
-
-    if (row.nextElementSibling !== group) {
-      group.parentElement.insertBefore(row, group);
-    }
-  }
-
-  ensureCleanPasteUi();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureCleanPasteUi, { once: true });
-  }
-
-  let rafId = null;
-  const mo = new MutationObserver(() => {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      ensureCleanPasteUi();
-    });
-  });
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
-})();
-
-/* --- WORKING PASTE BUTTON FOR HTTP / HTTPS / ALL THEMES --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_WORKING_PASTE_INIT__) return;
-  window.__COSMO_WORKING_PASTE_INIT__ = true;
-
-  const PASTE_BTN_ID = 'jwt-paste-btn';
-  let armedPasteInput = null;
-
-  function getJwtInput() {
-    return (
-      document.getElementById('jwt-login-input') ||
-      document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]')
-    );
-  }
-
-  function setLoginStatusText(msg) {
-    const el = document.getElementById('login-status');
-    if (el) el.textContent = msg;
-  }
-
-  function writeTextToInput(input, rawText) {
-    if (!input || typeof rawText !== 'string') return false;
-    const cleaned = rawText.trim();
-    if (!cleaned) return false;
-
-    input.focus();
-    const proto =
-      input.tagName === 'TEXTAREA'
-        ? window.HTMLTextAreaElement?.prototype
-        : window.HTMLInputElement?.prototype;
-    const desc = proto ? Object.getOwnPropertyDescriptor(proto, 'value') : null;
-    if (desc && typeof desc.set === 'function') {
-      desc.set.call(input, cleaned);
-    } else {
-      input.value = cleaned;
-    }
-
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
-    setLoginStatusText('');
-    return true;
-  }
-
-  // 全域攔截 paste 事件，確保貼上內容能正確寫入並觸發既有監聽器
-  document.addEventListener(
-    'paste',
-    (ev) => {
-      const target =
-        document.activeElement &&
-        (document.activeElement.id === 'jwt-login-input' ||
-          document.activeElement.matches?.('textarea[id*="jwt" i], input[id*="jwt" i]'))
-          ? document.activeElement
-          : armedPasteInput;
-
-      if (!target) return;
-      const clipText = ev.clipboardData?.getData('text');
-      if (typeof clipText === 'string' && clipText.length > 0) {
-        ev.preventDefault();
-        writeTextToInput(target, clipText);
-        armedPasteInput = null;
-      }
-    },
-    true
-  );
-
-  async function onPasteButtonClick(ev) {
-    ev.preventDefault();
-    ev.stopPropagation();
-
-    const input = getJwtInput();
-    if (!input) return;
-
-    armedPasteInput = input;
-    input.focus();
-
-    // 1. 若環境允許（如 localhost / https 且已授權），直接讀取剪貼簿
-    if (window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (writeTextToInput(input, text)) {
-          armedPasteInput = null;
-          return;
-        }
-      } catch (_) {
-        // 轉入下方焦點引導
-      }
-    }
-
-    // 2. 區網 HTTP 或未授權時，聚焦輸入框並提示 Ctrl+V / Cmd+V（配合上方 paste 監聽自動寫入）
-    try {
-      input.select?.();
-    } catch (_) {}
-    setLoginStatusText('已聚焦輸入框，請按 Ctrl+V / Cmd+V（或右鍵貼上）');
-  }
-
-  function bindPasteButton() {
-    const btn = document.getElementById(PASTE_BTN_ID);
-    if (!btn) return;
-    if (btn.dataset.cosmoPasteBound === '1') return;
-    btn.dataset.cosmoPasteBound = '1';
-    btn.addEventListener('click', onPasteButtonClick, true);
-  }
-
-  bindPasteButton();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindPasteButton, { once: true });
-  }
-
-  let rafId = null;
-  const mo = new MutationObserver(() => {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      bindPasteButton();
-    });
-  });
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
-})();
-
-/* --- DIRECT PASTE FOR #jwt-paste-btn (NO MODAL) --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_DIRECT_PASTE_NO_MODAL_INIT__) return;
-  window.__COSMO_DIRECT_PASTE_NO_MODAL_INIT__ = true;
-
-  const BTN_ID = 'jwt-paste-btn';
-
-  function getJwtInput() {
-    return (
-      document.getElementById('jwt-login-input') ||
-      document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]')
-    );
-  }
-
-  function applyJwtValue(val) {
-    const input = getJwtInput();
-    if (!input || typeof val !== 'string') return false;
-    const text = val.trim();
+    if (!input || typeof rawVal !== 'string') return false;
+    const text = rawVal.trim();
     if (!text) return false;
 
     const proto =
@@ -2978,7 +2406,7 @@
     if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
       try {
         const text = await navigator.clipboard.readText();
-        if (applyJwtValue(text)) return;
+        if (writeJwtValue(text)) return;
       } catch (_) {}
     }
 
@@ -2986,7 +2414,7 @@
       try {
         const ok = document.execCommand && document.execCommand('paste');
         if (ok && input.value && input.value.trim().length > 0) {
-          applyJwtValue(input.value);
+          writeJwtValue(input.value);
           return;
         }
       } catch (_) {}
@@ -2994,58 +2422,38 @@
     }
   }
 
-  function bindBtn() {
-    const btn = document.getElementById(BTN_ID);
-    if (!btn || btn.dataset.directPasteBound === '1') return;
-    btn.dataset.directPasteBound = '1';
-    btn.addEventListener(
-      'click',
-      (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        runDirectPaste();
-      },
-      true
-    );
-  }
-
-  document.getElementById('jwt-http-paste-modal')?.remove();
-  bindBtn();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindBtn, { once: true });
-  }
-
-  let rafId = null;
-  const mo = new MutationObserver(() => {
-    if (rafId !== null) return;
-    rafId = requestAnimationFrame(() => {
-      rafId = null;
-      document.getElementById('jwt-http-paste-modal')?.remove();
-      bindBtn();
-    });
-  });
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-  });
-})();
-
-/* --- PLACE #jwt-paste-btn BESIDE #jwt-login-btn --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_PASTE_BESIDE_LOGIN_INIT__) return;
-  window.__COSMO_PASTE_BESIDE_LOGIN_INIT__ = true;
-
-  const BTN_ID = 'jwt-paste-btn';
-  const ROW_CLASS = 'jwt-login-action-row';
-
-  function placePasteBesideLoginBtn() {
-    const loginBtn = document.getElementById('jwt-login-btn');
-    const pasteBtn = document.getElementById(BTN_ID);
-    if (!loginBtn || !pasteBtn || !loginBtn.parentElement) return;
-
-    // 移除舊的上方獨立列
+  function ensurePasteButtonAndLayout() {
+    document.getElementById('jwt-http-paste-modal')?.remove();
     document.querySelectorAll('.jwt-paste-outer-row').forEach((el) => el.remove());
+
+    const loginBtn = document.getElementById('jwt-login-btn');
+    if (!loginBtn || !loginBtn.parentElement) return;
+
+    let pasteBtn = document.getElementById(BTN_ID);
+    if (!pasteBtn) {
+      pasteBtn = document.createElement('button');
+      pasteBtn.type = 'button';
+      pasteBtn.id = BTN_ID;
+      pasteBtn.setAttribute('aria-label', 'Paste JWT');
+      pasteBtn.setAttribute('title', 'Paste JWT');
+      pasteBtn.innerHTML = CLIPBOARD_SVG;
+      pasteBtn.addEventListener(
+        'click',
+        (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          runDirectPaste();
+        },
+        true
+      );
+    }
+
+    Array.from(pasteBtn.childNodes).forEach((n) => {
+      if (n.nodeType === Node.TEXT_NODE) n.remove();
+    });
+    if (!pasteBtn.querySelector('svg')) {
+      pasteBtn.innerHTML = CLIPBOARD_SVG;
+    }
 
     let row = loginBtn.closest(`.${ROW_CLASS}`);
     if (!row) {
@@ -3055,7 +2463,6 @@
       row.appendChild(loginBtn);
     }
 
-    // 同步按鈕高度與 #jwt-login-btn 一致（維持正方形）
     const h = loginBtn.offsetHeight || 42;
     pasteBtn.style.width = `${h}px`;
     pasteBtn.style.height = `${h}px`;
@@ -3067,18 +2474,247 @@
     }
   }
 
-  placePasteBesideLoginBtn();
+  ensurePasteButtonAndLayout();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', placePasteBesideLoginBtn, { once: true });
+    document.addEventListener('DOMContentLoaded', ensurePasteButtonAndLayout, { once: true });
   }
-  window.addEventListener('resize', placePasteBesideLoginBtn, { passive: true });
+  window.addEventListener('resize', ensurePasteButtonAndLayout, { passive: true });
 
   let rafId = null;
   const mo = new MutationObserver(() => {
     if (rafId !== null) return;
     rafId = requestAnimationFrame(() => {
       rafId = null;
-      placePasteBesideLoginBtn();
+      ensurePasteButtonAndLayout();
+    });
+  });
+  mo.observe(document.documentElement || document.body, {
+    childList: true,
+    subtree: true,
+  });
+})();
+
+/* --- ADV-SETTING BG UPLOADER (NO HEIC, CANVAS JPEG 0.85 + LOCALSTORAGE) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_BG_TOPBAR_NO_HEIC_INIT__) return;
+  window.__COSMO_BG_TOPBAR_NO_HEIC_INIT__ = true;
+
+  const STORAGE_KEY = 'cosmo_adv_custom_bg_jpg85_v1';
+  const LAYER_ID = 'cosmo-custom-bg-layer';
+  const IMG_ID = 'cosmo-custom-bg-img';
+  const FILE_INPUT_ID = 'cosmo-adv-bg-file-input';
+  const UPLOAD_BTN_ID = 'cosmo-adv-bg-upload-btn';
+  const CLEAR_BTN_ID = 'cosmo-adv-bg-clear-btn';
+  const ROW_CLASS = 'adv-bg-upload-row';
+  const JPEG_QUALITY = 0.85;
+
+  function getTopbarHeightPx() {
+    const topbar =
+      document.querySelector('#topbar, .topbar, header.topbar, .chat-header, #chat-header') ||
+      document.querySelector('header');
+    if (topbar && topbar.offsetHeight > 0) {
+      return topbar.offsetHeight;
+    }
+    const rawVar = getComputedStyle(document.documentElement).getPropertyValue('--topbar-h').trim();
+    const parsed = parseFloat(rawVar);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 52;
+  }
+
+  function syncLayerTopbarMetrics() {
+    const layer = document.getElementById(LAYER_ID);
+    if (!layer) return;
+    const h = getTopbarHeightPx();
+    layer.style.top = `${h}px`;
+    layer.style.height = `calc(100vh - ${h}px)`;
+    layer.style.maxHeight = `calc(100dvh - ${h}px)`;
+  }
+
+  function ensureBgLayer() {
+    let layer = document.getElementById(LAYER_ID);
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = LAYER_ID;
+      layer.setAttribute('aria-hidden', 'true');
+      document.body.prepend(layer);
+    }
+
+    let img = document.getElementById(IMG_ID);
+    if (!img) {
+      img = document.createElement('img');
+      img.id = IMG_ID;
+      img.alt = '';
+      layer.appendChild(img);
+    }
+
+    syncLayerTopbarMetrics();
+    return { layer, img };
+  }
+
+  function applyBackgroundDataUrl(dataUrl) {
+    const { layer, img } = ensureBgLayer();
+    if (dataUrl && dataUrl.startsWith('data:image/')) {
+      img.src = dataUrl;
+      img.style.width = 'auto';
+      img.style.height = '100%';
+      img.style.maxHeight = '100%';
+      layer.classList.add('has-bg');
+    } else {
+      img.removeAttribute('src');
+      layer.classList.remove('has-bg');
+    }
+  }
+
+  function decodeBlobToImage(blob) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      img.src = url;
+    });
+  }
+
+  async function convertToJpeg85DataUrl(file) {
+    const img = await decodeBlobToImage(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D unavailable');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  }
+
+  async function handleFileChange(file) {
+    if (!file || !String(file.type || '').startsWith('image/')) return;
+    try {
+      const jpgDataUrl = await convertToJpeg85DataUrl(file);
+      try {
+        localStorage.setItem(STORAGE_KEY, jpgDataUrl);
+      } catch (_) {
+        alert('圖片轉檔後仍超出 localStorage 容量上限，請選擇較小張的圖片。');
+        return;
+      }
+      applyBackgroundDataUrl(jpgDataUrl);
+    } catch (_) {
+      alert('圖片轉檔失敗，請確認格式為 WEBP、PNG 或 JPEG。');
+    }
+  }
+
+  function findThemeSelectRow() {
+    const themeSelect =
+      document.querySelector('select.cosmo-theme-select') ||
+      document.querySelector('select[id*="theme" i], select[class*="theme" i], select[name*="theme" i]');
+    if (!themeSelect) return null;
+
+    const rowContainer =
+      themeSelect.closest('.setting-row, .settings-row, .adv-row, .field-row, .control-row, .form-row, .row, label') ||
+      themeSelect.parentElement;
+
+    return { themeSelect, rowContainer };
+  }
+
+  function mountBelowThemeSelect() {
+    const found = findThemeSelectRow();
+    if (!found || !found.rowContainer || !found.rowContainer.parentElement) return;
+
+    let row = document.querySelector(`.${ROW_CLASS}`);
+    if (!row) {
+      row = document.createElement('div');
+      row.className = ROW_CLASS;
+    }
+
+    let fileInput = document.getElementById(FILE_INPUT_ID);
+    if (!fileInput) {
+      fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.id = FILE_INPUT_ID;
+      fileInput.accept = 'image/png,image/webp,image/jpeg,image/gif';
+      fileInput.style.display = 'none';
+      fileInput.addEventListener('change', () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (f) handleFileChange(f);
+        fileInput.value = '';
+      });
+    } else {
+      fileInput.accept = 'image/png,image/webp,image/jpeg,image/gif';
+    }
+
+    let uploadBtn = document.getElementById(UPLOAD_BTN_ID);
+    if (!uploadBtn) {
+      uploadBtn = document.createElement('button');
+      uploadBtn.type = 'button';
+      uploadBtn.id = UPLOAD_BTN_ID;
+      uploadBtn.className = 'btn';
+      uploadBtn.textContent = '上傳背景圖';
+      uploadBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        fileInput.click();
+      });
+    }
+
+    let clearBtn = document.getElementById(CLEAR_BTN_ID);
+    if (!clearBtn) {
+      clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.id = CLEAR_BTN_ID;
+      clearBtn.className = 'btn';
+      clearBtn.textContent = '清除背景';
+      clearBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (_) {}
+        applyBackgroundDataUrl('');
+      });
+    }
+
+    if (fileInput.parentElement !== row) row.appendChild(fileInput);
+    if (uploadBtn.parentElement !== row) row.appendChild(uploadBtn);
+    if (clearBtn.parentElement !== row) row.appendChild(clearBtn);
+
+    if (found.rowContainer.nextElementSibling !== row) {
+      found.rowContainer.insertAdjacentElement('afterend', row);
+    }
+  }
+
+  let savedBg = '';
+  try {
+    savedBg = localStorage.getItem(STORAGE_KEY) || '';
+  } catch (_) {}
+  applyBackgroundDataUrl(savedBg);
+  mountBelowThemeSelect();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      syncLayerTopbarMetrics();
+      mountBelowThemeSelect();
+    }, { once: true });
+  }
+
+  window.addEventListener('resize', syncLayerTopbarMetrics, { passive: true });
+
+  let rafId = null;
+  const mo = new MutationObserver(() => {
+    if (rafId !== null) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      syncLayerTopbarMetrics();
+      mountBelowThemeSelect();
     });
   });
   mo.observe(document.documentElement || document.body, {

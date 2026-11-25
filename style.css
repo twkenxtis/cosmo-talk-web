@@ -1882,183 +1882,7 @@ body.is-login-view {
   margin-right: 14px !important;
 }
 
-/* --- STANDALONE SQUARE PASTE BUTTON (#9576BE, PURE ICON, OUTSIDE TOP-RIGHT OF JWT INPUT) --- */
-.login-card {
-  position: relative;
-}
-
-.jwt-paste-outer-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 6px;
-  margin-bottom: 6px;
-}
-
-#jwt-paste-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0;
-  margin: 0 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #9576BE !important;
-  border: 1px solid #9576BE !important;
-  border-radius: 8px;
-  color: #ffffff !important;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: filter 0.15s ease, transform 0.1s ease;
-}
-
-#jwt-paste-btn:hover {
-  filter: brightness(1.08);
-}
-
-#jwt-paste-btn:active {
-  transform: scale(0.96);
-}
-
-#jwt-paste-btn svg {
-  width: 18px;
-  height: 18px;
-  margin: 0 !important;
-  stroke: #ffffff;
-  fill: none;
-  pointer-events: none;
-}
-
-/* --- POLISHED JWT HEADER ROW + SQUARE SHARP (#9576BE) PASTE BUTTON --- */
-/* 隱藏輸入框內／旁的舊剪貼簿按鈕與圖示，避免重複 */
-textarea#jwt-login-input ~ button,
-textarea#jwt-login-input ~ [class*="paste" i],
-textarea#jwt-login-input ~ [id*="paste" i],
-textarea#jwt-login-input ~ [class*="clipboard" i],
-.login-group button:not(#jwt-login-btn):not(#jwt-paste-btn),
-.login-group [class*="paste" i]:not(#jwt-paste-btn),
-.login-group [id*="paste" i]:not(#jwt-paste-btn),
-.login-card .icon-tabler-clipboard:not(#jwt-paste-btn svg) {
-  display: none !important;
-}
-
-.jwt-paste-outer-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-top: 4px;
-  margin-bottom: 8px;
-}
-
-.jwt-paste-outer-row .jwt-paste-caption {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--text-muted, #9ca3af);
-  margin: 0;
-}
-
-:root[data-theme="light"] .jwt-paste-outer-row .jwt-paste-caption,
-:root[data-theme="white"] .jwt-paste-outer-row .jwt-paste-caption {
-  color: #4b5563;
-}
-
-#jwt-paste-btn {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  margin: 0 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #9576BE !important;
-  border: 1px solid #9576BE !important;
-  border-radius: 0 !important;
-  color: #ffffff !important;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: filter 0.15s ease, transform 0.1s ease;
-}
-
-#jwt-paste-btn:hover {
-  filter: brightness(1.08);
-}
-
-#jwt-paste-btn:active {
-  transform: scale(0.96);
-}
-
-#jwt-paste-btn svg {
-  width: 17px;
-  height: 17px;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  stroke: #ffffff;
-  fill: none;
-  pointer-events: none;
-}
-
-/* --- CLEAN RIGHT-ALIGNED SQUARE SHARP (#9576BE) PASTE BUTTON --- */
-.jwt-paste-outer-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-top: 6px;
-  margin-bottom: 6px;
-}
-
-.jwt-paste-outer-row .jwt-paste-caption {
-  display: none !important;
-}
-
-#jwt-paste-btn {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  margin: 0 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #9576BE !important;
-  border: 1px solid #9576BE !important;
-  border-radius: 0 !important;
-  color: #ffffff !important;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: filter 0.15s ease, transform 0.1s ease;
-}
-
-#jwt-paste-btn:hover {
-  filter: brightness(1.08);
-}
-
-#jwt-paste-btn:active {
-  transform: scale(0.96);
-}
-
-#jwt-paste-btn svg {
-  width: 17px;
-  height: 17px;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  stroke: #ffffff;
-  fill: none;
-  pointer-events: none;
-}
-
 /* --- PASTE BUTTON BESIDE #jwt-login-btn (SAME ROW RIGHT, SQUARE SHARP #9576BE) --- */
-.jwt-paste-outer-row {
-  display: none !important;
-}
-
 .jwt-login-action-row {
   display: flex;
   align-items: stretch;
@@ -2108,4 +1932,34 @@ textarea#jwt-login-input ~ [class*="clipboard" i],
   stroke: #ffffff;
   fill: none;
   pointer-events: none;
+}
+
+/* --- ADV-SETTING CUSTOM BG: BELOW TOPBAR, MAX-HEIGHT = 100vh - TOPBAR, NO HEIC --- */
+#cosmo-custom-bg-layer {
+  position: fixed;
+  top: var(--topbar-h, 52px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - var(--topbar-h, 52px));
+  max-height: calc(100dvh - var(--topbar-h, 52px));
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#cosmo-custom-bg-layer.has-bg {
+  display: flex;
+}
+
+#cosmo-custom-bg-img {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: none;
+  max-height: 100%;
+  object-fit: contain;
 }
