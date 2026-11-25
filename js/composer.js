@@ -621,3 +621,72 @@ const CosmoComposer = (() => {
     ensureCloseButtons();
   }
 })();
+
+/* --- SWAP STICKER BAR (TOP, CENTERED X) & STICKER PICKER PANEL (BOTTOM) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SWAP_STICKER_ORDER_INIT__) return;
+  window.__COSMO_SWAP_STICKER_ORDER_INIT__ = true;
+
+  function ensureSwapStyle() {
+    if (document.getElementById('cosmo-swap-sticker-style')) return;
+    const style = document.createElement('style');
+    style.id = 'cosmo-swap-sticker-style';
+    style.textContent = `
+      .chat-composer-wrapper .selected-sticker-bar,
+      .chat-composer-wrapper #selected-sticker-bar {
+        order: 1;
+        align-self: center;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .chat-composer-wrapper .sticker-picker-panel,
+      .chat-composer-wrapper #sticker-picker-panel {
+        order: 2;
+      }
+      .chat-composer-wrapper .composer-bar {
+        order: 3;
+      }
+      .chat-composer-wrapper #btn-scroll-to-bottom {
+        order: 0;
+      }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function applyDomOrder() {
+    ensureSwapStyle();
+    const wrapper = document.querySelector('.chat-composer-wrapper');
+    if (!wrapper) return;
+
+    const bar =
+      document.getElementById('selected-sticker-bar') ||
+      wrapper.querySelector('.selected-sticker-bar');
+    const panel =
+      document.getElementById('sticker-picker-panel') ||
+      wrapper.querySelector('.sticker-picker-panel');
+
+    if (bar && panel && bar.parentElement === wrapper && panel.parentElement === wrapper) {
+      if (panel.nextElementSibling !== bar && bar.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        wrapper.insertBefore(bar, panel);
+      }
+      bar.style.alignSelf = 'center';
+      bar.style.marginLeft = 'auto';
+      bar.style.marginRight = 'auto';
+    }
+  }
+
+  const mo = new MutationObserver(() => applyDomOrder());
+  mo.observe(document.documentElement || document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyDomOrder, { once: true });
+  } else {
+    applyDomOrder();
+  }
+})();

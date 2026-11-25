@@ -559,7 +559,7 @@ const CosmoChatView = (() => {
 
   const SVG_CHEVRON_HTML =
     '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" ' +
-    'fill="none" stroke="#ffffff" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" ' +
+    'fill="none" stroke="#10202b" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" ' +
     'class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down" aria-hidden="true" ' +
     'style="width:22px;height:22px;min-width:22px;min-height:22px;display:block;flex-shrink:0;">' +
     '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
@@ -584,8 +584,8 @@ const CosmoChatView = (() => {
         padding: 0;
         border: none;
         border-radius: 50%;
-        background-color: #343f45;
-        color: #ffffff;
+        background-color: #99d6ff;
+        color: #10202b;
         display: none;
         align-items: center;
         justify-content: center;
@@ -602,13 +602,13 @@ const CosmoChatView = (() => {
         display: inline-flex;
       }
       #btn-scroll-to-bottom:hover {
-        background-color: #3e4b52;
+        background-color: #82cbff;
       }
       #btn-scroll-to-bottom:active {
         transform: scale(0.94);
       }
       #btn-scroll-to-bottom i.ti {
-        color: #ffffff;
+        color: #10202b;
         font-size: 22px;
         line-height: 1;
         display: inline-flex;

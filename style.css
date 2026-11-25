@@ -1176,20 +1176,24 @@ body.is-login-view {
     bottom: auto;
     transform: none;
     max-height: none;
-    height: 3.5%;
+    min-height: 44px;
+    height: auto;
     z-index: 10;
-    padding: 23px, 27px;
+    padding: 6px 12px;
+    gap: 6px;
     display: flex;
     flex-direction: row;
     align-items: center;
     border: none;
-    border-radius: 3;
+    border-radius: 3px;
     box-shadow: none;
     background-color: transparent;
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
+    touch-action: pan-x manipulation;
     -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
     scrollbar-width: none;
   }
 
@@ -1202,9 +1206,18 @@ body.is-login-view {
   }
 
   #timeline-rail .timeline-btn {
-    font-size: 17px;
+    font-size: 14px;
+    line-height: 1.2;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 3px;
     flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #chat {
