@@ -33,6 +33,11 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Exclude non-public files before Pages upload
+        run: |
+          rm -rf ".gas-sync" ".git" ".github" ".vscode" "google app script" "google_app_script" "mock" "jsconfig.json" "README.md"
+          find . -maxdepth 3 -type f \( -name "*.ps1" -o -name "*.py" \) -delete
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
