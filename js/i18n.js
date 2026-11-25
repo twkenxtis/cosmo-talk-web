@@ -63,6 +63,7 @@ const CosmoI18n = (() => {
       stickers_load_failed: 'Failed to load stickers',
       stickers_load_error: 'Error loading stickers',
       request_failed: 'Request failed (HTTP {status})',
+      search_member_placeholder: 'Search current member (incl. translated)...',
 
       gasLoginMethod: "Google Apps Script Login Method"
     },
@@ -118,7 +119,8 @@ const CosmoI18n = (() => {
       stickers_load_error: 'スタンプ読み込み中にエラーが発生しました',
       request_failed: 'リクエスト失敗 (HTTP {status})',
 
-      gasLoginMethod: "Google Apps Script ログイン方法"
+      gasLoginMethod: "Google Apps Script ログイン方法",
+      search_member_placeholder: '現在のメンバーを検索（翻訳を含む）...',
     },
 
     ko: {
@@ -172,7 +174,8 @@ const CosmoI18n = (() => {
       stickers_load_error: '스티커 불러오기 중 오류 발생',
       request_failed: '요청 실패 (HTTP {status})',
 
-      gasLoginMethod: "Google Apps Script 로그인 방법"
+      gasLoginMethod: "Google Apps Script 로그인 방법",
+      search_member_placeholder: '현재 멤버 검색 (번역 내용 포함)...',
     },
 
     zht: {
@@ -226,7 +229,8 @@ const CosmoI18n = (() => {
       stickers_load_error: '貼圖載入發生錯誤',
       request_failed: '請求失敗 (HTTP {status})',
 
-      gasLoginMethod: "Google app script 登入方法"
+      gasLoginMethod: "Google app script 登入方法",
+      search_member_placeholder: '搜尋目前成員（包含翻譯內容）...',
     },
 
     zhc: {
@@ -280,7 +284,8 @@ const CosmoI18n = (() => {
       stickers_load_error: '贴图加载發生错误',
       request_failed: '请求失败 (HTTP {status})',
 
-      gasLoginMethod: "Google app script 登入方法"
+      gasLoginMethod: "Google app script 登入方法",
+      search_member_placeholder: '搜索当前成员（包含翻译内容）...',
     },
   };
 
@@ -334,8 +339,9 @@ const CosmoI18n = (() => {
   }
 
   function t(key, vars = null) {
-    const dict = MESSAGES[currentLang] || MESSAGES.zh;
-    let template = dict[key] ?? MESSAGES.zh[key] ?? String(key);
+    const dict = MESSAGES[currentLang] || MESSAGES.zht || {};
+    const fallbackDict = MESSAGES.zht || MESSAGES.en || {};
+    let template = dict[key] ?? fallbackDict[key] ?? String(key);
 
     if (vars && typeof vars === 'object') {
       for (const [k, v] of Object.entries(vars)) {

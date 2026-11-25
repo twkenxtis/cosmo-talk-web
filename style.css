@@ -557,7 +557,7 @@ body.is-login-view {
   height: 36px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
-  border: 2.5px solid rgb(35, 42, 48);
+  border: 2.5px solid var(--avatar-outline-color, rgb(35, 42, 48));
   background-color: #333;
   background-size: cover;
   background-position: center;
@@ -1348,4 +1348,764 @@ body.is-login-view {
   .member-list {
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* --- REPLY PAIR BUBBLES, 4-THEME SYSTEM & MEMBER SEARCH --- */
+:root[data-theme="dark"] {
+  --bg-color: #0f0f0f;
+  --sidebar-bg: #161618;
+  --sidebar-hover: #222226;
+  --sidebar-active: #2e2440;
+  --border-color: #262629;
+  --bubble-bg: #2c2c2e;
+  --bubble-reply-bg: #26123c;
+  --text-color: #ffffff;
+  --text-muted: #8e8e93;
+  --purple-text: #b28aff;
+  --accent-btn: #242429;
+  --accent-btn-hover: #32323a;
+}
+
+:root[data-theme="light"] {
+  --bg-color: #f4f5f7;
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #eceef2;
+  --sidebar-active: #e6ddfa;
+  --border-color: #d8dce3;
+  --bubble-bg: #ffffff;
+  --bubble-reply-bg: #efe8ff;
+  --text-color: #16181d;
+  --text-muted: #5c6270;
+  --purple-text: #6938ef;
+  --accent-btn: #e8eaef;
+  --accent-btn-hover: #dce0e8;
+}
+
+:root[data-theme="black"] {
+  --bg-color: #000000;
+  --sidebar-bg: #050505;
+  --sidebar-hover: #121214;
+  --sidebar-active: #241738;
+  --border-color: #1d1d22;
+  --bubble-bg: #141417;
+  --bubble-reply-bg: #1e0f2e;
+  --text-color: #ffffff;
+  --text-muted: #8e8e93;
+  --purple-text: #c09eff;
+  --accent-btn: #16161a;
+  --accent-btn-hover: #232329;
+}
+
+:root[data-theme="white"] {
+  --bg-color: #ffffff;
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #f2f3f5;
+  --sidebar-active: #ebe2ff;
+  --border-color: #e2e5ea;
+  --bubble-bg: #f5f6f8;
+  --bubble-reply-bg: #f1ebff;
+  --text-color: #111111;
+  --text-muted: #555a66;
+  --purple-text: #5b21b6;
+  --accent-btn: #f0f1f4;
+  --accent-btn-hover: #e4e6eb;
+}
+
+.cosmo-reply-chain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cosmo-reply-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border-left: 3.5px solid var(--purple-text);
+  background-color: var(--bubble-reply-bg);
+  color: var(--text-color);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.cosmo-reply-banner__meta {
+  font-weight: 700;
+  color: var(--reply-accent, var(--purple-text));
+  word-break: break-word;
+}
+
+.cosmo-reply-banner__quote {
+  color: var(--text-color);
+  opacity: 0.92;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cosmo-reply-follow-bubble {
+  margin-top: 2px;
+}
+
+.cosmo-search-bar {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 640px;
+  padding: 6px 10px;
+  background-color: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 24;
+}
+
+.cosmo-search-bar.open {
+  display: flex;
+}
+
+.cosmo-search-input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 13px;
+  outline: none;
+}
+
+.cosmo-search-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cosmo-search-hit {
+  outline: 2px solid var(--purple-text);
+  border-radius: 14px;
+}
+
+.cosmo-theme-select {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* --- LIGHT / WHITE THEME USER-REPLY BUBBLE WHITE TEXT --- */
+:root[data-theme="light"] .bubble.user-reply,
+:root[data-theme="light"] .bubble.user-reply .cosmo-orig-text,
+:root[data-theme="white"] .bubble.user-reply,
+:root[data-theme="white"] .bubble.user-reply .cosmo-orig-text {
+  color: #ffffff;
+}
+
+/* --- LIGHT / WHITE THEME: ADV-SETTING PANEL, CHAT INPUT & TIMELINE BUTTONS --- */
+:root[data-theme="light"] .settings-modal-panel,
+:root[data-theme="white"] .settings-modal-panel {
+  background: #ffffff;
+  color: #16181d;
+  border: 1px solid #d8dce3;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.14);
+}
+
+:root[data-theme="light"] .settings-modal-header,
+:root[data-theme="white"] .settings-modal-header {
+  border-bottom-color: #e2e5ea;
+}
+
+:root[data-theme="light"] .composer-pill,
+:root[data-theme="white"] .composer-pill {
+  background-color: #ffffff;
+  border-color: #c7cdd6;
+}
+
+:root[data-theme="light"] .composer-pill:focus-within,
+:root[data-theme="white"] .composer-pill:focus-within {
+  border-color: #6938ef;
+}
+
+:root[data-theme="light"] .composer-input,
+:root[data-theme="light"] #chat-input,
+:root[data-theme="white"] .composer-input,
+:root[data-theme="white"] #chat-input {
+  color: #16181d;
+}
+
+:root[data-theme="light"] .composer-input::placeholder,
+:root[data-theme="light"] #chat-input::placeholder,
+:root[data-theme="white"] .composer-input::placeholder,
+:root[data-theme="white"] #chat-input::placeholder {
+  color: #6b7280;
+}
+
+:root[data-theme="light"] .timeline-btn,
+:root[data-theme="light"] #timeline-rail .timeline-btn,
+:root[data-theme="white"] .timeline-btn,
+:root[data-theme="white"] #timeline-rail .timeline-btn {
+  background-color: #ffffff;
+  color: #1f232b;
+  border-color: #d0d5dd;
+}
+
+:root[data-theme="light"] .timeline-btn:hover,
+:root[data-theme="light"] #timeline-rail .timeline-btn:hover,
+:root[data-theme="white"] .timeline-btn:hover,
+:root[data-theme="white"] #timeline-rail .timeline-btn:hover {
+  background-color: #eceef2;
+  border-color: #98a2b3;
+}
+
+:root[data-theme="light"] .timeline-btn.active,
+:root[data-theme="light"] #timeline-rail .timeline-btn.active,
+:root[data-theme="white"] .timeline-btn.active,
+:root[data-theme="white"] #timeline-rail .timeline-btn.active {
+  background-color: #e6ddfa;
+  color: #5b21b6;
+  border-color: #7c3aed;
+}
+
+/* --- LANGUAGE SELECTOR THEME STYLING --- */
+.login-lang-select,
+.settings-lang-select {
+  background-color: var(--accent-btn, #242429);
+  border: 1px solid var(--border-color, #34343c);
+  border-radius: 8px;
+  color: var(--text-color, #ffffff);
+  padding: 6px 10px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.login-lang-select:focus,
+.settings-lang-select:focus {
+  border-color: var(--purple-text, #b28aff);
+}
+
+:root[data-theme="light"] .login-lang-select,
+:root[data-theme="light"] .settings-lang-select,
+:root[data-theme="white"] .login-lang-select,
+:root[data-theme="white"] .settings-lang-select {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #16181d;
+}
+
+:root[data-theme="light"] .login-lang-select:hover,
+:root[data-theme="light"] .settings-lang-select:hover,
+:root[data-theme="white"] .login-lang-select:hover,
+:root[data-theme="white"] .settings-lang-select:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+:root[data-theme="black"] .login-lang-select,
+:root[data-theme="black"] .settings-lang-select {
+  background-color: #0d0d10;
+  border-color: #24242b;
+  color: #ffffff;
+}
+
+/* --- STICKER PICKER PANEL, GRID & SELECTED STICKER THEME SYNC --- */
+#sticker-picker-panel,
+.sticker-picker-panel {
+  background-color: var(--sidebar-bg, #161618);
+  color: var(--text-color, #ffffff);
+  border-color: var(--border-color, #262629);
+}
+
+.sticker-picker-header {
+  color: var(--text-muted, #8e8e93);
+  border-bottom-color: var(--border-color, #262629);
+}
+
+#sticker-grid,
+.sticker-grid {
+  background-color: var(--bg-color, #0f0f0f);
+  color: var(--text-color, #ffffff);
+}
+
+#selected-sticker-bar,
+.selected-sticker-bar {
+  background-color: var(--bubble-reply-bg, #26123c);
+  color: var(--text-color, #ffffff);
+  border-color: var(--border-color, #262629);
+}
+
+#selected-sticker-bar img,
+#selected-sticker-img,
+.selected-sticker-bar img,
+.sticker-item.selected,
+.sticker-grid .sticker-item.active {
+  background-color: var(--sidebar-active, #2e2440);
+  border-color: var(--purple-text, #b28aff);
+}
+
+/* Light theme */
+:root[data-theme="light"] #sticker-picker-panel,
+:root[data-theme="light"] .sticker-picker-panel {
+  background-color: #ffffff;
+  color: #16181d;
+  border-color: #d8dce3;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+:root[data-theme="light"] .sticker-picker-header {
+  color: #5c6270;
+  border-bottom-color: #e2e5ea;
+}
+
+:root[data-theme="light"] #sticker-grid,
+:root[data-theme="light"] .sticker-grid {
+  background-color: #f4f5f7;
+  color: #16181d;
+}
+
+:root[data-theme="light"] #selected-sticker-bar,
+:root[data-theme="light"] .selected-sticker-bar {
+  background-color: #efe8ff;
+  color: #16181d;
+  border-color: #d4c5fa;
+}
+
+:root[data-theme="light"] #selected-sticker-bar img,
+:root[data-theme="light"] #selected-sticker-img,
+:root[data-theme="light"] .selected-sticker-bar img,
+:root[data-theme="light"] .sticker-item.selected,
+:root[data-theme="light"] .sticker-grid .sticker-item.active {
+  background-color: #e6ddfa;
+  border-color: #6938ef;
+}
+
+/* White theme */
+:root[data-theme="white"] #sticker-picker-panel,
+:root[data-theme="white"] .sticker-picker-panel {
+  background-color: #ffffff;
+  color: #111111;
+  border-color: #e2e5ea;
+  box-shadow: 0 8px 24px rgba(17, 17, 17, 0.08);
+}
+
+:root[data-theme="white"] .sticker-picker-header {
+  color: #555a66;
+  border-bottom-color: #e5e7eb;
+}
+
+:root[data-theme="white"] #sticker-grid,
+:root[data-theme="white"] .sticker-grid {
+  background-color: #f8f9fa;
+  color: #111111;
+}
+
+:root[data-theme="white"] #selected-sticker-bar,
+:root[data-theme="white"] .selected-sticker-bar {
+  background-color: #f1ebff;
+  color: #111111;
+  border-color: #ddd0fc;
+}
+
+:root[data-theme="white"] #selected-sticker-bar img,
+:root[data-theme="white"] #selected-sticker-img,
+:root[data-theme="white"] .selected-sticker-bar img,
+:root[data-theme="white"] .sticker-item.selected,
+:root[data-theme="white"] .sticker-grid .sticker-item.active {
+  background-color: #ebe2ff;
+  border-color: #5b21b6;
+}
+
+/* Black theme */
+:root[data-theme="black"] #sticker-picker-panel,
+:root[data-theme="black"] .sticker-picker-panel {
+  background-color: #050505;
+  color: #ffffff;
+  border-color: #1d1d22;
+}
+
+:root[data-theme="black"] #sticker-grid,
+:root[data-theme="black"] .sticker-grid {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+:root[data-theme="black"] #selected-sticker-bar,
+:root[data-theme="black"] .selected-sticker-bar {
+  background-color: #1e0f2e;
+  color: #ffffff;
+  border-color: #2e1a47;
+}
+
+:root[data-theme="black"] #selected-sticker-bar img,
+:root[data-theme="black"] #selected-sticker-img,
+:root[data-theme="black"] .selected-sticker-bar img,
+:root[data-theme="black"] .sticker-item.selected,
+:root[data-theme="black"] .sticker-grid .sticker-item.active {
+  background-color: #241738;
+  border-color: #c09eff;
+}
+
+/* --- AVATAR BORDER COLOR PER THEME --- */
+:root {
+  --avatar-outline-color: rgb(35, 42, 48);
+}
+
+:root[data-theme="dark"] {
+  --avatar-outline-color: rgb(35, 42, 48);
+}
+
+:root[data-theme="light"] {
+  --avatar-outline-color: #cbd5e1;
+}
+
+:root[data-theme="black"] {
+  --avatar-outline-color: #18201d;
+}
+
+:root[data-theme="white"] {
+  --avatar-outline-color: #d8dee6;
+}
+
+/* --- LIGHT THEME: DARK ARTIST MEMBER NAME & LIGHT DATE BADGE --- */
+:root[data-theme="light"] .artist-member-name,
+:root[data-theme="light"] [data-artist-member-name],
+:root[data-theme="light"] .sender-name,
+:root[data-theme="light"] #chat-header .member-name,
+:root[data-theme="light"] .chat-header .member-name,
+:root[data-theme="light"] .chat-header-title,
+:root[data-theme="light"] #header-member-name,
+:root[data-theme="white"] .artist-member-name,
+:root[data-theme="white"] [data-artist-member-name],
+:root[data-theme="white"] .sender-name,
+:root[data-theme="white"] #chat-header .member-name,
+:root[data-theme="white"] .chat-header .member-name,
+:root[data-theme="white"] .chat-header-title,
+:root[data-theme="white"] #header-member-name {
+  color: #16181d !important;
+}
+
+:root[data-theme="light"] .date-divider,
+:root[data-theme="light"] .date-separator,
+:root[data-theme="light"] .msg-date,
+:root[data-theme="light"] .day-divider,
+:root[data-theme="light"] .chat-date-label,
+:root[data-theme="white"] .date-divider,
+:root[data-theme="white"] .date-separator,
+:root[data-theme="white"] .msg-date,
+:root[data-theme="white"] .day-divider,
+:root[data-theme="white"] .chat-date-label {
+  background-color: #eef1f5 !important;
+  color: #334155 !important;
+  border-color: #d8dee6 !important;
+}
+
+/* --- LIGHT / WHITE THEME: .day DATE BADGE BACKGROUND --- */
+:root[data-theme="light"] .day,
+:root[data-theme="light"] #chat .day,
+:root[data-theme="light"] .chat .day,
+:root[data-theme="white"] .day,
+:root[data-theme="white"] #chat .day,
+:root[data-theme="white"] .chat .day {
+  background-color: #eef1f6 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* --- LOGIN BUTTONS WHITE TEXT IN LIGHT THEME, JWT INPUT LIGHT BG & CLIPBOARD RIGHT MARGIN --- */
+:root[data-theme="light"] [class*="login"] button,
+:root[data-theme="light"] [id*="login"] button,
+:root[data-theme="light"] .btn-save-enter,
+:root[data-theme="light"] .btn-gas-login,
+:root[data-theme="light"] .btn-try-demo,
+:root[data-theme="light"] #btn-save-enter,
+:root[data-theme="light"] #btn-gas-login,
+:root[data-theme="light"] #btn-try-demo,
+:root[data-theme="white"] [class*="login"] button,
+:root[data-theme="white"] [id*="login"] button,
+:root[data-theme="white"] .btn-save-enter,
+:root[data-theme="white"] .btn-gas-login,
+:root[data-theme="white"] .btn-try-demo,
+:root[data-theme="white"] #btn-save-enter,
+:root[data-theme="white"] #btn-gas-login,
+:root[data-theme="white"] #btn-try-demo {
+  color: #ffffff !important;
+}
+
+/* 登入頁特定文字按鈕保底（Save and Enter Chat / Google Apps Script / Try Demo） */
+:root[data-theme="light"] button[data-i18n*="save"],
+:root[data-theme="light"] button[data-i18n*="gas"],
+:root[data-theme="light"] button[data-i18n*="demo"],
+:root[data-theme="white"] button[data-i18n*="save"],
+:root[data-theme="white"] button[data-i18n*="gas"],
+:root[data-theme="white"] button[data-i18n*="demo"] {
+  color: #ffffff !important;
+}
+
+/* 淺色主題下填入 JWT 的輸入框背景改為淺色 */
+:root[data-theme="light"] input[id*="jwt" i],
+:root[data-theme="light"] textarea[id*="jwt" i],
+:root[data-theme="light"] input[name*="jwt" i],
+:root[data-theme="light"] textarea[name*="jwt" i],
+:root[data-theme="light"] input[placeholder*="JWT" i],
+:root[data-theme="light"] textarea[placeholder*="JWT" i],
+:root[data-theme="light"] .jwt-input,
+:root[data-theme="white"] input[id*="jwt" i],
+:root[data-theme="white"] textarea[id*="jwt" i],
+:root[data-theme="white"] input[name*="jwt" i],
+:root[data-theme="white"] textarea[name*="jwt" i],
+:root[data-theme="white"] input[placeholder*="JWT" i],
+:root[data-theme="white"] textarea[placeholder*="JWT" i],
+:root[data-theme="white"] .jwt-input {
+  background-color: #f3f5f8 !important;
+  color: #16181d !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* 剪貼簿 icon 右邊距加大，離右邊更遠 */
+[class*="clipboard"],
+[id*="clipboard"],
+.icon-tabler-clipboard,
+.btn-paste,
+[id*="paste" i] {
+  margin-right: 18px !important;
+}
+
+[class*="clipboard"] svg,
+.icon-tabler-clipboard {
+  margin-right: 14px !important;
+}
+
+/* --- STANDALONE SQUARE PASTE BUTTON (#9576BE, PURE ICON, OUTSIDE TOP-RIGHT OF JWT INPUT) --- */
+.login-card {
+  position: relative;
+}
+
+.jwt-paste-outer-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+#jwt-paste-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9576BE !important;
+  border: 1px solid #9576BE !important;
+  border-radius: 8px;
+  color: #ffffff !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+#jwt-paste-btn:hover {
+  filter: brightness(1.08);
+}
+
+#jwt-paste-btn:active {
+  transform: scale(0.96);
+}
+
+#jwt-paste-btn svg {
+  width: 18px;
+  height: 18px;
+  margin: 0 !important;
+  stroke: #ffffff;
+  fill: none;
+  pointer-events: none;
+}
+
+/* --- POLISHED JWT HEADER ROW + SQUARE SHARP (#9576BE) PASTE BUTTON --- */
+/* 隱藏輸入框內／旁的舊剪貼簿按鈕與圖示，避免重複 */
+textarea#jwt-login-input ~ button,
+textarea#jwt-login-input ~ [class*="paste" i],
+textarea#jwt-login-input ~ [id*="paste" i],
+textarea#jwt-login-input ~ [class*="clipboard" i],
+.login-group button:not(#jwt-login-btn):not(#jwt-paste-btn),
+.login-group [class*="paste" i]:not(#jwt-paste-btn),
+.login-group [id*="paste" i]:not(#jwt-paste-btn),
+.login-card .icon-tabler-clipboard:not(#jwt-paste-btn svg) {
+  display: none !important;
+}
+
+.jwt-paste-outer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.jwt-paste-outer-row .jwt-paste-caption {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted, #9ca3af);
+  margin: 0;
+}
+
+:root[data-theme="light"] .jwt-paste-outer-row .jwt-paste-caption,
+:root[data-theme="white"] .jwt-paste-outer-row .jwt-paste-caption {
+  color: #4b5563;
+}
+
+#jwt-paste-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9576BE !important;
+  border: 1px solid #9576BE !important;
+  border-radius: 0 !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+#jwt-paste-btn:hover {
+  filter: brightness(1.08);
+}
+
+#jwt-paste-btn:active {
+  transform: scale(0.96);
+}
+
+#jwt-paste-btn svg {
+  width: 17px;
+  height: 17px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  stroke: #ffffff;
+  fill: none;
+  pointer-events: none;
+}
+
+/* --- CLEAN RIGHT-ALIGNED SQUARE SHARP (#9576BE) PASTE BUTTON --- */
+.jwt-paste-outer-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.jwt-paste-outer-row .jwt-paste-caption {
+  display: none !important;
+}
+
+#jwt-paste-btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9576BE !important;
+  border: 1px solid #9576BE !important;
+  border-radius: 0 !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+#jwt-paste-btn:hover {
+  filter: brightness(1.08);
+}
+
+#jwt-paste-btn:active {
+  transform: scale(0.96);
+}
+
+#jwt-paste-btn svg {
+  width: 17px;
+  height: 17px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  stroke: #ffffff;
+  fill: none;
+  pointer-events: none;
+}
+
+/* --- PASTE BUTTON BESIDE #jwt-login-btn (SAME ROW RIGHT, SQUARE SHARP #9576BE) --- */
+.jwt-paste-outer-row {
+  display: none !important;
+}
+
+.jwt-login-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.jwt-login-action-row > #jwt-login-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#jwt-paste-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9576BE !important;
+  border: 1px solid #9576BE !important;
+  border-radius: 0 !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+#jwt-paste-btn:hover {
+  filter: brightness(1.08);
+}
+
+#jwt-paste-btn:active {
+  transform: scale(0.96);
+}
+
+#jwt-paste-btn svg {
+  width: 18px;
+  height: 18px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  stroke: #ffffff;
+  fill: none;
+  pointer-events: none;
 }
