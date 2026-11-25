@@ -248,3 +248,295 @@ const CosmoSettings = (() => {
     toggle,
   };
 })();
+/* --- SPLIT FROM APP.JS: 4-THEME SWITCHER & CUSTOM BACKGROUND UPLOADER --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SPLIT_SETTINGS_BG_INIT__) return;
+  window.__COSMO_SPLIT_SETTINGS_BG_INIT__ = true;
+
+  const THEME_KEY = 'cosmo_ui_theme_mode';
+  const VALID_THEMES = ['dark', 'light', 'black', 'white'];
+  const BG_STORAGE_KEY = 'cosmo_adv_custom_bg_jpg85_v1';
+  const LAYER_ID = 'cosmo-custom-bg-layer';
+  const IMG_ID = 'cosmo-custom-bg-img';
+  const FILE_INPUT_ID = 'cosmo-adv-bg-file-input';
+  const UPLOAD_BTN_ID = 'cosmo-adv-bg-upload-btn';
+  const CLEAR_BTN_ID = 'cosmo-adv-bg-clear-btn';
+  const BG_ROW_CLASS = 'adv-bg-upload-row';
+  const JPEG_QUALITY = 0.85;
+
+  function applyTheme(themeName) {
+    const mode = VALID_THEMES.includes(themeName) ? themeName : 'dark';
+    document.documentElement.setAttribute('data-theme', mode);
+    try {
+      window.localStorage.setItem(THEME_KEY, mode);
+    } catch (_) {}
+    const sel = document.getElementById('cosmo-theme-select');
+    if (sel && sel.value !== mode) sel.value = mode;
+  }
+
+  function injectThemeControl() {
+    const modalBody =
+      document.querySelector('#settings-modal .settings-modal-body') ||
+      document.querySelector('.settings-modal-panel .settings-modal-body') ||
+      document.querySelector('.settings-modal-body');
+    if (!modalBody || document.getElementById('cosmo-theme-row')) return;
+
+    const row = document.createElement('div');
+    row.id = 'cosmo-theme-row';
+    row.className = 'settings-option-row';
+
+    const label = document.createElement('span');
+    label.className = 'settings-option-label';
+    label.textContent = '主題 / Theme';
+
+    const select = document.createElement('select');
+    select.id = 'cosmo-theme-select';
+    select.className = 'cosmo-theme-select';
+    select.setAttribute('aria-label', '主題切換');
+
+    [
+      { value: 'dark', text: 'Dark (深色)' },
+      { value: 'light', text: 'Light (淺色)' },
+      { value: 'black', text: 'Black (純黑)' },
+      { value: 'white', text: 'White (純白)' },
+    ].forEach((opt) => {
+      const o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.text;
+      select.appendChild(o);
+    });
+
+    try {
+      select.value = window.localStorage.getItem(THEME_KEY) || 'dark';
+    } catch (_) {}
+    select.addEventListener('change', () => applyTheme(select.value));
+
+    row.appendChild(label);
+    row.appendChild(select);
+    modalBody.appendChild(row);
+  }
+
+  function getTopbarHeightPx() {
+    const topbar =
+      document.querySelector('#topbar, .topbar, header.topbar, .chat-header, #chat-header') ||
+      document.querySelector('header');
+    if (topbar && topbar.offsetHeight > 0) return topbar.offsetHeight;
+    const rawVar = getComputedStyle(document.documentElement).getPropertyValue('--topbar-h').trim();
+    const parsed = parseFloat(rawVar);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 52;
+  }
+
+  function isLoginView() {
+    if (document.body.classList.contains('is-login-view')) return true;
+    const lp = document.getElementById('login-page');
+    return Boolean(lp && getComputedStyle(lp).display !== 'none');
+  }
+
+  function ensureBgLayer() {
+    let layer = document.getElementById(LAYER_ID);
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = LAYER_ID;
+      layer.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(layer);
+    }
+
+    let img = document.getElementById(IMG_ID);
+    if (!img) {
+      img = document.createElement('img');
+      img.id = IMG_ID;
+      img.alt = '';
+      layer.appendChild(img);
+    }
+
+    const h = `${getTopbarHeightPx()}px`;
+    if (layer.style.top !== h) {
+      layer.style.top = h;
+      layer.style.height = `calc(100vh - ${h})`;
+      layer.style.maxHeight = `calc(100dvh - ${h})`;
+    }
+    return { layer, img };
+  }
+
+  function applyBackgroundDataUrl(dataUrl) {
+    const { layer, img } = ensureBgLayer();
+    const valid = Boolean(dataUrl && dataUrl.startsWith('data:image/'));
+
+    if (valid) {
+      if (img.src !== dataUrl) img.src = dataUrl;
+      layer.classList.add('has-bg');
+    } else {
+      if (img.hasAttribute('src')) img.removeAttribute('src');
+      layer.classList.remove('has-bg');
+    }
+
+    if (!valid || isLoginView()) {
+      document.body.classList.remove('cosmo-has-custom-bg');
+      layer.style.display = 'none';
+    } else {
+      document.body.classList.add('cosmo-has-custom-bg');
+      layer.style.display = 'flex';
+    }
+  }
+
+  function decodeFileToImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      img.src = url;
+    });
+  }
+
+  async function convertFileToJpeg85DataUrl(file) {
+    const img = await decodeFileToImage(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  }
+
+  async function handleSelectedFile(file) {
+    if (!file || !String(file.type || '').startsWith('image/')) return;
+    try {
+      const jpgDataUrl = await convertFileToJpeg85DataUrl(file);
+      try {
+        localStorage.setItem(BG_STORAGE_KEY, jpgDataUrl);
+      } catch (_) {
+        alert('圖片轉檔後仍超出 localStorage 容量上限，請選擇較小張的圖片。');
+        return;
+      }
+      applyBackgroundDataUrl(jpgDataUrl);
+    } catch (_) {
+      alert('圖片轉檔失敗，請確認格式為 WEBP、PNG 或 JPEG。');
+    }
+  }
+
+  function ensureFileInput() {
+    let fileInput = document.getElementById(FILE_INPUT_ID);
+    if (!fileInput) {
+      fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.id = FILE_INPUT_ID;
+      fileInput.accept = 'image/png,image/webp,image/jpeg,image/gif';
+      fileInput.style.position = 'fixed';
+      fileInput.style.left = '-9999px';
+      fileInput.style.opacity = '0';
+      fileInput.style.pointerEvents = 'none';
+      fileInput.addEventListener('change', () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (f) handleSelectedFile(f);
+        fileInput.value = '';
+      });
+      document.body.appendChild(fileInput);
+    }
+    return fileInput;
+  }
+
+  function mountBgControlsBelowThemeSelect() {
+    const fileInput = ensureFileInput();
+    const themeSelect = document.getElementById('cosmo-theme-select');
+    if (!themeSelect) return;
+
+    const rowContainer =
+      themeSelect.closest('.setting-row, .settings-row, .adv-row, .field-row, .control-row, .form-row, .row, label') ||
+      themeSelect.parentElement;
+    if (!rowContainer || !rowContainer.parentElement) return;
+
+    let row = document.querySelector(`.${BG_ROW_CLASS}`);
+    if (!row) {
+      row = document.createElement('div');
+      row.className = BG_ROW_CLASS;
+    }
+
+    let uploadBtn = document.getElementById(UPLOAD_BTN_ID);
+    if (!uploadBtn) {
+      uploadBtn = document.createElement('button');
+      uploadBtn.type = 'button';
+      uploadBtn.id = UPLOAD_BTN_ID;
+      uploadBtn.className = 'btn';
+      uploadBtn.textContent = '上傳背景圖';
+      uploadBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        ensureFileInput().click();
+      });
+    }
+
+    let clearBtn = document.getElementById(CLEAR_BTN_ID);
+    if (!clearBtn) {
+      clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.id = CLEAR_BTN_ID;
+      clearBtn.className = 'btn';
+      clearBtn.textContent = '清除背景';
+      clearBtn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        try {
+          localStorage.removeItem(BG_STORAGE_KEY);
+        } catch (_) {}
+        applyBackgroundDataUrl('');
+      });
+    }
+
+    if (uploadBtn.parentElement !== row) row.appendChild(uploadBtn);
+    if (clearBtn.parentElement !== row) row.appendChild(clearBtn);
+    if (fileInput.parentElement !== document.body) document.body.appendChild(fileInput);
+
+    if (rowContainer.nextElementSibling !== row) {
+      rowContainer.insertAdjacentElement('afterend', row);
+    }
+  }
+
+  function syncSettingsAndBg() {
+    injectThemeControl();
+    mountBgControlsBelowThemeSelect();
+    let saved = '';
+    try {
+      saved = localStorage.getItem(BG_STORAGE_KEY) || '';
+    } catch (_) {}
+    applyBackgroundDataUrl(saved);
+  }
+
+  try {
+    applyTheme(window.localStorage.getItem(THEME_KEY) || 'dark');
+  } catch (_) {
+    applyTheme('dark');
+  }
+  syncSettingsAndBg();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncSettingsAndBg, { once: true });
+  }
+  window.addEventListener('resize', () => {
+    ensureBgLayer();
+    const sel = document.getElementById('jwt-login-btn');
+    void sel;
+  }, { passive: true });
+
+  const mo = new MutationObserver(() => syncSettingsAndBg());
+  mo.observe(document.documentElement || document.body, {
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+    childList: true,
+    subtree: true,
+  });
+
+  window.CosmoReplyThemeSearch = window.CosmoReplyThemeSearch || { applyTheme };
+})();

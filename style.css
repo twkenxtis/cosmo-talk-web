@@ -1818,71 +1818,6 @@ body.is-login-view {
   border-color: #cbd5e1 !important;
 }
 
-/* --- LOGIN BUTTONS WHITE TEXT IN LIGHT THEME, JWT INPUT LIGHT BG & CLIPBOARD RIGHT MARGIN --- */
-:root[data-theme="light"] [class*="login"] button,
-:root[data-theme="light"] [id*="login"] button,
-:root[data-theme="light"] .btn-save-enter,
-:root[data-theme="light"] .btn-gas-login,
-:root[data-theme="light"] .btn-try-demo,
-:root[data-theme="light"] #btn-save-enter,
-:root[data-theme="light"] #btn-gas-login,
-:root[data-theme="light"] #btn-try-demo,
-:root[data-theme="white"] [class*="login"] button,
-:root[data-theme="white"] [id*="login"] button,
-:root[data-theme="white"] .btn-save-enter,
-:root[data-theme="white"] .btn-gas-login,
-:root[data-theme="white"] .btn-try-demo,
-:root[data-theme="white"] #btn-save-enter,
-:root[data-theme="white"] #btn-gas-login,
-:root[data-theme="white"] #btn-try-demo {
-  color: #ffffff !important;
-}
-
-/* 登入頁特定文字按鈕保底（Save and Enter Chat / Google Apps Script / Try Demo） */
-:root[data-theme="light"] button[data-i18n*="save"],
-:root[data-theme="light"] button[data-i18n*="gas"],
-:root[data-theme="light"] button[data-i18n*="demo"],
-:root[data-theme="white"] button[data-i18n*="save"],
-:root[data-theme="white"] button[data-i18n*="gas"],
-:root[data-theme="white"] button[data-i18n*="demo"] {
-  color: #ffffff !important;
-}
-
-/* 淺色主題下填入 JWT 的輸入框背景改為淺色 */
-:root[data-theme="light"] input[id*="jwt" i],
-:root[data-theme="light"] textarea[id*="jwt" i],
-:root[data-theme="light"] input[name*="jwt" i],
-:root[data-theme="light"] textarea[name*="jwt" i],
-:root[data-theme="light"] input[placeholder*="JWT" i],
-:root[data-theme="light"] textarea[placeholder*="JWT" i],
-:root[data-theme="light"] .jwt-input,
-:root[data-theme="white"] input[id*="jwt" i],
-:root[data-theme="white"] textarea[id*="jwt" i],
-:root[data-theme="white"] input[name*="jwt" i],
-:root[data-theme="white"] textarea[name*="jwt" i],
-:root[data-theme="white"] input[placeholder*="JWT" i],
-:root[data-theme="white"] textarea[placeholder*="JWT" i],
-:root[data-theme="white"] .jwt-input {
-  background-color: #f3f5f8 !important;
-  color: #16181d !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* 剪貼簿 icon 右邊距加大，離右邊更遠 */
-[class*="clipboard"],
-[id*="clipboard"],
-.icon-tabler-clipboard,
-.btn-paste,
-[id*="paste" i] {
-  margin-right: 18px !important;
-}
-
-[class*="clipboard"] svg,
-.icon-tabler-clipboard {
-  margin-right: 14px !important;
-}
-
-/* --- PASTE BUTTON BESIDE #jwt-login-btn (SAME ROW RIGHT, SQUARE SHARP #9576BE) --- */
 .jwt-login-action-row {
   display: flex;
   align-items: stretch;
@@ -1934,32 +1869,467 @@ body.is-login-view {
   pointer-events: none;
 }
 
-/* --- ADV-SETTING CUSTOM BG: BELOW TOPBAR, MAX-HEIGHT = 100vh - TOPBAR, NO HEIC --- */
+.adv-bg-upload-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.adv-bg-upload-row > #cosmo-adv-bg-upload-btn,
+.adv-bg-upload-row > #cosmo-adv-bg-clear-btn {
+  flex: 1 1 0 !important;
+  width: 50% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+}
+
 #cosmo-custom-bg-layer {
-  position: fixed;
-  top: var(--topbar-h, 52px);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(100vh - var(--topbar-h, 52px));
-  max-height: calc(100dvh - var(--topbar-h, 52px));
-  z-index: 0;
-  pointer-events: none;
+  position: fixed !important;
+  top: var(--topbar-h, 52px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - var(--topbar-h, 52px)) !important;
+  max-height: calc(100dvh - var(--topbar-h, 52px)) !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
   display: none;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background: transparent !important;
 }
 
 #cosmo-custom-bg-layer.has-bg {
-  display: flex;
+  display: flex !important;
 }
 
 #cosmo-custom-bg-img {
-  display: block;
-  width: auto;
-  height: 100%;
-  max-width: none;
-  max-height: 100%;
-  object-fit: contain;
+  display: block !important;
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+}
+
+body.is-login-view #cosmo-custom-bg-layer,
+body.is-login-view #cosmo-custom-bg-layer.has-bg {
+  display: none !important;
+}
+
+body:not(.is-login-view) #app,
+body:not(.is-login-view) main,
+body:not(.is-login-view) #chat,
+body:not(.is-login-view) .chat-container,
+body:not(.is-login-view) .chat-main,
+body:not(.is-login-view) .chat-view,
+body:not(.is-login-view) .messages,
+body:not(.is-login-view) #messages,
+body:not(.is-login-view) .timeline {
+  position: relative;
+  z-index: 1;
+}
+
+body.cosmo-has-custom-bg:not(.is-login-view) #chat,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-container,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-main,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-view,
+body.cosmo-has-custom-bg:not(.is-login-view) .messages,
+body.cosmo-has-custom-bg:not(.is-login-view) #messages,
+body.cosmo-has-custom-bg:not(.is-login-view) .timeline {
+  background-color: transparent !important;
+}
+
+body.cosmo-has-custom-bg:not(.is-login-view) [class*="bubble" i],
+body.cosmo-has-custom-bg:not(.is-login-view) .message,
+body.cosmo-has-custom-bg:not(.is-login-view) .msg {
+  position: relative;
+  z-index: 2;
+}
+
+/* --- CANONICAL PASTE BTN (#jwt-paste-btn) & BG LAYER UNDER BUBBLE CHAT --- */
+.jwt-login-action-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.jwt-login-action-row > #jwt-login-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#jwt-paste-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  margin: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #9576BE !important;
+  border: 1px solid #9576BE !important;
+  border-radius: 0 !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+
+#jwt-paste-btn:hover {
+  filter: brightness(1.08);
+}
+
+#jwt-paste-btn:active {
+  transform: scale(0.96);
+}
+
+#jwt-paste-btn svg {
+  width: 18px;
+  height: 18px;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  stroke: #ffffff;
+  fill: none;
+  pointer-events: none;
+}
+
+.adv-bg-upload-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.adv-bg-upload-row > #cosmo-adv-bg-upload-btn,
+.adv-bg-upload-row > #cosmo-adv-bg-clear-btn {
+  flex: 1 1 0 !important;
+  width: 50% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+}
+
+#cosmo-custom-bg-layer {
+  position: fixed !important;
+  top: var(--topbar-h, 52px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - var(--topbar-h, 52px)) !important;
+  max-height: calc(100dvh - var(--topbar-h, 52px)) !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+#cosmo-custom-bg-layer.has-bg {
+  display: flex !important;
+}
+
+#cosmo-custom-bg-img {
+  display: block !important;
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+}
+
+body.is-login-view #cosmo-custom-bg-layer,
+body.is-login-view #cosmo-custom-bg-layer.has-bg {
+  display: none !important;
+}
+
+body:not(.is-login-view) #app,
+body:not(.is-login-view) main,
+body:not(.is-login-view) #chat,
+body:not(.is-login-view) .chat-container,
+body:not(.is-login-view) .chat-main,
+body:not(.is-login-view) .chat-view,
+body:not(.is-login-view) .messages,
+body:not(.is-login-view) #messages,
+body:not(.is-login-view) .timeline {
+  position: relative;
+  z-index: 1;
+}
+
+body.cosmo-has-custom-bg:not(.is-login-view) #chat,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-container,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-main,
+body.cosmo-has-custom-bg:not(.is-login-view) .chat-view,
+body.cosmo-has-custom-bg:not(.is-login-view) .messages,
+body.cosmo-has-custom-bg:not(.is-login-view) #messages,
+body.cosmo-has-custom-bg:not(.is-login-view) .timeline {
+  background-color: transparent !important;
+}
+
+body.cosmo-has-custom-bg:not(.is-login-view) [class*="bubble" i],
+body.cosmo-has-custom-bg:not(.is-login-view) .message,
+body.cosmo-has-custom-bg:not(.is-login-view) .msg {
+  position: relative;
+  z-index: 2;
+}
+
+/* --- LIGHT / WHITE THEME: LOGIN 3 BUTTONS WHITE TEXT & JWT INPUT LIGHT BG --- */
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-login-btn,
+  #jwt-login-btn *,
+  #login-page button,
+  #login-page button *,
+  #login-page .btn,
+  #login-page .btn *,
+  .login-card button,
+  .login-card button *,
+  .login-card .btn,
+  .login-card .btn *,
+  [id*="appscript" i],
+  [id*="appscript" i] *,
+  [id*="script" i][id*="login" i],
+  [id*="script" i][id*="login" i] *,
+  [id*="demo" i][id*="btn" i],
+  [id*="demo" i][id*="btn" i] *,
+  [class*="demo" i][class*="btn" i],
+  [class*="demo" i][class*="btn" i] *,
+  [data-action*="demo" i],
+  [data-action*="demo" i] *,
+  [data-action*="script" i],
+  [data-action*="script" i] *
+) {
+  color: #ffffff !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-login-btn svg,
+  #login-page button svg,
+  .login-card button svg,
+  [id*="appscript" i] svg,
+  [id*="demo" i][id*="btn" i] svg,
+  [class*="demo" i][class*="btn" i] svg
+) {
+  stroke: #ffffff !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-login-input,
+  textarea#jwt-login-input,
+  input#jwt-login-input,
+  .login-card textarea#jwt-login-input,
+  .login-card input#jwt-login-input
+) {
+  background-color: #f5f6fa !important;
+  color: #18181b !important;
+  border-color: #cbd5e1 !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-login-input,
+  textarea#jwt-login-input,
+  input#jwt-login-input
+)::placeholder {
+  color: #64748b !important;
+}
+
+/* --- LIGHT THEME: TRY DEMO & HOW TO GET JWT BUTTONS BG #404040 --- */
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-guide-btn,
+  [id*="guide" i][id*="jwt" i],
+  [id*="how-to-get-jwt" i],
+  [id*="get-jwt" i],
+  [id*="jwt-guide" i],
+  [data-action*="guide" i],
+  [data-action*="jwt-guide" i],
+  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
+) {
+  background-color: #404040 !important;
+  border-color: #404040 !important;
+  color: #ffffff !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-guide-btn,
+  [id*="guide" i][id*="jwt" i],
+  [id*="how-to-get-jwt" i],
+  [id*="get-jwt" i],
+  [id*="jwt-guide" i],
+  [data-action*="guide" i],
+  [data-action*="jwt-guide" i],
+  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
+) :is(*, svg) {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* --- LIGHT THEME: TRY DEMO & HOW TO GET JWT BUTTONS BG #BFBFBF --- */
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-guide-btn,
+  [id*="guide" i][id*="jwt" i],
+  [id*="how-to-get-jwt" i],
+  [id*="get-jwt" i],
+  [id*="jwt-guide" i],
+  [data-action*="guide" i],
+  [data-action*="jwt-guide" i],
+  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
+) {
+  background-color: #bfbfbf !important;
+  border-color: #bfbfbf !important;
+  color: #18181b !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  #jwt-guide-btn,
+  [id*="guide" i][id*="jwt" i],
+  [id*="how-to-get-jwt" i],
+  [id*="get-jwt" i],
+  [id*="jwt-guide" i],
+  [data-action*="guide" i],
+  [data-action*="jwt-guide" i],
+  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
+  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
+) :is(*, svg) {
+  color: #18181b !important;
+  stroke: #18181b !important;
+}
+
+/* --- GOOGLE APPS SCRIPT BTN HOVER: INVERT BACKGROUND IN LIGHT THEME --- */
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  [id*="appscript" i]:hover,
+  [id*="app-script" i]:hover,
+  [id*="gas" i][id*="login" i]:hover,
+  [class*="appscript" i]:hover,
+  [class*="app-script" i]:hover,
+  [data-action*="appscript" i]:hover,
+  [data-action*="script" i]:hover
+) {
+  background-color: #18181b !important;
+  border-color: #18181b !important;
+  color: #ffffff !important;
+}
+
+:is(
+  :root[data-theme="light"],
+  :root[data-theme="white"],
+  [data-theme="light"],
+  [data-theme="white"],
+  body.theme-light,
+  body.theme-white,
+  body.light-theme,
+  body.white-theme
+) :is(
+  [id*="appscript" i]:hover,
+  [id*="app-script" i]:hover,
+  [id*="gas" i][id*="login" i]:hover,
+  [class*="appscript" i]:hover,
+  [class*="app-script" i]:hover,
+  [data-action*="appscript" i]:hover,
+  [data-action*="script" i]:hover
+) :is(*, svg) {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }

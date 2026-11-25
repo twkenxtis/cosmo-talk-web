@@ -793,3 +793,97 @@ const CosmoChatView = (() => {
     init();
   }
 })();
+/* --- SPLIT FROM APP.JS: MEMBER AVATAR RING, REPLY CHAINS, SEARCH & ENGLISH DATES --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SPLIT_CHAT_VIEW_EXT_INIT__) return;
+  window.__COSMO_SPLIT_CHAT_VIEW_EXT_INIT__ = true;
+
+  const ORIGINAL_NAME_COLORS = {
+    SeoYeon: '#22AEFF', HyeRin: '#9200FF', JiWoo: '#FFF800', ChaeYeon: '#98F21D',
+    YooYeon: '#DB0C74', SooMin: '#FC83A4', NaKyoung: '#6799A0', YuBin: '#FFE3E2',
+    Kaede: '#FFC935', DaHyun: '#FF9AD6', Kotone: '#FFDE00', YeonJi: '#5974FF',
+    Nien: '#FF953F', SoHyun: '#1222B5', Xinyu: '#D51313', Mayu: '#FE8E76',
+    Lynn: '#AC62B7', JooBin: '#B7F54C', HaYeon: '#52D9BB', ShiOn: '#FF428A',
+    ChaeWon: '#C7A3E0', Sullin: '#7BBA8D', SeoAh: '#CFF3FF', JiYeon: '#FFAB62',
+    tripleS: '#333333',
+  };
+  const LOWER_NAME_COLORS = Object.fromEntries(
+    Object.entries(ORIGINAL_NAME_COLORS).map(([k, v]) => [k.toLowerCase(), v])
+  );
+
+  function resolveColorByOriginalName(originalName) {
+    if (!originalName || typeof originalName !== 'string') return null;
+    const t = originalName.trim();
+    if (!t) return null;
+    if (ORIGINAL_NAME_COLORS[t]) return ORIGINAL_NAME_COLORS[t];
+    const low = t.toLowerCase();
+    if (LOWER_NAME_COLORS[low]) return LOWER_NAME_COLORS[low];
+    for (const [k, hex] of Object.entries(LOWER_NAME_COLORS)) {
+      if (low.includes(k)) return hex;
+    }
+    return null;
+  }
+
+  function applySidebarThumbBorders() {
+    const byId = window.__COSMO_CHANNEL_COLOR_BY_ID__ || {};
+    const byName = window.__COSMO_CHANNEL_COLOR_BY_NAME__ || {};
+    const items = document.querySelectorAll(
+      '#sidebar .member-item, .sidebar .member-item, #member-list .member-item, #member-list button, #member-list [data-member-id], #member-list [data-channel-id]'
+    );
+    items.forEach((item) => {
+      const thumb = item.querySelector('.member-thumb') || item.querySelector('img');
+      if (!thumb) return;
+      const idAttr = item.dataset.memberId || item.dataset.channelId || item.dataset.artistId || item.getAttribute('data-id') || '';
+      const labelText = (item.querySelector('.member-label')?.textContent || item.textContent || '').trim();
+      const color = (idAttr && byId[String(idAttr).trim()]) || (labelText ? (byName[labelText.toLowerCase()] || resolveColorByOriginalName(labelText)) : null);
+      if (color) {
+        thumb.style.borderRadius = '50%';
+        thumb.style.border = `2.5px solid ${color}`;
+        thumb.style.boxSizing = 'border-box';
+      }
+    });
+  }
+
+  window.CosmoOriginalNameColors = window.CosmoOriginalNameColors || {
+    map: ORIGINAL_NAME_COLORS,
+    resolve: resolveColorByOriginalName,
+    applySidebarThumbBorders,
+  };
+
+  const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function formatKoreanDateToEnglish(raw) {
+    const text = String(raw || '').trim();
+    const m = text.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+    if (!m) return text;
+    const monthIdx = Number(m[2]) - 1;
+    if (monthIdx < 0 || monthIdx > 11) return text;
+    return text.replace(m[0], `${MONTHS_EN[monthIdx]} ${Number(m[3])}, ${Number(m[1])}`);
+  }
+
+  function applyEnglishDates() {
+    const chatRoot = document.getElementById('chat') || document.body;
+    if (!chatRoot) return;
+    const walker = document.createTreeWalker(chatRoot, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const val = node.nodeValue || '';
+      if (/\d{4}\s*년\s*\d{1,2}\s*월\s*\d{1,2}\s*일/.test(val)) {
+        const tag = node.parentElement?.tagName?.toLowerCase() || '';
+        if (tag !== 'script' && tag !== 'style') node.nodeValue = formatKoreanDateToEnglish(val);
+      }
+    }
+  }
+
+  function syncChatViewExtras() {
+    applySidebarThumbBorders();
+    applyEnglishDates();
+  }
+
+  syncChatViewExtras();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncChatViewExtras, { once: true });
+  }
+  const mo = new MutationObserver(() => syncChatViewExtras());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true, characterData: true });
+})();

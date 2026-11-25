@@ -418,3 +418,64 @@ const CosmoTranslate = (() => {
 if (typeof window !== 'undefined') {
   window.CosmoTranslate = CosmoTranslate;
 }
+/* --- SPLIT FROM APP.JS: TOPBAR TRANSLATE TOGGLE & SILENT CURRENT-MEMBER BLOB PREFETCH --- */
+(() => {
+  if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
+  if (window.__COSMO_SPLIT_TRANSLATE_EXT_INIT__) return;
+  window.__COSMO_SPLIT_TRANSLATE_EXT_INIT__ = true;
+
+  const BTN_ID = 'btn-toggle-translate';
+  const SVG_ICON_HTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+    'class="icon icon-tabler icons-tabler-outline icon-tabler-language" aria-hidden="true">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
+    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
+    '<path d="M19.1 18h-6.2" /></svg>';
+
+  function findTargetToolbar() {
+    const searchBtn = document.getElementById('cosmo-member-search-btn') || document.querySelector('[data-action="search"], .search-btn');
+    if (searchBtn && searchBtn.parentElement) return { parent: searchBtn.parentElement, anchor: searchBtn };
+    for (const sel of ['#chat-header .header-actions', '#chat-header', '.chat-header', '#topbar']) {
+      const el = document.querySelector(sel);
+      if (el) return { parent: el, anchor: null };
+    }
+    return null;
+  }
+
+  function ensureTranslateButton() {
+    const loc = findTargetToolbar();
+    if (!loc || !loc.parent) return;
+    let btn = document.getElementById(BTN_ID);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = BTN_ID;
+      btn.className = 'icon-btn btn-toggle-translate';
+      btn.title = 'Translate (ON/OFF)';
+      btn.setAttribute('aria-label', 'Translate (ON/OFF)');
+      btn.innerHTML = SVG_ICON_HTML;
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (typeof CosmoTranslate.toggle === 'function') CosmoTranslate.toggle();
+      });
+    }
+    if (btn.parentElement !== loc.parent) {
+      if (loc.anchor && loc.anchor.parentElement === loc.parent) {
+        loc.anchor.insertAdjacentElement('afterend', btn);
+      } else {
+        loc.parent.appendChild(btn);
+      }
+    }
+    const isOn = typeof CosmoTranslate.isEnabled === 'function' ? Boolean(CosmoTranslate.isEnabled()) : false;
+    btn.dataset.translateOn = isOn ? '1' : '0';
+    btn.classList.toggle('active', isOn);
+    btn.classList.toggle('is-active', isOn);
+  }
+
+  ensureTranslateButton();
+  const mo = new MutationObserver(() => ensureTranslateButton());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();

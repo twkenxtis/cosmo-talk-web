@@ -216,3 +216,159 @@ const CosmoAuth = (() => {
     authorizedFetch,
   };
 })();
+/* --- SPLIT FROM APP.JS: JWT PASTE BUTTON & LOGOUT REDIRECT HELPER --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SPLIT_AUTH_PASTE_INIT__) return;
+  window.__COSMO_SPLIT_AUTH_PASTE_INIT__ = true;
+
+  const PASTE_BTN_ID = 'jwt-paste-btn';
+  const PASTE_ROW_CLASS = 'jwt-login-action-row';
+  const CLIPBOARD_SVG =
+    '<svg viewBox="0 0 24 24" width="18" height="18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />' +
+    '<path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />' +
+    '</svg>';
+
+  window.__COSMO_LOGGING_OUT__ = window.__COSMO_LOGGING_OUT__ || false;
+
+  function getCleanTargetUrl() {
+    if (window.location.hostname === 'twkenxtis.github.io') {
+      return 'https://twkenxtis.github.io/cosmo-talk-web/';
+    }
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  window.addEventListener('pagehide', () => {
+    window.__COSMO_LOGGING_OUT__ = false;
+  });
+
+  if (typeof window.__cosmoCleanLogoutRedirect !== 'function') {
+    window.__cosmoCleanLogoutRedirect = function __cosmoCleanLogoutRedirect(wasDemo) {
+      const cleanUrl = getCleanTargetUrl();
+      try {
+        window.sessionStorage.removeItem('cosmo_demo_mode');
+        window.localStorage.removeItem('cosmo_demo_mode');
+      } catch (_) {}
+
+      if (wasDemo || window.location.search.includes('demo')) {
+        window.__COSMO_LOGGING_OUT__ = true;
+        if (window.location.href !== cleanUrl) {
+          window.location.replace(cleanUrl);
+          return true;
+        }
+      }
+      window.__COSMO_LOGGING_OUT__ = false;
+      return false;
+    };
+  }
+
+  function getJwtInput() {
+    return (
+      document.getElementById('jwt-login-input') ||
+      document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]')
+    );
+  }
+
+  function writeJwtValue(rawVal) {
+    const input = getJwtInput();
+    if (!input || typeof rawVal !== 'string') return false;
+    const text = rawVal.trim();
+    if (!text) return false;
+
+    const proto =
+      input.tagName === 'TEXTAREA'
+        ? window.HTMLTextAreaElement?.prototype
+        : window.HTMLInputElement?.prototype;
+    const desc = proto ? Object.getOwnPropertyDescriptor(proto, 'value') : null;
+    if (desc && typeof desc.set === 'function') {
+      desc.set.call(input, text);
+    } else {
+      input.value = text;
+    }
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.focus();
+    return true;
+  }
+
+  async function runDirectPaste() {
+    const input = getJwtInput();
+    if (input) input.focus();
+
+    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (writeJwtValue(text)) return;
+      } catch (_) {}
+    }
+
+    if (input) {
+      try {
+        const ok = document.execCommand && document.execCommand('paste');
+        if (ok && input.value && input.value.trim().length > 0) {
+          writeJwtValue(input.value);
+          return;
+        }
+      } catch (_) {}
+      input.focus();
+    }
+  }
+
+  function ensurePasteBtnBesideLogin() {
+    document.getElementById('jwt-http-paste-modal')?.remove();
+    document.getElementById('btn-paste-jwt')?.remove();
+    document.querySelectorAll('.jwt-paste-outer-row').forEach((el) => el.remove());
+
+    const loginBtn = document.getElementById('jwt-login-btn');
+    if (!loginBtn || !loginBtn.parentElement) return;
+
+    let pasteBtn = document.getElementById(PASTE_BTN_ID);
+    if (!pasteBtn) {
+      pasteBtn = document.createElement('button');
+      pasteBtn.type = 'button';
+      pasteBtn.id = PASTE_BTN_ID;
+      pasteBtn.setAttribute('aria-label', 'Paste JWT');
+      pasteBtn.setAttribute('title', 'Paste JWT');
+      pasteBtn.innerHTML = CLIPBOARD_SVG;
+      pasteBtn.addEventListener(
+        'click',
+        (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          runDirectPaste();
+        },
+        true
+      );
+    }
+
+    let row = loginBtn.closest(`.${PASTE_ROW_CLASS}`);
+    if (!row) {
+      row = document.createElement('div');
+      row.className = PASTE_ROW_CLASS;
+      loginBtn.parentElement.insertBefore(row, loginBtn);
+      row.appendChild(loginBtn);
+    }
+
+    const h = loginBtn.offsetHeight || 42;
+    if (pasteBtn.style.height !== `${h}px`) {
+      pasteBtn.style.width = `${h}px`;
+      pasteBtn.style.height = `${h}px`;
+      pasteBtn.style.minWidth = `${h}px`;
+      pasteBtn.style.minHeight = `${h}px`;
+    }
+
+    if (pasteBtn.parentElement !== row || pasteBtn.previousElementSibling !== loginBtn) {
+      row.appendChild(pasteBtn);
+    }
+  }
+
+  ensurePasteBtnBesideLogin();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensurePasteBtnBesideLogin, { once: true });
+  }
+  window.addEventListener('resize', ensurePasteBtnBesideLogin, { passive: true });
+  const mo = new MutationObserver(() => ensurePasteBtnBesideLogin());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();

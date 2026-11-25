@@ -204,3 +204,47 @@ const CosmoUtils = (() => {
     pickMediaUrl,
   };
 })();
+/* --- SPLIT FROM APP.JS: MUTATION OBSERVER LOOP & LOGOUT GUARD --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SPLIT_MO_GUARD_INIT__) return;
+  window.__COSMO_SPLIT_MO_GUARD_INIT__ = true;
+
+  const NativeMO = window.MutationObserver;
+  if (typeof NativeMO === 'function' && !NativeMO.__COSMO_WRAPPED__) {
+    function WrappedMutationObserver(callback) {
+      let scheduled = false;
+      let pendingMutations = [];
+      let pendingTarget = null;
+
+      const wrappedCb = (mutations, observer) => {
+        if (window.__COSMO_LOGGING_OUT__) {
+          pendingMutations = [];
+          return;
+        }
+        pendingMutations.push(...mutations);
+        pendingTarget = observer;
+        if (scheduled) return;
+        scheduled = true;
+        requestAnimationFrame(() => {
+          scheduled = false;
+          if (window.__COSMO_LOGGING_OUT__) {
+            pendingMutations = [];
+            return;
+          }
+          const batch = pendingMutations;
+          const obs = pendingTarget;
+          pendingMutations = [];
+          if (batch.length > 0) {
+            callback(batch, obs);
+          }
+        });
+      };
+
+      return new NativeMO(wrappedCb);
+    }
+    WrappedMutationObserver.__COSMO_WRAPPED__ = true;
+    WrappedMutationObserver.prototype = NativeMO.prototype;
+    window.MutationObserver = WrappedMutationObserver;
+  }
+})();
