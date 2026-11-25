@@ -11,7 +11,7 @@
         <img src="https://i.ibb.co/Dffv4R4g/COSMO-TALK-STATIC-2.png" alt="Cosmo Talk Web Preview" width="480" />
     </a>
     <a href="https://twkenxtis.github.io/cosmo-talk-web/">
-        <img src="https://i.ibb.co/Z6FMnK9N/COSMO-TALK-STATIC-1.png" alt="Cosmo Talk Web Preview" width="480" />
+        <img src="https://i.ibb.co/hRmyZxhq/123.png" alt="Cosmo Talk Web Preview" width="480" />
     </a>
 </p>
 
