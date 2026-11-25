@@ -479,3 +479,43 @@ if (typeof window !== 'undefined') {
   const mo = new MutationObserver(() => ensureTranslateButton());
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 })();
+/* --- SAFARI SAFE TRANSLATE BUTTON ICON SYNC --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_SAFARI_TRANSLATE_ICON_INIT__) return;
+  window.__COSMO_SAFARI_TRANSLATE_ICON_INIT__ = true;
+
+  const BTN_ID = 'btn-toggle-translate';
+  const SAFARI_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+    'aria-hidden="true" style="width:20px;height:20px;min-width:20px;min-height:20px;display:block;flex-shrink:0;">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
+    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
+    '<path d="M19.1 18h-6.2" /></svg>';
+
+  function syncSafariTranslateIcon() {
+    const btn = document.getElementById(BTN_ID);
+    if (!btn) return;
+    if (!btn.querySelector('svg')) {
+      btn.innerHTML = SAFARI_SVG;
+    }
+    const svg = btn.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('width', '20');
+      svg.setAttribute('height', '20');
+      svg.style.width = '20px';
+      svg.style.height = '20px';
+      svg.style.display = 'block';
+      svg.style.flexShrink = '0';
+    }
+  }
+
+  syncSafariTranslateIcon();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncSafariTranslateIcon, { once: true });
+  }
+  const mo = new MutationObserver(() => syncSafariTranslateIcon());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();

@@ -2333,3 +2333,27 @@ body.cosmo-has-custom-bg:not(.is-login-view) .msg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
+
+/* --- SAFARI SAFE TRANSLATE ICON RENDERING --- */
+#btn-toggle-translate {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  flex-shrink: 0 !important;
+  color: inherit;
+}
+
+#btn-toggle-translate svg,
+#btn-toggle-translate i {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  flex-shrink: 0 !important;
+}

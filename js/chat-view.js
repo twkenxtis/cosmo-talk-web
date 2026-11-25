@@ -1072,3 +1072,81 @@ const CosmoChatView = (() => {
   const mo = new MutationObserver(() => ensureSearchUi());
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 })();
+/* --- GUARANTEED TRANSLATE BUTTON ALONGSIDE SEARCH BUTTON (SAFARI SAFE) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_GUARANTEED_TRANSLATE_BTN_INIT__) return;
+  window.__COSMO_GUARANTEED_TRANSLATE_BTN_INIT__ = true;
+
+  const BTN_ID = 'btn-toggle-translate';
+  const ICON_SVG =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
+    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
+    'style="width:20px;height:20px;display:block;flex-shrink:0;pointer-events:none;">' +
+    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
+    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
+    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
+    '<path d="M19.1 18h-6.2" /></svg>';
+
+  function syncTranslateBtnInHeader() {
+    const header = document.getElementById('chat-header') || document.querySelector('.chat-header');
+    if (!header) return;
+
+    const actions = header.querySelector('.header-actions') || header;
+    let btn = document.getElementById(BTN_ID);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = BTN_ID;
+      btn.className = 'icon-btn btn-toggle-translate';
+      btn.title = 'Translate (ON/OFF)';
+      btn.setAttribute('aria-label', 'Translate (ON/OFF)');
+      btn.innerHTML = ICON_SVG;
+
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (typeof window.CosmoTranslate !== 'undefined' && typeof window.CosmoTranslate.toggle === 'function') {
+          const isOn = Boolean(window.CosmoTranslate.toggle());
+          btn.dataset.translateOn = isOn ? '1' : '0';
+          btn.classList.toggle('active', isOn);
+          btn.classList.toggle('is-active', isOn);
+        } else {
+          const next = btn.dataset.translateOn !== '1';
+          btn.dataset.translateOn = next ? '1' : '0';
+          btn.classList.toggle('active', next);
+          btn.classList.toggle('is-active', next);
+        }
+      });
+    }
+
+    // 確保內部一定有明確尺寸的 SVG，防止 Safari 壓扁或字型遺失
+    if (!btn.querySelector('svg')) {
+      btn.innerHTML = ICON_SVG;
+    }
+
+    // 放在搜尋按鈕旁邊（若搜尋按鈕存在，插在它後面；否則放在 actions 最前面）
+    const searchBtn = document.getElementById('cosmo-member-search-btn');
+    if (searchBtn && searchBtn.parentElement === actions) {
+      if (searchBtn.nextElementSibling !== btn) {
+        searchBtn.insertAdjacentElement('afterend', btn);
+      }
+    } else if (btn.parentElement !== actions) {
+      actions.prepend(btn);
+    }
+
+    if (typeof window.CosmoTranslate !== 'undefined' && typeof window.CosmoTranslate.isEnabled === 'function') {
+      const isOn = Boolean(window.CosmoTranslate.isEnabled());
+      btn.dataset.translateOn = isOn ? '1' : '0';
+      btn.classList.toggle('active', isOn);
+      btn.classList.toggle('is-active', isOn);
+    }
+  }
+
+  syncTranslateBtnInHeader();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncTranslateBtnInHeader, { once: true });
+  }
+  const mo = new MutationObserver(() => syncTranslateBtnInHeader());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();
