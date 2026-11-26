@@ -438,7 +438,7 @@ async function sendOtp(email) {
   await httpPostJson(
     `${CONFIG.privyEndpoint}/api/v1/passwordless/init`,
     { email: cleanEmail },
-    privyHeaders()
+    privyHeaders(),
   );
 }
 
@@ -458,7 +458,7 @@ async function verifyOtpAndLogin(email, code) {
   const privyResp = await httpPostJson(
     `${CONFIG.privyEndpoint}/api/v1/passwordless/authenticate`,
     { email: cleanEmail, code: cleanCode, mode: "login-or-sign-up" },
-    privyHeaders()
+    privyHeaders(),
   );
 
   const privyToken = privyResp?.token || privyResp?.privy_access_token;
@@ -468,7 +468,7 @@ async function verifyOtpAndLogin(email, code) {
 
   const account = await postCosmoEncrypted(
     "/bff/v3/users/login-by-privy",
-    JSON.stringify({ token: privyToken })
+    JSON.stringify({ token: privyToken }),
   );
 
   const creds = extractCredentials(account);
@@ -510,7 +510,7 @@ async function main() {
       "登入成功",
       CONFIG.copyAccessTokenToClipboard
         ? "已取得 accessToken 與 refreshToken 並存入 Keychain，accessToken 已複製到剪貼簿。"
-        : "已取得 accessToken 與 refreshToken 並存入 Keychain。"
+        : "已取得 accessToken 與 refreshToken 並存入 Keychain。",
     );
     Script.complete(creds.accessToken);
   } catch (err) {

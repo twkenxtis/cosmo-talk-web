@@ -1,18 +1,18 @@
 const CosmoAuth = (() => {
-  const API_BASE = 'https://api.cosmo.fans';
+  const API_BASE = "https://api.cosmo.fans";
   const REFRESH_ENDPOINT = `${API_BASE}/bff/v3/users/refresh-access-token`;
-  const COSMO_KEY_BASE64 = 'aUkaF3wWVltAI1QYVmxsZXfTV6L7mPTxA5+MMkLV9DE=';
+  const COSMO_KEY_BASE64 = "aUkaF3wWVltAI1QYVmxsZXfTV6L7mPTxA5+MMkLV9DE=";
   const REFRESH_BUFFER_SEC = 12 * 60 * 60; // 到期前 12 小時自動刷新
-  const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+  const BLOCKED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
   let inflightRefreshPromise = null;
 
   function decodeJwtExp(token) {
     try {
-      const parts = String(token || '').split('.');
+      const parts = String(token || "").split(".");
       if (parts.length < 2) return null;
-      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const pad = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const pad = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
       const payload = JSON.parse(atob(pad));
       const exp = Number(payload?.exp);
       return Number.isFinite(exp) ? exp : null;
@@ -30,37 +30,37 @@ const CosmoAuth = (() => {
   }
 
   function base64ToBytes(b64) {
-    const bin = atob(String(b64 || '').trim());
+    const bin = atob(String(b64 || "").trim());
     const out = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
     return out;
   }
 
   function bytesToBase64(bytes) {
-    let bin = '';
+    let bin = "";
     for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return btoa(bin);
   }
 
   async function encryptCosmoPayload(plaintext, keyBase64 = COSMO_KEY_BASE64) {
     if (!window.crypto?.subtle) {
-      throw new Error('Web Crypto unavailable');
+      throw new Error("Web Crypto unavailable");
     }
     const keyBytes = base64ToBytes(keyBase64);
     const iv = crypto.getRandomValues(new Uint8Array(16));
     const plainBytes = new TextEncoder().encode(plaintext);
 
     const cryptoKey = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       keyBytes,
-      { name: 'AES-CBC' },
+      { name: "AES-CBC" },
       false,
-      ['encrypt']
+      ["encrypt"],
     );
     const cipherBuf = await crypto.subtle.encrypt(
-      { name: 'AES-CBC', iv },
+      { name: "AES-CBC", iv },
       cryptoKey,
-      plainBytes
+      plainBytes,
     );
     const cipherBytes = new Uint8Array(cipherBuf);
     const combined = new Uint8Array(iv.length + cipherBytes.length);
@@ -73,7 +73,7 @@ const CosmoAuth = (() => {
     const visited = new WeakSet();
 
     function find(node, camel, snake) {
-      if (!node || typeof node !== 'object') return null;
+      if (!node || typeof node !== "object") return null;
       if (visited.has(node)) return null;
       visited.add(node);
 
@@ -85,17 +85,17 @@ const CosmoAuth = (() => {
         return null;
       }
 
-      if (Object.prototype.hasOwnProperty.call(node, camel) && typeof node[camel] === 'string' && node[camel].trim()) {
+      if (Object.prototype.hasOwnProperty.call(node, camel) && typeof node[camel] === "string" && node[camel].trim()) {
         return node[camel].trim();
       }
-      if (Object.prototype.hasOwnProperty.call(node, snake) && typeof node[snake] === 'string' && node[snake].trim()) {
+      if (Object.prototype.hasOwnProperty.call(node, snake) && typeof node[snake] === "string" && node[snake].trim()) {
         return node[snake].trim();
       }
 
       for (const key of Object.keys(node)) {
         if (BLOCKED_KEYS.has(key)) continue;
         const val = node[key];
-        if (val && typeof val === 'object') {
+        if (val && typeof val === "object") {
           const found = find(val, camel, snake);
           if (found) return found;
         }
@@ -104,51 +104,51 @@ const CosmoAuth = (() => {
     }
 
     return {
-      accessToken: find(obj, 'accessToken', 'access_token') || '',
-      refreshToken: find(obj, 'refreshToken', 'refresh_token') || '',
+      accessToken: find(obj, "accessToken", "access_token") || "",
+      refreshToken: find(obj, "refreshToken", "refresh_token") || "",
     };
   }
 
   function parseLoginInput(rawInput) {
-    const trimmed = String(rawInput || '').trim();
-    if (!trimmed) return { accessToken: '', refreshToken: '' };
+    const trimmed = String(rawInput || "").trim();
+    if (!trimmed) return { accessToken: "", refreshToken: "" };
 
-    if (trimmed.startsWith('{')) {
+    if (trimmed.startsWith("{")) {
       try {
         const parsed = JSON.parse(trimmed);
         const extracted = extractCredsFromResponse(parsed);
         return {
-          accessToken: extracted.accessToken.replace(/^Bearer\s+/i, '').trim(),
+          accessToken: extracted.accessToken.replace(/^Bearer\s+/i, "").trim(),
           refreshToken: extracted.refreshToken.trim(),
         };
       } catch (_) {}
     }
 
-    const cleaned = trimmed.replace(/^Bearer\s+/i, '').trim();
-    const isJwtLike = cleaned.split('.').length === 3 && !/\s/.test(cleaned);
+    const cleaned = trimmed.replace(/^Bearer\s+/i, "").trim();
+    const isJwtLike = cleaned.split(".").length === 3 && !/\s/.test(cleaned);
     return isJwtLike
-      ? { accessToken: cleaned, refreshToken: '' }
-      : { accessToken: '', refreshToken: cleaned };
+      ? { accessToken: cleaned, refreshToken: "" }
+      : { accessToken: "", refreshToken: cleaned };
   }
 
   async function performSilentRefresh(currentRefreshToken) {
-    const tokenToUse = String(currentRefreshToken || '').trim();
+    const tokenToUse = String(currentRefreshToken || "").trim();
     if (!tokenToUse) {
-      throw new Error('Missing refreshToken');
+      throw new Error("Missing refreshToken");
     }
 
     const encryptedBody = await encryptCosmoPayload(
       JSON.stringify({ refreshToken: tokenToUse }),
-      COSMO_KEY_BASE64
+      COSMO_KEY_BASE64,
     );
 
     const resp = await fetch(REFRESH_ENDPOINT, {
-      method: 'POST',
-      referrerPolicy: 'no-referrer',
+      method: "POST",
+      referrerPolicy: "no-referrer",
       headers: {
-        'Content-Type': 'text/plain',
-        'x-cosmo-encrypted': '1',
-        Accept: 'application/json',
+        "Content-Type": "text/plain",
+        "x-cosmo-encrypted": "1",
+        Accept: "application/json",
       },
       body: encryptedBody,
     });
@@ -163,7 +163,7 @@ const CosmoAuth = (() => {
     const nextRefresh = extracted.refreshToken || tokenToUse;
 
     if (!nextAccess) {
-      throw new Error('Refresh response missing accessToken');
+      throw new Error("Refresh response missing accessToken");
     }
 
     return CosmoStorage.saveTokens({
@@ -173,8 +173,8 @@ const CosmoAuth = (() => {
   }
 
   async function ensureFreshTokens({ force = false } = {}) {
-    if ((typeof window !== 'undefined' && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
-      return window.DEMO_TOKENS || { accessToken: 'demo', refreshToken: 'demo' };
+    if ((typeof window !== "undefined" && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
+      return window.DEMO_TOKENS || { accessToken: "demo", refreshToken: "demo" };
     }
     const tokens = await CosmoStorage.getTokens();
     const shouldRefresh = force || isTokenExpiringSoon(tokens.accessToken, REFRESH_BUFFER_SEC);
@@ -187,7 +187,7 @@ const CosmoAuth = (() => {
       if (tokens.accessToken && !force) {
         return tokens;
       }
-      throw new Error('No refreshToken available');
+      throw new Error("No refreshToken available");
     }
 
     if (!inflightRefreshPromise) {
@@ -200,13 +200,13 @@ const CosmoAuth = (() => {
   }
 
   async function authorizedFetch(url, init = {}, allowRetryOn401 = true) {
-    if ((typeof window !== 'undefined' && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
-      return fetch(url, { ...init, referrerPolicy: 'no-referrer' });
+    if ((typeof window !== "undefined" && window.__FORCE_PROD_SESSION__ !== true && window.IS_DEMO_MODE)) {
+      return fetch(url, { ...init, referrerPolicy: "no-referrer" });
     }
     let tokens = await ensureFreshTokens({ force: false });
     const buildInit = (accessToken) => ({
       ...init,
-      referrerPolicy: 'no-referrer',
+      referrerPolicy: "no-referrer",
       headers: {
         ...(init.headers || {}),
         Authorization: `Bearer ${accessToken}`,
@@ -233,34 +233,34 @@ const CosmoAuth = (() => {
 
 /* --- SPLIT FROM APP.JS: JWT PASTE BUTTON & LOGOUT REDIRECT HELPER --- */
 (() => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   if (window.__COSMO_SPLIT_AUTH_PASTE_INIT__) return;
   window.__COSMO_SPLIT_AUTH_PASTE_INIT__ = true;
 
-  const PASTE_BTN_ID = 'jwt-paste-btn';
-  const PASTE_ROW_CLASS = 'jwt-login-action-row';
+  const PASTE_BTN_ID = "jwt-paste-btn";
+  const PASTE_ROW_CLASS = "jwt-login-action-row";
   window.__COSMO_LOGGING_OUT__ = window.__COSMO_LOGGING_OUT__ || false;
 
   function getCleanTargetUrl() {
-    if (window.location.hostname === 'twkenxtis.github.io') {
-      return 'https://twkenxtis.github.io/cosmo-talk-web/';
+    if (window.location.hostname === "twkenxtis.github.io") {
+      return "https://twkenxtis.github.io/cosmo-talk-web/";
     }
     return `${window.location.origin}${window.location.pathname}`;
   }
 
-  window.addEventListener('pagehide', () => {
+  window.addEventListener("pagehide", () => {
     window.__COSMO_LOGGING_OUT__ = false;
   });
 
-  if (typeof window.__cosmoCleanLogoutRedirect !== 'function') {
+  if (typeof window.__cosmoCleanLogoutRedirect !== "function") {
     window.__cosmoCleanLogoutRedirect = function __cosmoCleanLogoutRedirect(wasDemo) {
       const cleanUrl = getCleanTargetUrl();
       try {
-        window.sessionStorage.removeItem('cosmo_demo_mode');
-        window.localStorage.removeItem('cosmo_demo_mode');
+        window.sessionStorage.removeItem("cosmo_demo_mode");
+        window.localStorage.removeItem("cosmo_demo_mode");
       } catch (_) {}
 
-      if (wasDemo || window.location.search.includes('demo')) {
+      if (wasDemo || window.location.search.includes("demo")) {
         window.__COSMO_LOGGING_OUT__ = true;
         if (window.location.href !== cleanUrl) {
           window.location.replace(cleanUrl);
@@ -274,29 +274,29 @@ const CosmoAuth = (() => {
 
   function getJwtInput() {
     return (
-      document.getElementById('jwt-login-input') ||
+      document.getElementById("jwt-login-input") ||
       document.querySelector('textarea[id*="jwt" i], input[id*="jwt" i]')
     );
   }
 
   function writeJwtValue(rawVal) {
     const input = getJwtInput();
-    if (!input || typeof rawVal !== 'string') return false;
+    if (!input || typeof rawVal !== "string") return false;
     const text = rawVal.trim();
     if (!text) return false;
 
     const proto =
-      input.tagName === 'TEXTAREA'
+      input.tagName === "TEXTAREA"
         ? window.HTMLTextAreaElement?.prototype
         : window.HTMLInputElement?.prototype;
-    const desc = proto ? Object.getOwnPropertyDescriptor(proto, 'value') : null;
-    if (desc && typeof desc.set === 'function') {
+    const desc = proto ? Object.getOwnPropertyDescriptor(proto, "value") : null;
+    if (desc && typeof desc.set === "function") {
       desc.set.call(input, text);
     } else {
       input.value = text;
     }
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    input.dispatchEvent(new Event('change', { bubbles: true }));
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
     input.focus();
     return true;
   }
@@ -305,7 +305,7 @@ const CosmoAuth = (() => {
     const input = getJwtInput();
     if (input) input.focus();
 
-    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+    if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
       try {
         const text = await navigator.clipboard.readText();
         if (writeJwtValue(text)) return;
@@ -314,7 +314,7 @@ const CosmoAuth = (() => {
 
     if (input) {
       try {
-        const ok = document.execCommand && document.execCommand('paste');
+        const ok = document.execCommand && document.execCommand("paste");
         if (ok && input.value && input.value.trim().length > 0) {
           writeJwtValue(input.value);
           return;
@@ -325,35 +325,35 @@ const CosmoAuth = (() => {
   }
 
   function ensurePasteBtnBesideLogin() {
-    document.getElementById('jwt-http-paste-modal')?.remove();
-    document.getElementById('btn-paste-jwt')?.remove();
-    document.querySelectorAll('.jwt-paste-outer-row').forEach((el) => el.remove());
+    document.getElementById("jwt-http-paste-modal")?.remove();
+    document.getElementById("btn-paste-jwt")?.remove();
+    document.querySelectorAll(".jwt-paste-outer-row").forEach((el) => el.remove());
 
-    const loginBtn = document.getElementById('jwt-login-btn');
+    const loginBtn = document.getElementById("jwt-login-btn");
     if (!loginBtn || !loginBtn.parentElement) return;
 
     let pasteBtn = document.getElementById(PASTE_BTN_ID);
     if (!pasteBtn) {
-      pasteBtn = document.createElement('button');
-      pasteBtn.type = 'button';
+      pasteBtn = document.createElement("button");
+      pasteBtn.type = "button";
       pasteBtn.id = PASTE_BTN_ID;
-      pasteBtn.setAttribute('aria-label', 'Paste JWT');
-      pasteBtn.setAttribute('title', 'Paste JWT');
-      CosmoSecurity.setIconFromConst(pasteBtn, 'CLIPBOARD_SVG');
+      pasteBtn.setAttribute("aria-label", "Paste JWT");
+      pasteBtn.setAttribute("title", "Paste JWT");
+      CosmoSecurity.setIconFromConst(pasteBtn, "CLIPBOARD_SVG");
       pasteBtn.addEventListener(
-        'click',
+        "click",
         (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           runDirectPaste();
         },
-        true
+        true,
       );
     }
 
     let row = loginBtn.closest(`.${PASTE_ROW_CLASS}`);
     if (!row) {
-      row = document.createElement('div');
+      row = document.createElement("div");
       row.className = PASTE_ROW_CLASS;
       loginBtn.parentElement.insertBefore(row, loginBtn);
       row.appendChild(loginBtn);
@@ -374,16 +374,16 @@ const CosmoAuth = (() => {
 
   function init() {
     ensurePasteBtnBesideLogin();
-    window.addEventListener('resize', ensurePasteBtnBesideLogin, { passive: true });
-    const loginPage = document.getElementById('login-page');
+    window.addEventListener("resize", ensurePasteBtnBesideLogin, { passive: true });
+    const loginPage = document.getElementById("login-page");
     if (loginPage) {
       const mo = new MutationObserver(() => ensurePasteBtnBesideLogin());
       mo.observe(loginPage, { childList: true, subtree: true });
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
     init();
   }

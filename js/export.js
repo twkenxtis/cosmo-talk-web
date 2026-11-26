@@ -24,7 +24,7 @@ const CosmoExport = (() => {
     if (Array.isArray(segmentStarts) && segmentStarts.length > 0) {
       let segStartIdx = 0;
       for (const seg of segmentStarts) {
-        if (typeof seg.renderedIndex === 'number' && seg.renderedIndex <= currentIdx) {
+        if (typeof seg.renderedIndex === "number" && seg.renderedIndex <= currentIdx) {
           segStartIdx = seg.renderedIndex;
         } else {
           break;
@@ -39,7 +39,7 @@ const CosmoExport = (() => {
   function buildMemberText({ renderedItems, segmentStarts, headerEl }) {
     const startIdx = getCurrentExportStartIndex({ renderedItems, segmentStarts, headerEl });
     const includeTs =
-      typeof CosmoSettings !== 'undefined' && typeof CosmoSettings.getIncludeTimestamp === 'function'
+      typeof CosmoSettings !== "undefined" && typeof CosmoSettings.getIncludeTimestamp === "function"
         ? CosmoSettings.getIncludeTimestamp()
         : true;
     const blocks = [];
@@ -48,10 +48,10 @@ const CosmoExport = (() => {
       const msg = renderedItems[i]?.msg;
       if (!msg) continue;
 
-      const isArtist = msg.senderType === 'artistMember' && msg.sourceType !== 'userReply';
+      const isArtist = msg.senderType === "artistMember" && msg.sourceType !== "userReply";
       if (!isArtist) continue;
 
-      if (msg.messageType === 'text' && typeof msg.content === 'string' && msg.content.trim()) {
+      if (msg.messageType === "text" && typeof msg.content === "string" && msg.content.trim()) {
         const cleanText = nfc(msg.content);
         if (includeTs) {
           const ts = fmtExportTs(msg.createdAt);
@@ -63,7 +63,7 @@ const CosmoExport = (() => {
     }
 
     return {
-      text: blocks.join('\n'),
+      text: blocks.join("\n"),
       startIdx,
     };
   }
@@ -73,17 +73,17 @@ const CosmoExport = (() => {
     const { text, startIdx } = buildMemberText({ renderedItems, segmentStarts, headerEl });
 
     const startIso = renderedItems[startIdx]?.msg?.createdAt;
-    const startTag = startIso ? fmtTimeline(startIso).replace(/[: ]/g, '-') : 'start';
+    const startTag = startIso ? fmtTimeline(startIso).replace(/[: ]/g, "-") : "start";
     const safeName = nfc(
       String(member.originalName || member.artistMemberName || member.artistMemberId).replace(
         /[\\/:*?"<>|]/g,
-        '_'
-      )
+        "_",
+      ),
     );
 
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = CosmoSecurity.safeLinkUrl(url);
     a.download = `${safeName}_from_${startTag}_chat.txt`;
     document.body.appendChild(a);

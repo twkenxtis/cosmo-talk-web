@@ -1,8 +1,8 @@
 const CosmoTranslate = (() => {
-  'use strict';
+  "use strict";
 
   const BATCH_SIZE = 130;
-  const API_BASE = 'https://api.cosmo.fans';
+  const API_BASE = "https://api.cosmo.fans";
 
   // 純記憶體 + Blob 快取（頁面重新整理即消失）
   const blobCache = new Map(); // key: `${memberId}:${messageId}` -> { messageId, translatedContent, blob, blobUrl }
@@ -14,13 +14,13 @@ const CosmoTranslate = (() => {
   let candidateQueue = [];
   let nextIndex = 0;
   let isBatchRunning = false;
-  let stateListeners = [];
+  const stateListeners = [];
 
   let demoDictPromise = null;
 
   function isDemoTranslateMode() {
     return (
-      typeof window !== 'undefined' &&
+      typeof window !== "undefined" &&
       window.__FORCE_PROD_SESSION__ !== true &&
       window.IS_DEMO_MODE === true
     );
@@ -28,22 +28,22 @@ const CosmoTranslate = (() => {
 
   async function loadDemoTranslations() {
     if (!demoDictPromise) {
-      demoDictPromise = fetch('demo/demo_translate.json', { cache: 'no-store' })
+      demoDictPromise = fetch("demo/demo_translate.json", { cache: "no-store" })
         .then((res) => (res.ok ? res.json() : { translations: {} }))
-        .then((json) => (json && typeof json.translations === 'object' ? json.translations : {}))
+        .then((json) => (json && typeof json.translations === "object" ? json.translations : {}))
         .catch(() => ({}));
     }
     return demoDictPromise;
   }
 
   function notifyErrorToast(errText) {
-    const msg = String(errText || 'Unknown error');
-    if (typeof CosmoToast !== 'undefined') {
-      if (typeof CosmoToast.error === 'function') return CosmoToast.error(msg);
-      if (typeof CosmoToast.show === 'function') return CosmoToast.show(msg);
-      if (typeof CosmoToast === 'function') return CosmoToast(msg);
+    const msg = String(errText || "Unknown error");
+    if (typeof CosmoToast !== "undefined") {
+      if (typeof CosmoToast.error === "function") return CosmoToast.error(msg);
+      if (typeof CosmoToast.show === "function") return CosmoToast.show(msg);
+      if (typeof CosmoToast === "function") return CosmoToast(msg);
     }
-    console.error('[Translate API Error]', msg);
+    console.error("[Translate API Error]", msg);
   }
 
   function notifyStateChange() {
@@ -62,12 +62,12 @@ const CosmoTranslate = (() => {
       try { URL.revokeObjectURL(prev.blobUrl); } catch (_) {}
     }
 
-    const text = String(translatedContent ?? '');
+    const text = String(translatedContent ?? "");
     const blob = new Blob(
       [JSON.stringify({ messageId: msgId, translatedContent: text })],
-      { type: 'application/json;charset=utf-8' }
+      { type: "application/json;charset=utf-8" },
     );
-    const blobUrl = typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+    const blobUrl = typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
       ? URL.createObjectURL(blob)
       : null;
 
@@ -95,46 +95,46 @@ const CosmoTranslate = (() => {
   }
 
   function extractSourceId(rec, msg) {
-    if (msg?.sourceId !== undefined && msg?.sourceId !== null && String(msg.sourceId).trim() !== '') {
+    if (msg?.sourceId !== undefined && msg?.sourceId !== null && String(msg.sourceId).trim() !== "") {
       return String(msg.sourceId).trim();
     }
-    if (rec?.sourceId !== undefined && rec?.sourceId !== null && String(rec.sourceId).trim() !== '') {
+    if (rec?.sourceId !== undefined && rec?.sourceId !== null && String(rec.sourceId).trim() !== "") {
       return String(rec.sourceId).trim();
     }
-    if (typeof msg?.syncId === 'string' && msg.syncId.includes(':')) {
-      return msg.syncId.split(':').pop().trim();
+    if (typeof msg?.syncId === "string" && msg.syncId.includes(":")) {
+      return msg.syncId.split(":").pop().trim();
     }
-    return '';
+    return "";
   }
 
   function parseCursorValue(rec, msg, fallbackIdx) {
     const raw = rec?.cursor ?? msg?.cursor ?? extractSourceId(rec, msg) ?? String(fallbackIdx);
     const num = Number(raw);
     if (Number.isFinite(num)) return num;
-    const digits = String(raw).replace(/\D+/g, '');
+    const digits = String(raw).replace(/\D+/g, "");
     return digits ? Number(digits) : fallbackIdx;
   }
 
   function isTargetArtistText(msg) {
-    if (!msg || typeof msg !== 'object') return false;
-    return msg.messageType === 'text' && msg.senderType === 'artistMember';
+    if (!msg || typeof msg !== "object") return false;
+    return msg.messageType === "text" && msg.senderType === "artistMember";
   }
 
   function buildQueueFromMember(member) {
-    const mid = member?.artistMemberId ?? member?.id ?? '';
+    const mid = member?.artistMemberId ?? member?.id ?? "";
     const records = Array.isArray(member?.records) ? member.records : [];
     const list = [];
 
     for (let i = 0; i < records.length; i++) {
       const rec = records[i];
-      if (!rec || rec.op === 'delete') continue;
-      const msg = rec.message && typeof rec.message === 'object' ? rec.message : rec;
+      if (!rec || rec.op === "delete") continue;
+      const msg = rec.message && typeof rec.message === "object" ? rec.message : rec;
       if (!isTargetArtistText(msg)) continue;
 
       const sourceId = extractSourceId(rec, msg);
       if (!sourceId) continue;
 
-      const memberId = String(msg.artistMemberId ?? mid ?? '');
+      const memberId = String(msg.artistMemberId ?? mid ?? "");
       if (!memberId) continue;
 
       list.push({
@@ -159,11 +159,11 @@ const CosmoTranslate = (() => {
 
   function applyTranslationToDom(memberId, messageId, translatedContent) {
     if (!enabled) return;
-    const msgId = String(messageId || '').trim();
-    const transText = String(translatedContent ?? '');
+    const msgId = String(messageId || "").trim();
+    const transText = String(translatedContent ?? "");
     if (!msgId || !transText) return;
 
-    const mid = String(memberId || currentMemberId || '');
+    const mid = String(memberId || currentMemberId || "");
     const selector = mid
       ? `[data-source-id="${CSS.escape(msgId)}"][data-artist-member-id="${CSS.escape(mid)}"]`
       : `[data-source-id="${CSS.escape(msgId)}"]`;
@@ -171,41 +171,41 @@ const CosmoTranslate = (() => {
     const wrapEl = document.querySelector(selector) || document.querySelector(`[data-source-id="${CSS.escape(msgId)}"]`);
     if (!wrapEl) return;
 
-    const bubble = wrapEl.querySelector('.bubble');
+    const bubble = wrapEl.querySelector(".bubble");
     if (!bubble) return;
 
-    let origSpan = bubble.querySelector('.cosmo-orig-text');
+    let origSpan = bubble.querySelector(".cosmo-orig-text");
     if (!origSpan) {
-      const rawContent = String(bubble.textContent || '');
-      origSpan = document.createElement('span');
-      origSpan.className = 'cosmo-orig-text';
+      const rawContent = String(bubble.textContent || "");
+      origSpan = document.createElement("span");
+      origSpan.className = "cosmo-orig-text";
       origSpan.dataset.rawText = rawContent;
       origSpan.textContent = rawContent;
-      bubble.textContent = '';
+      bubble.textContent = "";
       bubble.appendChild(origSpan);
     }
 
-    const baseText = origSpan.dataset.rawText ?? String(origSpan.textContent || '');
+    const baseText = origSpan.dataset.rawText ?? String(origSpan.textContent || "");
     origSpan.textContent = baseText;
 
-    let transEl = bubble.querySelector('.cosmo-translated-text');
+    let transEl = bubble.querySelector(".cosmo-translated-text");
     if (!transEl) {
-      transEl = document.createElement('span');
-      transEl.className = 'cosmo-translated-text';
-      transEl.style.display = 'block';
-      transEl.style.margin = '0';
-      transEl.style.padding = '0';
-      transEl.style.whiteSpace = 'pre-line';
+      transEl = document.createElement("span");
+      transEl.className = "cosmo-translated-text";
+      transEl.style.display = "block";
+      transEl.style.margin = "0";
+      transEl.style.padding = "0";
+      transEl.style.whiteSpace = "pre-line";
       bubble.appendChild(transEl);
     }
     transEl.textContent = transText;
   }
 
   function clearAllTranslationsFromDom() {
-    document.querySelectorAll('.cosmo-translated-text').forEach((el) => el.remove());
-    document.querySelectorAll('.bubble .cosmo-orig-text').forEach((span) => {
+    document.querySelectorAll(".cosmo-translated-text").forEach((el) => el.remove());
+    document.querySelectorAll(".bubble .cosmo-orig-text").forEach((span) => {
       const bubble = span.parentElement;
-      const raw = span.dataset.rawText ?? String(span.textContent || '');
+      const raw = span.dataset.rawText ?? String(span.textContent || "");
       if (bubble) {
         bubble.textContent = raw;
       }
@@ -214,9 +214,9 @@ const CosmoTranslate = (() => {
 
   function renderCachedForCurrentView() {
     if (!enabled) return;
-    document.querySelectorAll('[data-source-id]').forEach((wrapEl) => {
-      const sid = wrapEl.getAttribute('data-source-id') || '';
-      const mid = wrapEl.getAttribute('data-artist-member-id') || currentMemberId || '';
+    document.querySelectorAll("[data-source-id]").forEach((wrapEl) => {
+      const sid = wrapEl.getAttribute("data-source-id") || "";
+      const mid = wrapEl.getAttribute("data-artist-member-id") || currentMemberId || "";
       if (!sid || !mid) return;
       const cached = getCached(mid, sid);
       if (cached) {
@@ -253,7 +253,7 @@ const CosmoTranslate = (() => {
           return null;
         }
         const responseMsgId = String(entry.messageId ?? sid);
-        const translatedContent = String(entry.translatedContent ?? '');
+        const translatedContent = String(entry.translatedContent ?? "");
         const record = storeInBlob(mid, responseMsgId, translatedContent);
         if (enabled) {
           applyTranslationToDom(mid, responseMsgId, translatedContent);
@@ -268,9 +268,9 @@ const CosmoTranslate = (() => {
 
     try {
       const resp =
-        typeof CosmoAuth !== 'undefined' && typeof CosmoAuth.authorizedFetch === 'function'
-          ? await CosmoAuth.authorizedFetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
-          : await fetch(url, { method: 'GET', headers: { Accept: 'application/json' }, referrerPolicy: 'no-referrer' });
+        typeof CosmoAuth !== "undefined" && typeof CosmoAuth.authorizedFetch === "function"
+          ? await CosmoAuth.authorizedFetch(url, { method: "GET", headers: { Accept: "application/json" } })
+          : await fetch(url, { method: "GET", headers: { Accept: "application/json" }, referrerPolicy: "no-referrer" });
 
       if (resp.status === 404) {
         return null;
@@ -291,7 +291,7 @@ const CosmoTranslate = (() => {
       }
 
       const responseMsgId = String(parsed?.messageId ?? sid);
-      const translatedContent = String(parsed?.translatedContent ?? '');
+      const translatedContent = String(parsed?.translatedContent ?? "");
       const record = storeInBlob(mid, responseMsgId, translatedContent);
 
       if (enabled) {
@@ -396,7 +396,7 @@ const CosmoTranslate = (() => {
   }
 
   function onStateChange(fn) {
-    if (typeof fn === 'function') {
+    if (typeof fn === "function") {
       stateListeners.push(fn);
     }
   }
@@ -425,13 +425,13 @@ const CosmoTranslate = (() => {
   };
 })();
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.CosmoTranslate = CosmoTranslate;
 }
 
 /* --- CLEAN SINGLE-SOURCE TRANSLATE SCROLL GUARD & SILENT BLOB RUNNER --- */
 (() => {
-  if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
+  if (typeof window === "undefined" || typeof CosmoTranslate === "undefined") return;
   if (window.__COSMO_CLEAN_TRANSLATE_SCROLL_GUARD_INIT__) return;
   window.__COSMO_CLEAN_TRANSLATE_SCROLL_GUARD_INIT__ = true;
 
@@ -453,14 +453,14 @@ if (typeof window !== 'undefined') {
   const abortByMember = new Map();
 
   let lastUserInputAt = 0;
-  for (const ev of ['wheel', 'touchstart', 'touchmove', 'pointerdown']) {
+  for (const ev of ["wheel", "touchstart", "touchmove", "pointerdown"]) {
     window.addEventListener(ev, () => {
       lastUserInputAt = Date.now();
     }, { passive: true, capture: true });
   }
 
   function getActiveScroller() {
-    const chat = document.getElementById('chat');
+    const chat = document.getElementById("chat");
     if (chat && chat.scrollHeight > chat.clientHeight + 2) {
       return chat;
     }
@@ -505,7 +505,7 @@ if (typeof window !== 'undefined') {
     };
     try {
       const res = fn();
-      if (res && typeof res.then === 'function') {
+      if (res && typeof res.then === "function") {
         return res.finally(finish);
       }
       finish();
@@ -516,8 +516,8 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  for (const name of ['toggle', 'setEnabled', 'renderCachedForCurrentView']) {
-    if (typeof CosmoTranslate[name] === 'function' && !CosmoTranslate[name].__cosmoCleanGuard) {
+  for (const name of ["toggle", "setEnabled", "renderCachedForCurrentView"]) {
+    if (typeof CosmoTranslate[name] === "function" && !CosmoTranslate[name].__cosmoCleanGuard) {
       const orig = CosmoTranslate[name].bind(CosmoTranslate);
       const wrapped = function (...args) {
         return runSafelyWithoutJump(() => orig(...args));
@@ -531,18 +531,18 @@ if (typeof window !== 'undefined') {
     if (raw === undefined || raw === null) return 0;
     const n = Number(raw);
     if (Number.isFinite(n)) return n;
-    const digits = String(raw).replace(/\D+/g, '');
+    const digits = String(raw).replace(/\D+/g, "");
     return digits ? Number(digits) : 0;
   }
 
   function extractLatestCursorFromMember(member) {
-    if (!member || typeof member !== 'object') return 0;
+    if (!member || typeof member !== "object") return 0;
     let maxCursor = parseNumericCursor(member.latestCursor ?? member.cursor ?? 0);
     const records = Array.isArray(member.records) ? member.records : [];
     for (let i = records.length - 1; i >= Math.max(0, records.length - 30); i--) {
       const rec = records[i];
       if (!rec) continue;
-      const msg = rec.message && typeof rec.message === 'object' ? rec.message : rec;
+      const msg = rec.message && typeof rec.message === "object" ? rec.message : rec;
       const c = parseNumericCursor(rec.cursor ?? msg?.cursor ?? rec.sourceId ?? msg?.sourceId);
       if (c > maxCursor) maxCursor = c;
     }
@@ -551,7 +551,7 @@ if (typeof window !== 'undefined') {
 
   function updateKnownMemberCursor(member) {
     if (!member) return 0;
-    const mid = String(member.artistMemberId ?? member.id ?? '').trim();
+    const mid = String(member.artistMemberId ?? member.id ?? "").trim();
     if (!mid) return 0;
     const latest = extractLatestCursorFromMember(member);
     const prev = latestKnownCursorByMember.get(mid) || 0;
@@ -562,7 +562,7 @@ if (typeof window !== 'undefined') {
   }
 
   function saveTranslationToBlob(mid, sid, translatedContent, cursorVal = 0) {
-    const text = String(translatedContent ?? '').trim();
+    const text = String(translatedContent ?? "").trim();
     if (!text) return null;
 
     const payload = JSON.stringify({
@@ -572,9 +572,9 @@ if (typeof window !== 'undefined') {
       translatedContent: text,
       updatedAt: Date.now(),
     });
-    const blob = new Blob([payload], { type: 'application/json;charset=utf-8' });
+    const blob = new Blob([payload], { type: "application/json;charset=utf-8" });
     const blobUrl =
-      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+      typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
         ? URL.createObjectURL(blob)
         : null;
 
@@ -607,20 +607,20 @@ if (typeof window !== 'undefined') {
   }
 
   async function readStreamText(resp, signal) {
-    if (!resp.body || typeof resp.body.getReader !== 'function') {
+    if (!resp.body || typeof resp.body.getReader !== "function") {
       return await resp.text();
     }
     const reader = resp.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let out = '';
+    const decoder = new TextDecoder("utf-8");
+    let out = "";
     const timer = setTimeout(() => {
-      try { reader.cancel('timeout'); } catch (_) {}
+      try { reader.cancel("timeout"); } catch (_) {}
     }, STREAM_TIMEOUT_MS);
 
     try {
       while (true) {
         if (signal?.aborted) {
-          try { reader.cancel('aborted'); } catch (_) {}
+          try { reader.cancel("aborted"); } catch (_) {}
           break;
         }
         const { done, value } = await reader.read();
@@ -639,7 +639,7 @@ if (typeof window !== 'undefined') {
     const key = `${mid}:${sid}`;
     if (blobStore.has(key)) return blobStore.get(key);
 
-    if (typeof CosmoTranslate.getCached === 'function') {
+    if (typeof CosmoTranslate.getCached === "function") {
       const cached = CosmoTranslate.getCached(mid, sid);
       if (cached?.translatedContent) {
         return saveTranslationToBlob(mid, sid, cached.translatedContent, cursorVal);
@@ -647,13 +647,13 @@ if (typeof window !== 'undefined') {
     }
 
     const isDemo =
-      typeof window !== 'undefined' &&
+      typeof window !== "undefined" &&
       window.__FORCE_PROD_SESSION__ !== true &&
       window.IS_DEMO_MODE === true;
 
     if (isDemo) {
       try {
-        const res = await fetch('demo/demo_translate.json', { cache: 'no-store', signal });
+        const res = await fetch("demo/demo_translate.json", { cache: "no-store", signal });
         if (!res.ok) return null;
         const json = await res.json();
         const dict = json?.translations || {};
@@ -668,24 +668,24 @@ if (typeof window !== 'undefined') {
     const url = `https://api.cosmo.fans/bff/v3/channels/messages/${encodeURIComponent(mid)}/${encodeURIComponent(sid)}/translated-contents`;
     try {
       const resp =
-        typeof CosmoAuth !== 'undefined' && typeof CosmoAuth.authorizedFetch === 'function'
+        typeof CosmoAuth !== "undefined" && typeof CosmoAuth.authorizedFetch === "function"
           ? await CosmoAuth.authorizedFetch(url, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              signal,
-            })
+            method: "GET",
+            headers: { Accept: "application/json" },
+            signal,
+          })
           : await fetch(url, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              referrerPolicy: 'no-referrer',
-              signal,
-            });
+            method: "GET",
+            headers: { Accept: "application/json" },
+            referrerPolicy: "no-referrer",
+            signal,
+          });
 
       if (!resp || resp.status !== 200) return null;
       const raw = await readStreamText(resp, signal);
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      const transText = String(parsed?.translatedContent ?? '').trim();
+      const transText = String(parsed?.translatedContent ?? "").trim();
       if (!transText) return null;
       return saveTranslationToBlob(mid, parsed?.messageId ?? sid, transText, cursorVal);
     } catch (_) {
@@ -694,8 +694,8 @@ if (typeof window !== 'undefined') {
   }
 
   function buildSortedPendingItems(member) {
-    const mid = String(member?.artistMemberId ?? member?.id ?? '').trim();
-    if (!mid) return { mid: '', items: [], latestCursor: 0 };
+    const mid = String(member?.artistMemberId ?? member?.id ?? "").trim();
+    if (!mid) return { mid: "", items: [], latestCursor: 0 };
 
     const latestCursor = updateKnownMemberCursor(member);
     const records = Array.isArray(member.records) ? member.records : [];
@@ -703,17 +703,17 @@ if (typeof window !== 'undefined') {
 
     for (let i = 0; i < records.length; i++) {
       const rec = records[i];
-      if (!rec || rec.op === 'delete') continue;
-      const msg = rec.message && typeof rec.message === 'object' ? rec.message : rec;
-      if (!msg || msg.messageType !== 'text' || msg.senderType !== 'artistMember') continue;
+      if (!rec || rec.op === "delete") continue;
+      const msg = rec.message && typeof rec.message === "object" ? rec.message : rec;
+      if (!msg || msg.messageType !== "text" || msg.senderType !== "artistMember") continue;
 
-      let sid = '';
-      if (msg.sourceId !== undefined && msg.sourceId !== null && String(msg.sourceId).trim() !== '') {
+      let sid = "";
+      if (msg.sourceId !== undefined && msg.sourceId !== null && String(msg.sourceId).trim() !== "") {
         sid = String(msg.sourceId).trim();
-      } else if (rec.sourceId !== undefined && rec.sourceId !== null && String(rec.sourceId).trim() !== '') {
+      } else if (rec.sourceId !== undefined && rec.sourceId !== null && String(rec.sourceId).trim() !== "") {
         sid = String(rec.sourceId).trim();
-      } else if (typeof msg.syncId === 'string' && msg.syncId.includes(':')) {
-        sid = msg.syncId.split(':').pop().trim();
+      } else if (typeof msg.syncId === "string" && msg.syncId.includes(":")) {
+        sid = msg.syncId.split(":").pop().trim();
       }
       if (!sid) continue;
       if (blobStore.has(`${mid}:${sid}`)) continue;
@@ -728,7 +728,7 @@ if (typeof window !== 'undefined') {
 
   async function runSilentBatchTranslateWithCursorCheck(member, { getLatestMember } = {}) {
     if (!member) return;
-    const mid = String(member.artistMemberId ?? member.id ?? '').trim();
+    const mid = String(member.artistMemberId ?? member.id ?? "").trim();
     if (!mid) return;
 
     updateKnownMemberCursor(member);
@@ -759,25 +759,25 @@ if (typeof window !== 'undefined') {
                 item.memberId,
                 item.sourceId,
                 item.cursorVal,
-                controller.signal
+                controller.signal,
               );
             }
           }
 
           await Promise.all(
-            Array.from({ length: Math.min(CONCURRENCY, batch.length) }, worker)
+            Array.from({ length: Math.min(CONCURRENCY, batch.length) }, worker),
           );
 
           if (
-            typeof CosmoTranslate.isEnabled === 'function' &&
+            typeof CosmoTranslate.isEnabled === "function" &&
             CosmoTranslate.isEnabled() &&
-            typeof CosmoTranslate.renderCachedForCurrentView === 'function'
+            typeof CosmoTranslate.renderCachedForCurrentView === "function"
           ) {
             runSafelyWithoutJump(() => CosmoTranslate.renderCachedForCurrentView());
           }
 
           const freshestMember =
-            typeof getLatestMember === 'function' ? getLatestMember(mid) : null;
+            typeof getLatestMember === "function" ? getLatestMember(mid) : null;
           const freshestCursor = freshestMember
             ? updateKnownMemberCursor(freshestMember)
             : (latestKnownCursorByMember.get(mid) || runStartCursor);
@@ -799,7 +799,7 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  if (typeof CosmoTranslate.setMemberContext === 'function' && !CosmoTranslate.setMemberContext.__cosmoSilentHook) {
+  if (typeof CosmoTranslate.setMemberContext === "function" && !CosmoTranslate.setMemberContext.__cosmoSilentHook) {
     const origSetMember = CosmoTranslate.setMemberContext.bind(CosmoTranslate);
     const wrappedSetMember = function (member, ...rest) {
       const res = origSetMember(member, ...rest);

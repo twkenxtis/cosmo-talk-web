@@ -280,3 +280,5 @@ mock/
 *.ps1
 README.md
 *.bak
+eslint.config.js
+prompt_for_vscode.md
