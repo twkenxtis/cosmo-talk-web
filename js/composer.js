@@ -332,6 +332,62 @@ const CosmoComposer = (() => {
     }
   }
 
+  async function syncAndRenderBubbleAfterSend(sentMemberId) {
+    const targetId = String(sentMemberId ?? "").trim();
+    if (!targetId) return;
+
+    // 1. 優先走 CosmoSync.syncSingleChannel 直接針對該成員打 latest.ndjson（略過額外的 v4 channels 清單請求）
+    if (
+      typeof CosmoSync !== "undefined" &&
+      typeof CosmoSync.syncSingleChannel === "function" &&
+      typeof CosmoStorage !== "undefined" &&
+      typeof CosmoStorage.getNdjsonCache === "function"
+    ) {
+      const members = Array.isArray(window.CosmoApp?.membersData) ? window.CosmoApp.membersData : [];
+      const idx = members.findIndex((m) => String(m?.artistMemberId) === targetId);
+      const baseMember = idx >= 0
+        ? members[idx]
+        : {
+          artistMemberId: targetId,
+          artistMemberName: targetId,
+          originalName: "",
+          profileImageUrl: "",
+        };
+
+      const cachedEntry = await CosmoStorage.getNdjsonCache(CosmoSync.ARTIST_ID, targetId).catch(() => null);
+      const updatedMember = await CosmoSync.syncSingleChannel(baseMember, cachedEntry);
+
+      if (updatedMember) {
+        if (idx >= 0) {
+          members[idx] = updatedMember;
+        }
+        if (String(window.CosmoApp?.activeMemberId ?? targetId) === targetId) {
+          window.currentMember = updatedMember;
+          if (typeof CosmoChatView !== "undefined") {
+            if (typeof CosmoChatView.renderSidebar === "function") {
+              CosmoChatView.renderSidebar(members, targetId);
+            }
+            if (typeof CosmoChatView.renderChat === "function") {
+              CosmoChatView.renderChat(updatedMember);
+            }
+          }
+          const chatEl = document.getElementById("chat");
+          if (chatEl) {
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+          const docEl = document.scrollingElement || document.documentElement || document.body;
+          if (docEl) {
+            docEl.scrollTop = docEl.scrollHeight;
+          }
+        }
+        return;
+      }
+    }
+
+    // 2. Fallback：呼叫外部注入的 onMessageSent（refreshMemberFromNdjson）
+    await callbacks.onMessageSent(sentMemberId);
+  }
+
   async function sendMessagePayload() {
     const curMember = callbacks.getActiveMember();
     if (state.isSending || !curMember || !curMember.artistMemberId) return;
@@ -387,7 +443,7 @@ const CosmoComposer = (() => {
           updatePlaceholder();
         }
 
-        await callbacks.onMessageSent(sentMemberId);
+        await syncAndRenderBubbleAfterSend(sentMemberId);
       } else {
         const errText = await resp.text().catch(() => "");
         const displayMsg = CosmoToast.extractApiErrorMessage(errText, resp.status);
