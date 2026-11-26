@@ -1604,3 +1604,96 @@ const CosmoChatView = (() => {
     }
   }, { passive: true });
 })();
+
+/* --- SCROLL TO BOTTOM ONCE AFTER F5 / INITIAL LOAD --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_ONCE_F5_SCROLL_BOTTOM_INIT__) return;
+  window.__COSMO_ONCE_F5_SCROLL_BOTTOM_INIT__ = true;
+
+  // 每次 F5 / 重新載入頁面時產生新的 navigation id，確保本次載入只捲動到底部一次
+  let navKey = '';
+  try {
+    const navEntry = performance.getEntriesByType?.('navigation')?.[0];
+    navKey = `cosmo_f5_scrolled_${navEntry?.startTime ?? 0}_${performance.timeOrigin ?? Date.now()}`;
+  } catch (_) {
+    navKey = `cosmo_f5_scrolled_${Date.now()}`;
+  }
+
+  let scrolledOnceThisLoad = false;
+
+  function scrollChatToBottomOnceNow() {
+    if (scrolledOnceThisLoad) return;
+    if (document.body.classList.contains('is-login-view')) return;
+
+    const chat = document.getElementById('chat');
+    const sc =
+      chat && chat.scrollHeight > chat.clientHeight + 2
+        ? chat
+        : (document.scrollingElement || document.documentElement);
+
+    const hasMessages = Boolean(
+      chat && chat.querySelector('.msg-wrapper, [data-source-id], [data-message-id]')
+    );
+    const hasScrollableContent = Boolean(sc && sc.scrollHeight > sc.clientHeight + 8);
+    if (!hasMessages && !hasScrollableContent) return;
+
+    scrolledOnceThisLoad = true;
+    try {
+      sessionStorage.setItem(navKey, '1');
+    } catch (_) {}
+
+    const applyBottom = (el) => {
+      if (!el) return;
+      const prev = el.style?.scrollBehavior;
+      if (el.style) el.style.scrollBehavior = 'auto';
+      el.scrollTop = el.scrollHeight;
+      if (el.style) el.style.scrollBehavior = prev || '';
+    };
+
+    applyBottom(chat);
+    if (sc && sc !== chat) applyBottom(sc);
+    window.scrollTo(0, document.body ? document.body.scrollHeight : 0);
+
+    if (window.CosmoViewportLock?.hideScrollDownButton) {
+      window.CosmoViewportLock.hideScrollDownButton();
+    }
+  }
+
+  let attempts = 0;
+  const maxAttempts = 25;
+
+  function tryInitialBottomOnce() {
+    if (scrolledOnceThisLoad) return;
+    attempts += 1;
+    scrollChatToBottomOnceNow();
+    if (!scrolledOnceThisLoad && attempts < maxAttempts) {
+      requestAnimationFrame(() => setTimeout(tryInitialBottomOnce, 80));
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(tryInitialBottomOnce), { once: true });
+  } else {
+    requestAnimationFrame(tryInitialBottomOnce);
+  }
+  window.addEventListener('load', () => requestAnimationFrame(tryInitialBottomOnce), { once: true });
+
+  // 若聊天訊息非同步渲染較晚完成，在首次出現訊息時觸發一次後即停止
+  const chatEl = document.getElementById('chat');
+  if (chatEl) {
+    const mo = new MutationObserver(() => {
+      if (scrolledOnceThisLoad) {
+        mo.disconnect();
+        return;
+      }
+      if (chatEl.querySelector('.msg-wrapper, [data-source-id], [data-message-id]')) {
+        requestAnimationFrame(() => {
+          scrollChatToBottomOnceNow();
+          mo.disconnect();
+        });
+      }
+    });
+    mo.observe(chatEl, { childList: true, subtree: true });
+  }
+})();
