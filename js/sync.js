@@ -192,7 +192,7 @@ const CosmoSync = (() => {
 
     const seen = new Set();
     const merged = [];
-    for (const item of [base, next]) {
+    for (const item of [...base, ...next]) {
       const key = getRecordUniqueKey(item);
       if (key && seen.has(key)) continue;
       if (key) seen.add(key);
