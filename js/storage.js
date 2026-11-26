@@ -31,8 +31,10 @@ const CosmoStorage = (() => {
 
   async function saveTokens({ accessToken = '', refreshToken = '' } = {}) {
     const db = await openDb();
-    const cleanAccess = String(accessToken || '').trim();
-    const cleanRefresh = String(refreshToken || '').trim();
+    const cleanAccess = (typeof CosmoSecurity !== 'undefined' ? CosmoSecurity.cleanJwt(accessToken) : String(accessToken || '').trim());
+    if (accessToken && !cleanAccess) throw new Error('Invalid JWT format');
+    const cleanRefresh = (typeof CosmoSecurity !== 'undefined' ? CosmoSecurity.cleanToken(refreshToken) : String(refreshToken || '').trim());
+    if (refreshToken && !cleanRefresh) throw new Error('Invalid refresh token format');
 
     return new Promise((resolve, reject) => {
       const tx = db.transaction(SESSION_STORE, 'readwrite');

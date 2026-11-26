@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' https: blob: data:; connect-src 'self' https://api.cosmo.fans; font-src 'self' https://cdn.jsdelivr.net; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="COSMO TALK STATIC - Cosmo Talk 聊天紀錄檢視與匯出工具">
 <meta property="og:type" content="website">
@@ -195,6 +196,7 @@
   </main>
 </section>
 
+<script src="js/security.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/i18n.js"></script>

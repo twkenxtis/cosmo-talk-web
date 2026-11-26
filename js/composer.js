@@ -155,11 +155,18 @@ const CosmoComposer = (() => {
 
   function clearSelectedSticker() {
     setSelectedSticker(null);
+    if (state.stickersCache !== null) {
+      renderStickerGrid();
+    } else {
+      document
+        .querySelectorAll('.sticker-grid-item.selected')
+        .forEach((item) => item.classList.remove('selected'));
+    }
   }
 
   function setSelectedSticker(sticker) {
-    const barEl = dom.selectedStickerBar;
-    const imgEl = dom.selectedStickerImg;
+    const barEl = dom.selectedStickerBar || document.getElementById('selected-sticker-bar');
+    const imgEl = dom.selectedStickerImg || document.getElementById('selected-sticker-img');
 
     if (!sticker) {
       state.selectedSticker = null;
@@ -198,7 +205,7 @@ const CosmoComposer = (() => {
     if (barEl) {
       if (imgEl) {
         if (previewUrl) {
-          imgEl.src = previewUrl;
+          imgEl.src = CosmoSecurity.safeImgUrl(previewUrl);
           imgEl.alt = utf8Char || sticker.codepointHex || 'sticker';
           imgEl.style.display = 'block';
         } else {
@@ -252,7 +259,7 @@ const CosmoComposer = (() => {
       btn.title = nfc(st.codepointHex);
 
       const img = document.createElement('img');
-      img.src = previewUrl;
+      img.src = CosmoSecurity.safeImgUrl(previewUrl);
       img.alt = nfc(st.codepointHex);
       img.loading = 'lazy';
       btn.appendChild(img);
@@ -371,8 +378,7 @@ const CosmoComposer = (() => {
 
       if (resp.status === 201 || resp.status === 206 || resp.ok) {
         if (dom.chatInput) dom.chatInput.value = '';
-        setSelectedSticker(null);
-        renderStickerGrid();
+        clearSelectedSticker();
 
         if (resp.status === 206) {
           await fetchRemainingCount(sentMemberId);
@@ -399,14 +405,9 @@ const CosmoComposer = (() => {
 
   function reset() {
     state.remainingCount = null;
-    state.selectedSticker = null;
     if (dom.stickerPickerPanel) dom.stickerPickerPanel.classList.remove('open');
-    if (dom.selectedStickerBar) dom.selectedStickerBar.style.display = 'none';
-    if (dom.chatInput) {
-      dom.chatInput.disabled = false;
-      dom.chatInput.value = '';
-    }
-    updateSendButtonState();
+    if (dom.chatInput) dom.chatInput.value = '';
+    clearSelectedSticker();
   }
 
   function onLanguageChanged() {
@@ -419,6 +420,110 @@ const CosmoComposer = (() => {
   function onWindowResize() {
     if (dom.stickerPickerPanel && dom.stickerPickerPanel.classList.contains('open')) {
       requestAnimationFrame(syncStickerGridSquareRows);
+    }
+  }
+
+  function setupStickerChrome() {
+    if (!document.getElementById('cosmo-swap-sticker-style')) {
+      const style = document.createElement('style');
+      style.id = 'cosmo-swap-sticker-style';
+      style.textContent = `
+        .chat-composer-wrapper .selected-sticker-bar,
+        .chat-composer-wrapper #selected-sticker-bar {
+          order: 1;
+          align-self: center;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .chat-composer-wrapper .sticker-picker-panel,
+        .chat-composer-wrapper #sticker-picker-panel {
+          order: 2;
+        }
+        .chat-composer-wrapper .composer-bar {
+          order: 3;
+        }
+        .chat-composer-wrapper #btn-scroll-to-bottom {
+          order: 0;
+        }
+      `;
+      (document.head || document.documentElement).appendChild(style);
+    }
+
+    const wrapper = dom.composerWrapper || document.querySelector('.chat-composer-wrapper');
+    const panel = dom.stickerPickerPanel || document.getElementById('sticker-picker-panel');
+    const bar = dom.selectedStickerBar || document.getElementById('selected-sticker-bar');
+
+    if (panel && !panel.querySelector('.sticker-panel-close-x')) {
+      const header = panel.querySelector('.sticker-picker-header') || panel.firstElementChild;
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'icon-btn sticker-panel-close-x';
+      closeBtn.title = 'Close';
+      closeBtn.setAttribute('aria-label', 'Close');
+      closeBtn.textContent = '✕';
+      closeBtn.style.marginLeft = 'auto';
+      closeBtn.style.width = '28px';
+      closeBtn.style.height = '28px';
+      closeBtn.style.minWidth = '28px';
+      closeBtn.style.minHeight = '28px';
+      closeBtn.style.fontSize = '15px';
+      closeBtn.style.color = '#e5e5ea';
+      closeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        panel.classList.remove('open');
+      });
+      if (header) {
+        header.appendChild(closeBtn);
+      } else {
+        panel.insertBefore(closeBtn, panel.firstChild);
+      }
+    }
+
+    if (bar && !bar.querySelector('.selected-sticker-close-x')) {
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'selected-sticker-close-x';
+      removeBtn.title = 'Remove sticker';
+      removeBtn.setAttribute('aria-label', 'Remove sticker');
+      removeBtn.textContent = '✕';
+      removeBtn.style.position = 'absolute';
+      removeBtn.style.top = '8px';
+      removeBtn.style.right = '8px';
+      removeBtn.style.width = '28px';
+      removeBtn.style.height = '28px';
+      removeBtn.style.padding = '0';
+      removeBtn.style.border = 'none';
+      removeBtn.style.borderRadius = '50%';
+      removeBtn.style.background = 'transparent';
+      removeBtn.style.color = 'rgba(255, 255, 255, 0.85)';
+      removeBtn.style.fontSize = '16px';
+      removeBtn.style.lineHeight = '1';
+      removeBtn.style.display = 'inline-flex';
+      removeBtn.style.alignItems = 'center';
+      removeBtn.style.justifyContent = 'center';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.style.zIndex = '2';
+
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearSelectedSticker();
+        if (dom.chatInput) {
+          dom.chatInput.focus();
+        }
+      });
+
+      bar.appendChild(removeBtn);
+    }
+
+    if (wrapper && bar && panel && bar.parentElement === wrapper && panel.parentElement === wrapper) {
+      if (bar.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_PRECEDING) {
+        wrapper.insertBefore(bar, panel);
+      }
+      bar.style.alignSelf = 'center';
+      bar.style.marginLeft = 'auto';
+      bar.style.marginRight = 'auto';
     }
   }
 
@@ -463,8 +568,8 @@ const CosmoComposer = (() => {
       }
     });
 
-    setSelectedSticker(null);
-    updateSendButtonState();
+    setupStickerChrome();
+    clearSelectedSticker();
   }
 
   return {
@@ -478,215 +583,6 @@ const CosmoComposer = (() => {
   };
 })();
 
-/* --- STICKER PICKER / SELECTED STICKER CLOSE (X) BUTTON (FIXED) --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_STICKER_CLOSE_X_FIXED__) return;
-  window.__COSMO_STICKER_CLOSE_X_FIXED__ = true;
-
-  function hideSelectedStickerBar(bar) {
-    if (!bar) return;
-    bar.classList.remove('active');
-    bar.style.display = 'none';
-
-    const img =
-      document.getElementById('selected-sticker-img') ||
-      bar.querySelector('img');
-    if (img) {
-      img.removeAttribute('src');
-      img.style.display = 'none';
-    }
-
-    document
-      .querySelectorAll('.sticker-grid-item.selected')
-      .forEach((item) => item.classList.remove('selected'));
-
-    const inputEl =
-      document.getElementById('chat-input') ||
-      document.querySelector('.composer-input');
-    if (inputEl) {
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }
-
-  function restoreSelectedStickerBarWhenPicked(bar) {
-    if (!bar) return;
-    const img =
-      document.getElementById('selected-sticker-img') ||
-      bar.querySelector('img');
-    const hasSrc = Boolean(img && img.getAttribute('src') && img.getAttribute('src').trim());
-    if (hasSrc || bar.classList.contains('active')) {
-      bar.style.display = '';
-      if (img) img.style.display = '';
-    }
-  }
-
-  function ensureCloseButtons() {
-    const panel =
-      document.getElementById('sticker-picker-panel') ||
-      document.querySelector('.sticker-picker-panel');
-    if (panel && !panel.querySelector('.sticker-panel-close-x')) {
-      const header =
-        panel.querySelector('.sticker-picker-header') || panel.firstElementChild;
-      const closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.className = 'icon-btn sticker-panel-close-x';
-      closeBtn.title = 'Close';
-      closeBtn.setAttribute('aria-label', 'Close');
-      closeBtn.textContent = '✕';
-      closeBtn.style.marginLeft = 'auto';
-      closeBtn.style.width = '28px';
-      closeBtn.style.height = '28px';
-      closeBtn.style.minWidth = '28px';
-      closeBtn.style.minHeight = '28px';
-      closeBtn.style.fontSize = '15px';
-      closeBtn.style.color = '#e5e5ea';
-
-      closeBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        panel.classList.remove('open');
-      });
-
-      if (header) {
-        header.appendChild(closeBtn);
-      } else {
-        panel.insertBefore(closeBtn, panel.firstChild);
-      }
-    }
-
-    const bar =
-      document.getElementById('selected-sticker-bar') ||
-      document.querySelector('.selected-sticker-bar');
-    if (bar) {
-      restoreSelectedStickerBarWhenPicked(bar);
-
-      if (!bar.querySelector('.selected-sticker-close-x')) {
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'selected-sticker-close-x';
-        removeBtn.title = 'Remove sticker';
-        removeBtn.setAttribute('aria-label', 'Remove sticker');
-        removeBtn.textContent = '✕';
-        removeBtn.style.position = 'absolute';
-        removeBtn.style.top = '8px';
-        removeBtn.style.right = '8px';
-        removeBtn.style.width = '28px';
-        removeBtn.style.height = '28px';
-        removeBtn.style.padding = '0';
-        removeBtn.style.border = 'none';
-        removeBtn.style.borderRadius = '50%';
-        removeBtn.style.background = 'transparent';
-        removeBtn.style.color = 'rgba(255, 255, 255, 0.85)';
-        removeBtn.style.fontSize = '16px';
-        removeBtn.style.lineHeight = '1';
-        removeBtn.style.display = 'inline-flex';
-        removeBtn.style.alignItems = 'center';
-        removeBtn.style.justifyContent = 'center';
-        removeBtn.style.cursor = 'pointer';
-        removeBtn.style.zIndex = '2';
-
-        removeBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof CosmoComposer !== 'undefined' && typeof CosmoComposer.clearSelectedSticker === 'function') {
-            CosmoComposer.clearSelectedSticker();
-          }
-          hideSelectedStickerBar(bar);
-          const inputEl =
-            document.getElementById('chat-input') ||
-            document.querySelector('.composer-input');
-          if (inputEl) {
-            inputEl.disabled = false;
-            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-        });
-
-        bar.appendChild(removeBtn);
-      }
-    }
-  }
-
-  const mo = new MutationObserver(() => ensureCloseButtons());
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'src', 'style'],
-  });
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureCloseButtons, { once: true });
-  } else {
-    ensureCloseButtons();
-  }
-})();
-
-/* --- SWAP STICKER BAR (TOP, CENTERED X) & STICKER PICKER PANEL (BOTTOM) --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_SWAP_STICKER_ORDER_INIT__) return;
-  window.__COSMO_SWAP_STICKER_ORDER_INIT__ = true;
-
-  function ensureSwapStyle() {
-    if (document.getElementById('cosmo-swap-sticker-style')) return;
-    const style = document.createElement('style');
-    style.id = 'cosmo-swap-sticker-style';
-    style.textContent = `
-      .chat-composer-wrapper .selected-sticker-bar,
-      .chat-composer-wrapper #selected-sticker-bar {
-        order: 1;
-        align-self: center;
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .chat-composer-wrapper .sticker-picker-panel,
-      .chat-composer-wrapper #sticker-picker-panel {
-        order: 2;
-      }
-      .chat-composer-wrapper .composer-bar {
-        order: 3;
-      }
-      .chat-composer-wrapper #btn-scroll-to-bottom {
-        order: 0;
-      }
-    `;
-    (document.head || document.documentElement).appendChild(style);
-  }
-
-  function applyDomOrder() {
-    ensureSwapStyle();
-    const wrapper = document.querySelector('.chat-composer-wrapper');
-    if (!wrapper) return;
-
-    const bar =
-      document.getElementById('selected-sticker-bar') ||
-      wrapper.querySelector('.selected-sticker-bar');
-    const panel =
-      document.getElementById('sticker-picker-panel') ||
-      wrapper.querySelector('.sticker-picker-panel');
-
-    if (bar && panel && bar.parentElement === wrapper && panel.parentElement === wrapper) {
-      if (panel.nextElementSibling !== bar && bar.compareDocumentPosition(panel) & Node.DOCUMENT_POSITION_FOLLOWING) {
-        wrapper.insertBefore(bar, panel);
-      }
-      bar.style.alignSelf = 'center';
-      bar.style.marginLeft = 'auto';
-      bar.style.marginRight = 'auto';
-    }
-  }
-
-  const mo = new MutationObserver(() => applyDomOrder());
-  mo.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'style'],
-  });
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyDomOrder, { once: true });
-  } else {
-    applyDomOrder();
-  }
-})();
+if (typeof window !== 'undefined') {
+  window.CosmoComposer = CosmoComposer;
+}

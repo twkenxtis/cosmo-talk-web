@@ -109,7 +109,7 @@ const CosmoSettings = (() => {
     const closeBtn = document.createElement('button');
     closeBtn.type = 'button';
     closeBtn.className = 'icon-btn settings-close-btn';
-    closeBtn.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>';
+    CosmoSecurity.setIcon(closeBtn, 'ti-x');
     closeBtn.onclick = () => close();
 
     header.appendChild(title);
@@ -225,6 +225,7 @@ const CosmoSettings = (() => {
     refreshModalTexts();
     syncOptionButtons();
     backdropEl.style.display = 'flex';
+    document.dispatchEvent(new CustomEvent('cosmo:settings-opened'));
   }
 
   function close() {
@@ -248,7 +249,8 @@ const CosmoSettings = (() => {
     toggle,
   };
 })();
-/* --- SPLIT FROM APP.JS: 4-THEME SWITCHER & CUSTOM BACKGROUND UPLOADER --- */
+
+/* --- 4-THEME SWITCHER & CUSTOM BACKGROUND UPLOADER --- */
 (() => {
   if (typeof window === 'undefined') return;
   if (window.__COSMO_SPLIT_SETTINGS_BG_INIT__) return;
@@ -265,6 +267,14 @@ const CosmoSettings = (() => {
   const BG_ROW_CLASS = 'adv-bg-upload-row';
   const JPEG_QUALITY = 0.85;
 
+  function notifyUser(msg) {
+    if (typeof CosmoToast !== 'undefined') {
+      if (typeof CosmoToast.show === 'function') return CosmoToast.show(msg, { type: 'error' });
+      if (typeof CosmoToast === 'function') return CosmoToast(msg);
+    }
+    console.warn('[CosmoSettings]', msg);
+  }
+
   function applyTheme(themeName) {
     const mode = VALID_THEMES.includes(themeName) ? themeName : 'dark';
     document.documentElement.setAttribute('data-theme', mode);
@@ -277,8 +287,8 @@ const CosmoSettings = (() => {
 
   function injectThemeControl() {
     const modalBody =
+      document.querySelector('#settings-modal-panel .settings-modal-body') ||
       document.querySelector('#settings-modal .settings-modal-body') ||
-      document.querySelector('.settings-modal-panel .settings-modal-body') ||
       document.querySelector('.settings-modal-body');
     if (!modalBody || document.getElementById('cosmo-theme-row')) return;
 
@@ -364,14 +374,20 @@ const CosmoSettings = (() => {
     const valid = Boolean(dataUrl && dataUrl.startsWith('data:image/'));
 
     if (valid) {
-      if (img.src !== dataUrl) img.src = dataUrl;
-      layer.classList.add('has-bg');
+      const safeSrc = CosmoSecurity.safeImgUrl(dataUrl);
+      if (safeSrc) {
+        if (img.src !== safeSrc) img.src = safeSrc;
+        layer.classList.add('has-bg');
+      } else {
+        if (img.hasAttribute('src')) img.removeAttribute('src');
+        layer.classList.remove('has-bg');
+      }
     } else {
       if (img.hasAttribute('src')) img.removeAttribute('src');
       layer.classList.remove('has-bg');
     }
 
-    if (!valid || isLoginView()) {
+    if (!valid || !layer.classList.contains('has-bg') || isLoginView()) {
       document.body.classList.remove('cosmo-has-custom-bg');
       layer.style.display = 'none';
     } else {
@@ -418,12 +434,12 @@ const CosmoSettings = (() => {
       try {
         localStorage.setItem(BG_STORAGE_KEY, jpgDataUrl);
       } catch (_) {
-        alert('圖片轉檔後仍超出 localStorage 容量上限，請選擇較小張的圖片。');
+        notifyUser('圖片轉檔後仍超出 localStorage 容量上限，請選擇較小張的圖片。');
         return;
       }
       applyBackgroundDataUrl(jpgDataUrl);
     } catch (_) {
-      alert('圖片轉檔失敗，請確認格式為 WEBP、PNG 或 JPEG。');
+      notifyUser('圖片轉檔失敗，請確認格式為 WEBP、PNG 或 JPEG。');
     }
   }
 
@@ -448,13 +464,36 @@ const CosmoSettings = (() => {
     return fileInput;
   }
 
+  function applyBgButtonLabels() {
+    const uploadText =
+      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
+        ? CosmoI18n.t('upload_bg_btn')
+        : '上傳背景圖';
+    const clearText =
+      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
+        ? CosmoI18n.t('clear_bg_btn')
+        : '移除背景';
+
+    const upBtn = document.getElementById(UPLOAD_BTN_ID);
+    if (upBtn && upBtn.textContent !== uploadText) {
+      upBtn.textContent = uploadText;
+      upBtn.setAttribute('aria-label', uploadText);
+    }
+
+    const clrBtn = document.getElementById(CLEAR_BTN_ID);
+    if (clrBtn && clrBtn.textContent !== clearText) {
+      clrBtn.textContent = clearText;
+      clrBtn.setAttribute('aria-label', clearText);
+    }
+  }
+
   function mountBgControlsBelowThemeSelect() {
     const fileInput = ensureFileInput();
     const themeSelect = document.getElementById('cosmo-theme-select');
     if (!themeSelect) return;
 
     const rowContainer =
-      themeSelect.closest('.setting-row, .settings-row, .adv-row, .field-row, .control-row, .form-row, .row, label') ||
+      themeSelect.closest('.settings-option-row, .setting-row, .settings-row, .adv-row, .field-row, .control-row, .form-row, .row, label') ||
       themeSelect.parentElement;
     if (!rowContainer || !rowContainer.parentElement) return;
 
@@ -470,7 +509,6 @@ const CosmoSettings = (() => {
       uploadBtn.type = 'button';
       uploadBtn.id = UPLOAD_BTN_ID;
       uploadBtn.className = 'btn';
-      uploadBtn.textContent = '上傳背景圖';
       uploadBtn.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -484,7 +522,6 @@ const CosmoSettings = (() => {
       clearBtn.type = 'button';
       clearBtn.id = CLEAR_BTN_ID;
       clearBtn.className = 'btn';
-      clearBtn.textContent = '清除背景';
       clearBtn.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -502,6 +539,7 @@ const CosmoSettings = (() => {
     if (rowContainer.nextElementSibling !== row) {
       rowContainer.insertAdjacentElement('afterend', row);
     }
+    applyBgButtonLabels();
   }
 
   function syncSettingsAndBg() {
@@ -519,64 +557,33 @@ const CosmoSettings = (() => {
   } catch (_) {
     applyTheme('dark');
   }
-  syncSettingsAndBg();
+
+  function init() {
+    syncSettingsAndBg();
+    window.addEventListener('resize', ensureBgLayer, { passive: true });
+    document.addEventListener('cosmo:settings-opened', syncSettingsAndBg);
+
+    if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
+      CosmoI18n.onChange(applyBgButtonLabels);
+    }
+
+    const bodyMo = new MutationObserver(() => {
+      let saved = '';
+      try {
+        saved = localStorage.getItem(BG_STORAGE_KEY) || '';
+      } catch (_) {}
+      applyBackgroundDataUrl(saved);
+    });
+    if (document.body) {
+      bodyMo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+  }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncSettingsAndBg, { once: true });
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
   }
-  window.addEventListener('resize', () => {
-    ensureBgLayer();
-    const sel = document.getElementById('jwt-login-btn');
-    void sel;
-  }, { passive: true });
-
-  const mo = new MutationObserver(() => syncSettingsAndBg());
-  mo.observe(document.documentElement || document.body, {
-    attributes: true,
-    attributeFilter: ['class', 'style'],
-    childList: true,
-    subtree: true,
-  });
 
   window.CosmoReplyThemeSearch = window.CosmoReplyThemeSearch || { applyTheme };
-})();
-
-/* --- I18N SYNC FOR UPLOAD & REMOVE BACKGROUND BUTTONS --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_BG_BTN_I18N_INIT__) return;
-  window.__COSMO_BG_BTN_I18N_INIT__ = true;
-
-  function applyBgButtonLabels() {
-    const uploadText =
-      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
-        ? CosmoI18n.t('upload_bg_btn')
-        : '上傳背景圖';
-    const clearText =
-      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
-        ? CosmoI18n.t('clear_bg_btn')
-        : '移除背景';
-
-    const upBtn = document.getElementById('cosmo-adv-bg-upload-btn');
-    if (upBtn && upBtn.textContent !== uploadText) {
-      upBtn.textContent = uploadText;
-      upBtn.setAttribute('aria-label', uploadText);
-    }
-
-    const clrBtn = document.getElementById('cosmo-adv-bg-clear-btn');
-    if (clrBtn && clrBtn.textContent !== clearText) {
-      clrBtn.textContent = clearText;
-      clrBtn.setAttribute('aria-label', clearText);
-    }
-  }
-
-  applyBgButtonLabels();
-  if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
-    CosmoI18n.onChange(applyBgButtonLabels);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyBgButtonLabels, { once: true });
-  }
-  const mo = new MutationObserver(() => applyBgButtonLabels());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 })();

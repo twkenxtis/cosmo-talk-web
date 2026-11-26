@@ -86,7 +86,7 @@ const CosmoUtils = (() => {
     if (!raw.includes('&')) return raw;
     if (typeof document !== 'undefined') {
       const textarea = document.createElement('textarea');
-      textarea.innerHTML = raw;
+      textarea.textContent = raw;
       return textarea.value;
     }
     return raw

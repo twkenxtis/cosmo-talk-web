@@ -83,7 +83,15 @@ const CosmoTranslate = (() => {
 
   function getCached(memberId, messageId) {
     if (!memberId || !messageId) return null;
-    return blobCache.get(`${String(memberId)}:${String(messageId)}`) || null;
+    const mid = String(memberId);
+    const sid = String(messageId);
+    const direct = blobCache.get(`${mid}:${sid}`);
+    if (direct) return direct;
+    const silentEntry = window.CosmoSilentTranslate?.getSilentBlobEntry?.(mid, sid);
+    if (silentEntry?.translatedContent) {
+      return storeInBlob(mid, silentEntry.messageId || sid, silentEntry.translatedContent);
+    }
+    return null;
   }
 
   function extractSourceId(rec, msg) {
@@ -166,7 +174,6 @@ const CosmoTranslate = (() => {
     const bubble = wrapEl.querySelector('.bubble');
     if (!bubble) return;
 
-    // 保留原始文字最後一個字元，換行後直接顯示譯文（不空一行）
     let origSpan = bubble.querySelector('.cosmo-orig-text');
     if (!origSpan) {
       const rawContent = String(bubble.textContent || '');
@@ -223,8 +230,8 @@ const CosmoTranslate = (() => {
     const sid = String(sourceId);
     const key = `${mid}:${sid}`;
 
-    if (blobCache.has(key)) {
-      const existing = blobCache.get(key);
+    const existing = getCached(mid, sid);
+    if (existing) {
       if (enabled) {
         applyTranslationToDom(mid, existing.messageId || sid, existing.translatedContent);
       }
@@ -307,7 +314,11 @@ const CosmoTranslate = (() => {
     try {
       const batch = [];
       while (batch.length < BATCH_SIZE && nextIndex < candidateQueue.length) {
-        batch.push(candidateQueue[nextIndex++]);
+        const cand = candidateQueue[nextIndex++];
+        const key = `${cand.memberId || currentMemberId}:${cand.sourceId}`;
+        if (!attemptedKeys.has(key) && !getCached(cand.memberId || currentMemberId, cand.sourceId)) {
+          batch.push(cand);
+        }
       }
       if (batch.length === 0) return;
 
@@ -336,21 +347,20 @@ const CosmoTranslate = (() => {
     const prevMid = currentMemberId;
     currentMemberId = built.memberId;
 
-    // 切換到不同成員時才重置；同一成員若只是重新 renderChat（例如跳轉），保留進度並補齊新訊息
-    if (!prevMid || String(prevMid) !== String(currentMemberId)) {
-      candidateQueue = built.items;
-      nextIndex = 0;
-    } else if (candidateQueue.length === 0) {
+    // 切換到不同成員時才重置；同一成員新增訊息時將未嘗試的新訊息置頂，不跳過未抓到的舊訊息
+    if (!prevMid || String(prevMid) !== String(currentMemberId) || candidateQueue.length === 0) {
       candidateQueue = built.items;
       nextIndex = 0;
     } else {
       const existingIds = new Set(candidateQueue.map((x) => `${x.memberId}:${x.sourceId}`));
-      const appended = built.items.filter((x) => !existingIds.has(`${x.memberId}:${x.sourceId}`));
+      const appended = built.items
+        .filter((x) => !existingIds.has(`${x.memberId}:${x.sourceId}`))
+        .sort((a, b) => (b.cursorVal !== a.cursorVal ? b.cursorVal - a.cursorVal : b.orderIdx - a.orderIdx));
+
       if (appended.length > 0) {
-        candidateQueue = [...appended, ...candidateQueue].sort((a, b) =>
-          b.cursorVal !== a.cursorVal ? b.cursorVal - a.cursorVal : b.orderIdx - a.orderIdx
-        );
-        nextIndex = Math.min(nextIndex + appended.length, candidateQueue.length);
+        candidateQueue = [...appended, ...candidateQueue];
+        // 讓 nextIndex 指向這批新插入的頂端項目（從 0 開始抓新訊息），舊進度靠 attemptedKeys / getCached 自動 O(1) 跳過
+        nextIndex = 0;
       }
     }
 
@@ -418,109 +428,8 @@ const CosmoTranslate = (() => {
 if (typeof window !== 'undefined') {
   window.CosmoTranslate = CosmoTranslate;
 }
-/* --- SPLIT FROM APP.JS: TOPBAR TRANSLATE TOGGLE & SILENT CURRENT-MEMBER BLOB PREFETCH --- */
-(() => {
-  if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
-  if (window.__COSMO_SPLIT_TRANSLATE_EXT_INIT__) return;
-  window.__COSMO_SPLIT_TRANSLATE_EXT_INIT__ = true;
 
-  const BTN_ID = 'btn-toggle-translate';
-  const SVG_ICON_HTML =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
-    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-    'class="icon icon-tabler icons-tabler-outline icon-tabler-language" aria-hidden="true">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
-    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
-    '<path d="M19.1 18h-6.2" /></svg>';
-
-  function findTargetToolbar() {
-    const searchBtn = document.getElementById('cosmo-member-search-btn') || document.querySelector('[data-action="search"], .search-btn');
-    if (searchBtn && searchBtn.parentElement) return { parent: searchBtn.parentElement, anchor: searchBtn };
-    for (const sel of ['#chat-header .header-actions', '#chat-header', '.chat-header', '#topbar']) {
-      const el = document.querySelector(sel);
-      if (el) return { parent: el, anchor: null };
-    }
-    return null;
-  }
-
-  function ensureTranslateButton() {
-    const loc = findTargetToolbar();
-    if (!loc || !loc.parent) return;
-    let btn = document.getElementById(BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = BTN_ID;
-      btn.className = 'icon-btn btn-toggle-translate';
-      btn.title = 'Translate (ON/OFF)';
-      btn.setAttribute('aria-label', 'Translate (ON/OFF)');
-      btn.innerHTML = SVG_ICON_HTML;
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        if (typeof CosmoTranslate.toggle === 'function') CosmoTranslate.toggle();
-      });
-    }
-    if (btn.parentElement !== loc.parent) {
-      if (loc.anchor && loc.anchor.parentElement === loc.parent) {
-        loc.anchor.insertAdjacentElement('afterend', btn);
-      } else {
-        loc.parent.appendChild(btn);
-      }
-    }
-    const isOn = typeof CosmoTranslate.isEnabled === 'function' ? Boolean(CosmoTranslate.isEnabled()) : false;
-    btn.dataset.translateOn = isOn ? '1' : '0';
-    btn.classList.toggle('active', isOn);
-    btn.classList.toggle('is-active', isOn);
-  }
-
-  ensureTranslateButton();
-  const mo = new MutationObserver(() => ensureTranslateButton());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
-})();
-/* --- SAFARI SAFE TRANSLATE BUTTON ICON SYNC --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_SAFARI_TRANSLATE_ICON_INIT__) return;
-  window.__COSMO_SAFARI_TRANSLATE_ICON_INIT__ = true;
-
-  const BTN_ID = 'btn-toggle-translate';
-  const SAFARI_SVG =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
-    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-    'aria-hidden="true" style="width:20px;height:20px;min-width:20px;min-height:20px;display:block;flex-shrink:0;">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
-    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
-    '<path d="M19.1 18h-6.2" /></svg>';
-
-  function syncSafariTranslateIcon() {
-    const btn = document.getElementById(BTN_ID);
-    if (!btn) return;
-    if (!btn.querySelector('svg')) {
-      btn.innerHTML = SAFARI_SVG;
-    }
-    const svg = btn.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('width', '20');
-      svg.setAttribute('height', '20');
-      svg.style.width = '20px';
-      svg.style.height = '20px';
-      svg.style.display = 'block';
-      svg.style.flexShrink = '0';
-    }
-  }
-
-  syncSafariTranslateIcon();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncSafariTranslateIcon, { once: true });
-  }
-  const mo = new MutationObserver(() => syncSafariTranslateIcon());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
-})();
-
-/* --- CLEAN SINGLE-SOURCE TRANSLATE SCROLL GUARD --- */
+/* --- CLEAN SINGLE-SOURCE TRANSLATE SCROLL GUARD & SILENT BLOB RUNNER --- */
 (() => {
   if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
   if (window.__COSMO_CLEAN_TRANSLATE_SCROLL_GUARD_INIT__) return;
@@ -580,7 +489,6 @@ if (typeof window !== 'undefined') {
       return;
     }
 
-    // 僅在內容高度增加且目前意外跳到頂部或偏移時，依差值補償，絕不主動設為 0
     const heightDelta = nowHeight - prevHeight;
     if (Math.abs(heightDelta) > 0.5 && prevTop > 4 && nowTop <= 2) {
       sc.scrollTop = Math.max(0, prevTop + heightDelta);

@@ -51,11 +51,11 @@ const CosmoChatView = (() => {
       ? CosmoI18n.t(key, vars)
       : nfc(String(key));
 
-  const COPY_ICON_HTML = '<i class="ti ti-copy" aria-hidden="true"></i>';
-  const CHECK_ICON_HTML = '<i class="ti ti-check" aria-hidden="true"></i>';
-  const LOGOUT_ICON_HTML = '<i class="ti ti-logout" aria-hidden="true"></i>';
-  const EXPORT_ICON_HTML = '<i class="ti ti-file-export" aria-hidden="true"></i>';
-  const SETTINGS_ICON_HTML = '<i class="ti ti-tool" aria-hidden="true"></i>';
+  const COPY_ICON_HTML = 'ti-copy'; // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
+  const CHECK_ICON_HTML = 'ti-check'; // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
+  const LOGOUT_ICON_HTML = 'ti-logout'; // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
+  const EXPORT_ICON_HTML = 'ti-file-export'; // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
+  const SETTINGS_ICON_HTML = 'ti-tool'; // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
 
   const dom = {
     chatShell: document.getElementById('chat-shell'),
@@ -140,7 +140,10 @@ const CosmoChatView = (() => {
     for (const m of membersData) {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'member-item' + (m.artistMemberId === activeMemberId ? ' active' : '');
+      btn.className = 'member-item' + (String(m.artistMemberId) === String(activeMemberId) ? ' active' : '');
+      if (m.artistMemberId !== undefined && m.artistMemberId !== null) {
+        btn.dataset.memberId = String(m.artistMemberId);
+      }
       btn.onclick = () => {
         callbacks.onSelectMember(m);
         if (isMobile()) toggleSidebar(true);
@@ -150,7 +153,7 @@ const CosmoChatView = (() => {
       if (m.profileImageUrl) {
         const img = document.createElement('img');
         img.className = 'member-thumb';
-        img.src = m.profileImageUrl;
+        img.src = CosmoSecurity.safeImgUrl(m.profileImageUrl);
         img.alt = memberLabel(m);
         img.loading = 'lazy';
         btn.appendChild(img);
@@ -175,7 +178,7 @@ const CosmoChatView = (() => {
     expBtn.className = 'icon-btn';
     expBtn.title = tr('export_text');
     expBtn.setAttribute('aria-label', tr('export_text'));
-    expBtn.innerHTML = EXPORT_ICON_HTML;
+    CosmoSecurity.setIconFromConst(expBtn, 'EXPORT_ICON_HTML');
     expBtn.onclick = () =>
       CosmoExport.exportMemberText({
         member,
@@ -189,7 +192,7 @@ const CosmoChatView = (() => {
     copyBtn.className = 'icon-btn';
     copyBtn.title = tr('copy_artist_text');
     copyBtn.setAttribute('aria-label', tr('copy_artist_text'));
-    copyBtn.innerHTML = COPY_ICON_HTML;
+    CosmoSecurity.setIconFromConst(copyBtn, 'COPY_ICON_HTML');
     copyBtn.onclick = async () => {
       const { text } = CosmoExport.buildMemberText({
         renderedItems: viewState.currentRenderedItems,
@@ -199,12 +202,12 @@ const CosmoChatView = (() => {
       if (!text) return;
 
       const ok = await copyTextToClipboard(text);
-      copyBtn.innerHTML = ok ? CHECK_ICON_HTML : COPY_ICON_HTML;
+      CosmoSecurity.setIconFromConst(copyBtn, ok ? 'CHECK_ICON_HTML' : 'COPY_ICON_HTML');
       copyBtn.title = ok ? tr('copied') : tr('copy_failed');
       copyBtn.disabled = true;
 
       setTimeout(() => {
-        copyBtn.innerHTML = COPY_ICON_HTML;
+        CosmoSecurity.setIconFromConst(copyBtn, 'COPY_ICON_HTML');
         copyBtn.title = tr('copy_artist_text');
         copyBtn.disabled = false;
       }, 1500);
@@ -215,7 +218,7 @@ const CosmoChatView = (() => {
     settingsBtn.className = 'icon-btn';
     settingsBtn.title = tr('settings');
     settingsBtn.setAttribute('aria-label', tr('settings'));
-    settingsBtn.innerHTML = SETTINGS_ICON_HTML;
+    CosmoSecurity.setIconFromConst(settingsBtn, 'SETTINGS_ICON_HTML');
     settingsBtn.onclick = () => {
       if (typeof CosmoSettings !== 'undefined' && typeof CosmoSettings.toggle === 'function') {
         CosmoSettings.toggle();
@@ -227,7 +230,7 @@ const CosmoChatView = (() => {
     logoutBtn.className = 'icon-btn';
     logoutBtn.title = tr('logout');
     logoutBtn.setAttribute('aria-label', tr('logout'));
-    logoutBtn.innerHTML = LOGOUT_ICON_HTML;
+    CosmoSecurity.setIconFromConst(logoutBtn, 'LOGOUT_ICON_HTML');
     logoutBtn.onclick = () => callbacks.onLogout();
 
     actions.appendChild(expBtn);
@@ -238,8 +241,9 @@ const CosmoChatView = (() => {
   }
 
   function renderChat(member) {
-  if (typeof window !== 'undefined' && window.CosmoTranslate && typeof window.CosmoTranslate.setMemberContext === 'function') { window.CosmoTranslate.setMemberContext(member); }
-  if ((typeof window !== 'undefined' && window.IS_DEMO_MODE) && arguments[0] && !Array.isArray(arguments[0].messages)) { window.__DEMO_ENSURE_MEMBER_MESSAGES__(arguments[0]); }
+    if ((typeof window !== 'undefined' && window.IS_DEMO_MODE) && member && !Array.isArray(member.messages)) {
+      window.__DEMO_ENSURE_MEMBER_MESSAGES__(member);
+    }
     if (!dom.chatHeader || !dom.chat || !dom.timelineRail) return;
 
     dom.chatHeader.replaceChildren();
@@ -250,11 +254,19 @@ const CosmoChatView = (() => {
     viewState.currentSegmentStarts = [];
 
     if (!member) {
+      dom.chat.removeAttribute('data-artist-member-id');
       const empty = document.createElement('div');
       empty.className = 'empty-state';
       empty.textContent = tr('no_channel_data');
       dom.chat.appendChild(empty);
+      if (typeof window !== 'undefined' && window.CosmoTranslate?.setMemberContext) {
+        window.CosmoTranslate.setMemberContext(null);
+      }
       return;
+    }
+
+    if (member.artistMemberId !== undefined && member.artistMemberId !== null) {
+      dom.chat.dataset.artistMemberId = String(member.artistMemberId);
     }
 
     const label = memberLabel(member);
@@ -324,16 +336,21 @@ const CosmoChatView = (() => {
       const wrap = document.createElement('div');
       wrap.className = 'msg-wrapper' + (isGroupedWithPrev ? ' grouped-next' : '');
       const anchorId = `msg-${member.artistMemberId}-${count}`;
-    const __srcId = (msg && (msg.sourceId || (typeof msg.syncId === 'string' && msg.syncId.includes(':') ? msg.syncId.split(':').pop() : ''))) || '';
-    const __mid = (msg && msg.artistMemberId) ?? member.artistMemberId ?? '';
-      wrap.id = anchorId; if (__srcId) wrap.dataset.sourceId = String(__srcId); if (__mid !== '') wrap.dataset.artistMemberId = String(__mid);
+      const __srcId = (msg && (msg.sourceId || (typeof msg.syncId === 'string' && msg.syncId.includes(':') ? msg.syncId.split(':').pop() : ''))) || '';
+      const __mid = (msg && msg.artistMemberId) ?? member.artistMemberId ?? '';
+      wrap.id = anchorId;
+      if (__srcId) wrap.dataset.sourceId = String(__srcId);
+      if (__mid !== '') wrap.dataset.artistMemberId = String(__mid);
       if (!other) wrap.style.flexDirection = 'row-reverse';
 
       if (other) {
         const av = document.createElement('div');
         av.className = 'avatar';
         if (member.profileImageUrl) {
-          av.style.backgroundImage = `url('${member.profileImageUrl}')`;
+          const safeAvUrl = CosmoSecurity.safeImgUrl(member.profileImageUrl);
+          if (safeAvUrl) {
+            av.style.backgroundImage = `url('${safeAvUrl}')`;
+          }
         }
         wrap.appendChild(av);
       }
@@ -382,7 +399,7 @@ const CosmoChatView = (() => {
       } else if (hasSticker && msg.stickerMetadata?.imageUrl) {
         const sImg = document.createElement('img');
         sImg.className = 'sticker-img';
-        sImg.src = msg.stickerMetadata.imageUrl;
+        sImg.src = CosmoSecurity.safeImgUrl(msg.stickerMetadata.imageUrl);
         sImg.loading = 'lazy';
         bubble.appendChild(sImg);
       } else if (hasMedia) {
@@ -394,14 +411,14 @@ const CosmoChatView = (() => {
           if (MEDIA_EXT_RE.test(u)) {
             const vid = document.createElement('video');
             vid.className = 'media-video';
-            vid.src = u;
+            vid.src = CosmoSecurity.safeImgUrl(u);
             vid.controls = true;
             vid.preload = 'metadata';
             bubble.appendChild(vid);
           } else {
             const mImg = document.createElement('img');
             mImg.className = 'media-img';
-            mImg.src = u;
+            mImg.src = CosmoSecurity.safeImgUrl(u);
             mImg.loading = 'lazy';
             bubble.appendChild(mImg);
           }
@@ -464,13 +481,18 @@ const CosmoChatView = (() => {
         railFrag.appendChild(b);
       }
       dom.timelineRail.appendChild(railFrag);
+    }
 
-      const lastSeg = viewState.currentSegmentStarts[viewState.currentSegmentStarts.length - 1];
-      const lastTarget = document.getElementById(lastSeg.id);
-      if (lastTarget) {
-        requestAnimationFrame(() => {
-          // [DISABLED AUTO-JUMP TO LAST TIMELINE] lastTarget.scrollIntoView({ behavior: 'instant', block: 'start' });
-        });
+    if (typeof window !== 'undefined' && window.CosmoTranslate) {
+      if (typeof window.CosmoTranslate.setMemberContext === 'function') {
+        window.CosmoTranslate.setMemberContext(member);
+      }
+      if (
+        typeof window.CosmoTranslate.isEnabled === 'function' &&
+        window.CosmoTranslate.isEnabled() &&
+        typeof window.CosmoTranslate.renderCachedForCurrentView === 'function'
+      ) {
+        window.CosmoTranslate.renderCachedForCurrentView();
       }
     }
   }
@@ -487,27 +509,27 @@ const CosmoChatView = (() => {
   };
 })();
 
-/* --- TRANSLATION BUBBLE & CONTINUOUS SCROLL UP INTEGRATION (V6) --- */
+if (typeof window !== 'undefined') {
+  window.CosmoChatView = CosmoChatView;
+}
+
+/* --- TRANSLATION SCROLL UP INTEGRATION (THROTTLED) --- */
 (() => {
   if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
   if (window.__COSMO_TRANSLATE_CHAT_HOOK_V6__) return;
   window.__COSMO_TRANSLATE_CHAT_HOOK_V6__ = true;
 
-  if (typeof CosmoChatView !== 'undefined' && typeof CosmoChatView.renderChat === 'function') {
-    window.CosmoChatView = CosmoChatView;
-    const origRenderChat = CosmoChatView.renderChat.bind(CosmoChatView);
-    CosmoChatView.renderChat = function (member, ...rest) {
-      const res = origRenderChat(member, ...rest);
-      CosmoTranslate.setMemberContext(member);
-      if (CosmoTranslate.isEnabled()) {
-        CosmoTranslate.renderCachedForCurrentView();
-      }
-      return res;
-    };
-  }
-
-  // 只要向上捲動（包含 window、#chat 或任何可捲動容器）就漸進觸發下一批 30 筆（無最大請求限制）
   const lastTopByEl = new WeakMap();
+  let lastBatchTriggerAt = 0;
+  const TRIGGER_COOLDOWN_MS = 280;
+
+  function throttledRequestNextBatch() {
+    if (!CosmoTranslate.isEnabled()) return;
+    const now = Date.now();
+    if (now - lastBatchTriggerAt < TRIGGER_COOLDOWN_MS) return;
+    lastBatchTriggerAt = now;
+    CosmoTranslate.requestNextBatch();
+  }
 
   function triggerIfScrollingUp(el) {
     if (!CosmoTranslate.isEnabled()) return;
@@ -515,12 +537,13 @@ const CosmoChatView = (() => {
       el && el !== document && el.scrollHeight > el.clientHeight
         ? el
         : document.scrollingElement || document.documentElement;
+    if (!scroller) return;
     const curTop = Number(scroller.scrollTop || 0);
     const prevTop = lastTopByEl.get(scroller);
     lastTopByEl.set(scroller, curTop);
 
-    if (prevTop !== undefined && curTop < prevTop) {
-      CosmoTranslate.requestNextBatch();
+    if (prevTop !== undefined && curTop < prevTop - 4) {
+      throttledRequestNextBatch();
     }
   }
 
@@ -531,43 +554,162 @@ const CosmoChatView = (() => {
   window.addEventListener('wheel', (ev) => {
     if (!CosmoTranslate.isEnabled()) return;
     if (typeof ev.deltaY === 'number' && ev.deltaY < 0) {
-      CosmoTranslate.requestNextBatch();
+      throttledRequestNextBatch();
     }
   }, { passive: true, capture: true });
 
-  // 時間軸跳轉後補齊可視區快取與下一批
   document.addEventListener('click', (ev) => {
     const tBtn = ev.target?.closest?.('.timeline-btn');
     if (tBtn && CosmoTranslate.isEnabled()) {
       setTimeout(() => {
         if (CosmoTranslate.isEnabled()) {
           CosmoTranslate.renderCachedForCurrentView();
-          CosmoTranslate.requestNextBatch();
+          throttledRequestNextBatch();
         }
       }, 200);
     }
   }, { passive: true, capture: true });
 })();
 
-/* --- FLOATING SCROLL-TO-BOTTOM BUTTON (RELATIVE ABOVE SEND BTN) --- */
+/* --- UNIFIED HEADER, SIDEBAR AVATAR RING, ENGLISH DATES & SCROLL-TO-BOTTOM --- */
 (() => {
   if (typeof window === 'undefined') return;
-  if (window.__COSMO_SCROLL_BOTTOM_BTN_INIT__) return;
-  window.__COSMO_SCROLL_BOTTOM_BTN_INIT__ = true;
+  if (window.__COSMO_UNIFIED_CHAT_UI_INIT__) return;
+  window.__COSMO_UNIFIED_CHAT_UI_INIT__ = true;
 
-  const TI_CHEVRON_HTML = '<i class="ti ti-chevron-down" aria-hidden="true"></i>';
+  const SCROLL_BTN_ID = 'btn-scroll-to-bottom';
+  const SEARCH_BTN_ID = 'cosmo-member-search-btn';
+  const SEARCH_BAR_ID = 'cosmo-search-bar';
+  const SEARCH_INPUT_ID = 'cosmo-search-input';
+  const SEARCH_COUNT_ID = 'cosmo-search-count';
+  const TRANS_BTN_ID = 'btn-toggle-translate';
 
-  const SVG_CHEVRON_HTML =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" ' +
-    'fill="none" stroke="#10202b" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" ' +
-    'class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down" aria-hidden="true" ' +
-    'style="width:22px;height:22px;min-width:22px;min-height:22px;display:block;flex-shrink:0;">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M6 9l6 6l6 -6" /></svg>';
+  const ORIGINAL_NAME_COLORS = {
+    SeoYeon: '#22AEFF', HyeRin: '#9200FF', JiWoo: '#FFF800', ChaeYeon: '#98F21D',
+    YooYeon: '#DB0C74', SooMin: '#FC83A4', NaKyoung: '#6799A0', YuBin: '#FFE3E2',
+    Kaede: '#FFC935', DaHyun: '#FF9AD6', Kotone: '#FFDE00', YeonJi: '#5974FF',
+    Nien: '#FF953F', SoHyun: '#1222B5', Xinyu: '#D51313', Mayu: '#FE8E76',
+    Lynn: '#AC62B7', JooBin: '#B7F54C', HaYeon: '#52D9BB', ShiOn: '#FF428A',
+    ChaeWon: '#C7A3E0', Sullin: '#7BBA8D', SeoAh: '#CFF3FF', JiYeon: '#FFAB62',
+    tripleS: '#333333',
+  };
+  const LOWER_NAME_COLORS = Object.fromEntries(
+    Object.entries(ORIGINAL_NAME_COLORS).map(([k, v]) => [k.toLowerCase(), v])
+  );
+  const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  let useSvgFallback = false;
+  let useSvgChevron = false;
+  let searchMatches = [];
+  let searchIdx = -1;
+  let syncScheduled = false;
 
-  function ensureScopedStyle() {
+  function createChevronSvgNode() {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', '22');
+    svg.setAttribute('height', '22');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', '#10202b');
+    svg.setAttribute('stroke-width', '2.25');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.width = '22px';
+    svg.style.height = '22px';
+    svg.style.minWidth = '22px';
+    svg.style.minHeight = '22px';
+    svg.style.display = 'block';
+    svg.style.flexShrink = '0';
+    svg.style.pointerEvents = 'none';
+
+    const p1 = document.createElementNS(NS, 'path');
+    p1.setAttribute('stroke', 'none');
+    p1.setAttribute('d', 'M0 0h24v24H0z');
+    p1.setAttribute('fill', 'none');
+
+    const p2 = document.createElementNS(NS, 'path');
+    p2.setAttribute('d', 'M6 9l6 6l6 -6');
+
+    svg.appendChild(p1);
+    svg.appendChild(p2);
+    return svg;
+  }
+
+  function createTranslateSvgNode() {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('width', '20');
+    svg.setAttribute('height', '20');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.width = '20px';
+    svg.style.height = '20px';
+    svg.style.minWidth = '20px';
+    svg.style.minHeight = '20px';
+    svg.style.display = 'block';
+    svg.style.flexShrink = '0';
+    svg.style.pointerEvents = 'none';
+
+    const paths = [
+      { d: 'M0 0h24v24H0z', stroke: 'none', fill: 'none' },
+      { d: 'M4 5h7' },
+      { d: 'M9 3v2c0 4.418 -2.239 8 -5 8' },
+      { d: 'M5 9c0 2.144 2.952 3.908 6.7 4' },
+      { d: 'M12 20l4 -9l4 9' },
+      { d: 'M19.1 18h-6.2' },
+    ];
+    for (const item of paths) {
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', item.d);
+      if (item.stroke) p.setAttribute('stroke', item.stroke);
+      if (item.fill) p.setAttribute('fill', item.fill);
+      svg.appendChild(p);
+    }
+    return svg;
+  }
+
+  function renderChevronIcon(btn) {
+    if (!btn) return;
+    if (useSvgChevron) {
+      if (!btn.querySelector('svg')) {
+        btn.replaceChildren(createChevronSvgNode());
+      }
+    } else if (!btn.querySelector('i.ti-chevron-down') && !btn.querySelector('svg')) {
+      CosmoSecurity.setIcon(btn, 'ti-chevron-down');
+    }
+  }
+
+  async function detectChevronFontFallback() {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+      const probe = document.createElement('i');
+      probe.className = 'ti ti-chevron-down';
+      probe.style.position = 'fixed';
+      probe.style.left = '-9999px';
+      probe.style.visibility = 'hidden';
+      document.body.appendChild(probe);
+      const w = probe.getBoundingClientRect().width;
+      probe.remove();
+      if (w < 8) useSvgChevron = true;
+    } catch (_) {
+      useSvgChevron = true;
+    }
+    const btn = document.getElementById(SCROLL_BTN_ID);
+    if (btn) {
+      btn.replaceChildren();
+      renderChevronIcon(btn);
+    }
+  }
+
+  function ensureScrollBottomStyle() {
     if (document.getElementById('cosmo-scroll-bottom-style')) return;
     const style = document.createElement('style');
     style.id = 'cosmo-scroll-bottom-style';
@@ -627,32 +769,6 @@ const CosmoChatView = (() => {
     (document.head || document.documentElement).appendChild(style);
   }
 
-  async function detectFontFallback() {
-    try {
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
-      const probe = document.createElement('i');
-      probe.className = 'ti ti-chevron-down';
-      probe.style.position = 'fixed';
-      probe.style.left = '-9999px';
-      probe.style.visibility = 'hidden';
-      document.body.appendChild(probe);
-      const w = probe.getBoundingClientRect().width;
-      probe.remove();
-      if (w < 8) {
-        useSvgFallback = true;
-      }
-    } catch (_) {
-      useSvgFallback = true;
-    }
-    const btn = document.getElementById('btn-scroll-to-bottom');
-    if (btn) {
-      const desired = useSvgFallback ? SVG_CHEVRON_HTML : TI_CHEVRON_HTML;
-      if (btn.innerHTML !== desired) btn.innerHTML = desired;
-    }
-  }
-
   function isChatScreenActive() {
     const shell = document.getElementById('chat-shell');
     if (!shell || !shell.classList.contains('active')) return false;
@@ -687,18 +803,8 @@ const CosmoChatView = (() => {
         document.body?.scrollHeight || 0
       );
       window.scrollTo({ top: targetTop, behavior: 'smooth' });
-      setTimeout(() => {
-        const finalTop = Math.max(
-          document.documentElement?.scrollHeight || 0,
-          document.body?.scrollHeight || 0
-        );
-        window.scrollTo({ top: finalTop, behavior: 'smooth' });
-      }, 320);
     } else if (scroller) {
       scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
-      setTimeout(() => {
-        scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
-      }, 320);
     }
   }
 
@@ -710,8 +816,6 @@ const CosmoChatView = (() => {
     if (btn.parentElement !== wrapper) {
       wrapper.appendChild(btn);
     }
-
-    // 確保位於 .composer-bar 正上方，並依發送按鈕寬度微調右側對齊
     const composerBar = wrapper.querySelector('.composer-bar');
     if (composerBar && btn.nextElementSibling !== composerBar) {
       wrapper.insertBefore(btn, composerBar);
@@ -722,21 +826,46 @@ const CosmoChatView = (() => {
       const sRect = sendBtn.getBoundingClientRect();
       if (wRect.width > 0 && sRect.width > 0) {
         const offsetRight = Math.max(0, Math.round(wRect.right - sRect.right + (sRect.width - btn.offsetWidth) / 2));
-        btn.style.marginRight = `${offsetRight}px`;
+        if (btn.style.marginRight !== `${offsetRight}px`) {
+          btn.style.marginRight = `${offsetRight}px`;
+        }
       }
     }
   }
 
-  function updateVisibility() {
-    const btn = ensureButton();
-    if (!btn) return;
+  function ensureScrollBottomButton() {
+    const wrapper = document.querySelector('.chat-composer-wrapper');
+    if (!wrapper) return null;
+    ensureScrollBottomStyle();
 
+    let btn = document.getElementById(SCROLL_BTN_ID);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = SCROLL_BTN_ID;
+      btn.title = 'Scroll to bottom';
+      btn.setAttribute('aria-label', 'Scroll to bottom');
+      renderChevronIcon(btn);
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollToAbsoluteBottom();
+      });
+      wrapper.appendChild(btn);
+    } else {
+      renderChevronIcon(btn);
+    }
+    alignAboveSendButton(btn);
+    return btn;
+  }
+
+  function updateScrollBottomVisibility() {
+    const btn = ensureScrollBottomButton();
+    if (!btn) return;
     if (!isChatScreenActive()) {
       btn.classList.remove('visible');
       return;
     }
-
-    alignAboveSendButton(btn);
     const { distFromBottom } = getScrollMetrics();
     const thresholdPx = (window.innerHeight || document.documentElement.clientHeight || 600) * 1.5;
     const shouldShow = distFromBottom >= thresholdPx;
@@ -745,72 +874,6 @@ const CosmoChatView = (() => {
       alignAboveSendButton(btn);
     }
   }
-
-  function ensureButton() {
-    const wrapper = document.querySelector('.chat-composer-wrapper');
-    if (!wrapper) return null;
-    ensureScopedStyle();
-
-    let btn = document.getElementById('btn-scroll-to-bottom');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = 'btn-scroll-to-bottom';
-      btn.title = 'Scroll to bottom';
-      btn.setAttribute('aria-label', 'Scroll to bottom');
-      btn.innerHTML = useSvgFallback ? SVG_CHEVRON_HTML : TI_CHEVRON_HTML;
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        scrollToAbsoluteBottom();
-      });
-      wrapper.appendChild(btn);
-    }
-    alignAboveSendButton(btn);
-    return btn;
-  }
-
-  function init() {
-    ensureButton();
-    detectFontFallback();
-    updateVisibility();
-
-    window.addEventListener('scroll', updateVisibility, { passive: true, capture: true });
-    window.addEventListener('resize', updateVisibility, { passive: true });
-
-    const mo = new MutationObserver(() => updateVisibility());
-    mo.observe(document.documentElement || document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style'],
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
-})();
-/* --- SPLIT FROM APP.JS: MEMBER AVATAR RING, REPLY CHAINS, SEARCH & ENGLISH DATES --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_SPLIT_CHAT_VIEW_EXT_INIT__) return;
-  window.__COSMO_SPLIT_CHAT_VIEW_EXT_INIT__ = true;
-
-  const ORIGINAL_NAME_COLORS = {
-    SeoYeon: '#22AEFF', HyeRin: '#9200FF', JiWoo: '#FFF800', ChaeYeon: '#98F21D',
-    YooYeon: '#DB0C74', SooMin: '#FC83A4', NaKyoung: '#6799A0', YuBin: '#FFE3E2',
-    Kaede: '#FFC935', DaHyun: '#FF9AD6', Kotone: '#FFDE00', YeonJi: '#5974FF',
-    Nien: '#FF953F', SoHyun: '#1222B5', Xinyu: '#D51313', Mayu: '#FE8E76',
-    Lynn: '#AC62B7', JooBin: '#B7F54C', HaYeon: '#52D9BB', ShiOn: '#FF428A',
-    ChaeWon: '#C7A3E0', Sullin: '#7BBA8D', SeoAh: '#CFF3FF', JiYeon: '#FFAB62',
-    tripleS: '#333333',
-  };
-  const LOWER_NAME_COLORS = Object.fromEntries(
-    Object.entries(ORIGINAL_NAME_COLORS).map(([k, v]) => [k.toLowerCase(), v])
-  );
 
   function resolveColorByOriginalName(originalName) {
     if (!originalName || typeof originalName !== 'string') return null;
@@ -826,18 +889,19 @@ const CosmoChatView = (() => {
   }
 
   function applySidebarThumbBorders() {
+    const memberList = document.getElementById('member-list');
+    if (!memberList) return;
     const byId = window.__COSMO_CHANNEL_COLOR_BY_ID__ || {};
     const byName = window.__COSMO_CHANNEL_COLOR_BY_NAME__ || {};
-    const items = document.querySelectorAll(
-      '#sidebar .member-item, .sidebar .member-item, #member-list .member-item, #member-list button, #member-list [data-member-id], #member-list [data-channel-id]'
-    );
+    const items = memberList.querySelectorAll('.member-item');
     items.forEach((item) => {
       const thumb = item.querySelector('.member-thumb') || item.querySelector('img');
       if (!thumb) return;
-      const idAttr = item.dataset.memberId || item.dataset.channelId || item.dataset.artistId || item.getAttribute('data-id') || '';
+      const idAttr = item.dataset.memberId || item.dataset.channelId || item.dataset.artistId || '';
       const labelText = (item.querySelector('.member-label')?.textContent || item.textContent || '').trim();
       const color = (idAttr && byId[String(idAttr).trim()]) || (labelText ? (byName[labelText.toLowerCase()] || resolveColorByOriginalName(labelText)) : null);
-      if (color) {
+      if (color && thumb.dataset.ringColor !== color) {
+        thumb.dataset.ringColor = color;
         thumb.style.borderRadius = '50%';
         thumb.style.border = `2.5px solid ${color}`;
         thumb.style.boxSizing = 'border-box';
@@ -845,13 +909,6 @@ const CosmoChatView = (() => {
     });
   }
 
-  window.CosmoOriginalNameColors = window.CosmoOriginalNameColors || {
-    map: ORIGINAL_NAME_COLORS,
-    resolve: resolveColorByOriginalName,
-    applySidebarThumbBorders,
-  };
-
-  const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function formatKoreanDateToEnglish(raw) {
     const text = String(raw || '').trim();
     const m = text.match(/(\d{4})\s*년\s*(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
@@ -862,44 +919,15 @@ const CosmoChatView = (() => {
   }
 
   function applyEnglishDates() {
-    const chatRoot = document.getElementById('chat') || document.body;
+    const chatRoot = document.getElementById('chat');
     if (!chatRoot) return;
-    const walker = document.createTreeWalker(chatRoot, NodeFilter.SHOW_TEXT);
-    let node;
-    while ((node = walker.nextNode())) {
-      const val = node.nodeValue || '';
+    chatRoot.querySelectorAll('.day').forEach((dayEl) => {
+      const val = dayEl.textContent || '';
       if (/\d{4}\s*년\s*\d{1,2}\s*월\s*\d{1,2}\s*일/.test(val)) {
-        const tag = node.parentElement?.tagName?.toLowerCase() || '';
-        if (tag !== 'script' && tag !== 'style') node.nodeValue = formatKoreanDateToEnglish(val);
+        dayEl.textContent = formatKoreanDateToEnglish(val);
       }
-    }
+    });
   }
-
-  function syncChatViewExtras() {
-    applySidebarThumbBorders();
-    applyEnglishDates();
-  }
-
-  syncChatViewExtras();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncChatViewExtras, { once: true });
-  }
-  const mo = new MutationObserver(() => syncChatViewExtras());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true, characterData: true });
-})();
-/* --- TOPBAR SEARCH BUTTON (#cosmo-member-search-btn) & SEARCH BAR --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_CHAT_VIEW_SEARCH_INIT__) return;
-  window.__COSMO_CHAT_VIEW_SEARCH_INIT__ = true;
-
-  const BTN_ID = 'cosmo-member-search-btn';
-  const BAR_ID = 'cosmo-search-bar';
-  const INPUT_ID = 'cosmo-search-input';
-  const COUNT_ID = 'cosmo-search-count';
-
-  let matches = [];
-  let currentIdx = -1;
 
   function getSearchPlaceholder() {
     if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function') {
@@ -909,33 +937,33 @@ const CosmoChatView = (() => {
     return '搜尋目前成員（包含翻譯內容）...';
   }
 
-  function clearHits() {
+  function clearSearchHits() {
     document.querySelectorAll('.cosmo-search-hit').forEach((el) => {
       el.classList.remove('cosmo-search-hit');
     });
   }
 
-  function jumpToMatch(idx) {
-    clearHits();
-    const countEl = document.getElementById(COUNT_ID);
-    if (!matches.length) {
+  function jumpToSearchMatch(idx) {
+    clearSearchHits();
+    const countEl = document.getElementById(SEARCH_COUNT_ID);
+    if (!searchMatches.length) {
       if (countEl) countEl.textContent = '0 / 0';
       return;
     }
-    currentIdx = ((idx % matches.length) + matches.length) % matches.length;
-    const target = matches[currentIdx];
+    searchIdx = ((idx % searchMatches.length) + searchMatches.length) % searchMatches.length;
+    const target = searchMatches[searchIdx];
     target.classList.add('cosmo-search-hit');
     target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    if (countEl) countEl.textContent = `${currentIdx + 1} / ${matches.length}`;
+    if (countEl) countEl.textContent = `${searchIdx + 1} / ${searchMatches.length}`;
   }
 
-  function runSearch(rawQuery) {
+  function runMemberSearch(rawQuery) {
     const q = String(rawQuery || '').trim().toLowerCase();
-    matches = [];
-    currentIdx = -1;
-    clearHits();
+    searchMatches = [];
+    searchIdx = -1;
+    clearSearchHits();
 
-    const countEl = document.getElementById(COUNT_ID);
+    const countEl = document.getElementById(SEARCH_COUNT_ID);
     if (!q) {
       if (countEl) countEl.textContent = '0 / 0';
       return;
@@ -949,63 +977,66 @@ const CosmoChatView = (() => {
       if (w.offsetParent === null) continue;
       const text = String(w.textContent || '').toLowerCase();
       if (text.includes(q)) {
-        matches.push(w);
+        searchMatches.push(w);
       }
     }
-    jumpToMatch(0);
+    jumpToSearchMatch(0);
   }
 
-  function ensureSearchUi() {
+  function syncHeaderSearchAndTranslate() {
     const header = document.getElementById('chat-header') || document.querySelector('.chat-header');
     if (!header) return;
 
     const actions = header.querySelector('.header-actions') || header;
-    let btn = document.getElementById(BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = BTN_ID;
-      btn.className = 'icon-btn';
-      btn.innerHTML = '<i class="ti ti-search" aria-hidden="true"></i>';
-      btn.addEventListener('click', (ev) => {
+
+    // 1. Search button & bar
+    let searchBtn = document.getElementById(SEARCH_BTN_ID);
+    if (!searchBtn) {
+      searchBtn = document.createElement('button');
+      searchBtn.type = 'button';
+      searchBtn.id = SEARCH_BTN_ID;
+      searchBtn.className = 'icon-btn';
+      CosmoSecurity.setIcon(searchBtn, 'ti-search');
+      searchBtn.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
-        const bar = document.getElementById(BAR_ID);
+        const bar = document.getElementById(SEARCH_BAR_ID);
         if (!bar) return;
         bar.classList.toggle('open');
         if (bar.classList.contains('open')) {
-          document.getElementById(INPUT_ID)?.focus();
+          document.getElementById(SEARCH_INPUT_ID)?.focus();
         } else {
-          clearHits();
+          clearSearchHits();
         }
       });
     }
 
     const placeholderText = getSearchPlaceholder();
     const cleanLabel = placeholderText.replace(/\.{3,}$/, '').trim();
-    btn.title = cleanLabel;
-    btn.setAttribute('aria-label', cleanLabel);
-    btn.style.display = 'inline-flex';
-
-    if (btn.parentElement !== actions) {
-      actions.prepend(btn);
+    if (searchBtn.title !== cleanLabel) {
+      searchBtn.title = cleanLabel;
+      searchBtn.setAttribute('aria-label', cleanLabel);
+    }
+    searchBtn.style.display = 'inline-flex';
+    if (searchBtn.parentElement !== actions) {
+      actions.prepend(searchBtn);
     }
 
-    let bar = document.getElementById(BAR_ID);
+    let bar = document.getElementById(SEARCH_BAR_ID);
     if (!bar) {
       bar = document.createElement('div');
-      bar.id = BAR_ID;
+      bar.id = SEARCH_BAR_ID;
       bar.className = 'cosmo-search-bar';
 
       const input = document.createElement('input');
       input.type = 'search';
-      input.id = INPUT_ID;
+      input.id = SEARCH_INPUT_ID;
       input.className = 'cosmo-search-input';
       input.placeholder = placeholderText;
       input.setAttribute('aria-label', cleanLabel);
 
       const countSpan = document.createElement('span');
-      countSpan.id = COUNT_ID;
+      countSpan.id = SEARCH_COUNT_ID;
       countSpan.className = 'cosmo-search-count';
       countSpan.textContent = '0 / 0';
 
@@ -1014,14 +1045,14 @@ const CosmoChatView = (() => {
       prevBtn.className = 'icon-btn';
       prevBtn.title = '上一筆';
       prevBtn.textContent = '↑';
-      prevBtn.addEventListener('click', () => jumpToMatch(currentIdx - 1));
+      prevBtn.addEventListener('click', () => jumpToSearchMatch(searchIdx - 1));
 
       const nextBtn = document.createElement('button');
       nextBtn.type = 'button';
       nextBtn.className = 'icon-btn';
       nextBtn.title = '下一筆';
       nextBtn.textContent = '↓';
-      nextBtn.addEventListener('click', () => jumpToMatch(currentIdx + 1));
+      nextBtn.addEventListener('click', () => jumpToSearchMatch(searchIdx + 1));
 
       const closeBtn = document.createElement('button');
       closeBtn.type = 'button';
@@ -1030,17 +1061,17 @@ const CosmoChatView = (() => {
       closeBtn.textContent = '✕';
       closeBtn.addEventListener('click', () => {
         bar.classList.remove('open');
-        clearHits();
+        clearSearchHits();
       });
 
-      input.addEventListener('input', () => runSearch(input.value));
+      input.addEventListener('input', () => runMemberSearch(input.value));
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          jumpToMatch(e.shiftKey ? currentIdx - 1 : currentIdx + 1);
+          jumpToSearchMatch(e.shiftKey ? searchIdx - 1 : searchIdx + 1);
         } else if (e.key === 'Escape') {
           bar.classList.remove('open');
-          clearHits();
+          clearSearchHits();
         }
       });
 
@@ -1050,7 +1081,7 @@ const CosmoChatView = (() => {
       bar.appendChild(nextBtn);
       bar.appendChild(closeBtn);
     } else {
-      const input = document.getElementById(INPUT_ID);
+      const input = document.getElementById(SEARCH_INPUT_ID);
       if (input && input.placeholder !== placeholderText) {
         input.placeholder = placeholderText;
         input.setAttribute('aria-label', cleanLabel);
@@ -1060,95 +1091,108 @@ const CosmoChatView = (() => {
     if (header.nextElementSibling !== bar) {
       header.insertAdjacentElement('afterend', bar);
     }
-  }
 
-  ensureSearchUi();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureSearchUi, { once: true });
-  }
-  if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
-    CosmoI18n.onChange(ensureSearchUi);
-  }
-  const mo = new MutationObserver(() => ensureSearchUi());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
-})();
-/* --- GUARANTEED TRANSLATE BUTTON ALONGSIDE SEARCH BUTTON (SAFARI SAFE) --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_GUARANTEED_TRANSLATE_BTN_INIT__) return;
-  window.__COSMO_GUARANTEED_TRANSLATE_BTN_INIT__ = true;
+    // 2. Translate button alongside search button
+    let transBtn = document.getElementById(TRANS_BTN_ID);
+    if (!transBtn) {
+      transBtn = document.createElement('button');
+      transBtn.type = 'button';
+      transBtn.id = TRANS_BTN_ID;
+      transBtn.className = 'icon-btn btn-toggle-translate';
+      transBtn.title = 'Translate (ON/OFF)';
+      transBtn.setAttribute('aria-label', 'Translate (ON/OFF)');
+      transBtn.replaceChildren(createTranslateSvgNode());
 
-  const BTN_ID = 'btn-toggle-translate';
-  const ICON_SVG =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" ' +
-    'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-    'style="width:20px;height:20px;display:block;flex-shrink:0;pointer-events:none;">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M4 5h7" /><path d="M9 3v2c0 4.418 -2.239 8 -5 8" />' +
-    '<path d="M5 9c0 2.144 2.952 3.908 6.7 4" /><path d="M12 20l4 -9l4 9" />' +
-    '<path d="M19.1 18h-6.2" /></svg>';
-
-  function syncTranslateBtnInHeader() {
-    const header = document.getElementById('chat-header') || document.querySelector('.chat-header');
-    if (!header) return;
-
-    const actions = header.querySelector('.header-actions') || header;
-    let btn = document.getElementById(BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = BTN_ID;
-      btn.className = 'icon-btn btn-toggle-translate';
-      btn.title = 'Translate (ON/OFF)';
-      btn.setAttribute('aria-label', 'Translate (ON/OFF)');
-      btn.innerHTML = ICON_SVG;
-
-      btn.addEventListener('click', (ev) => {
+      transBtn.addEventListener('click', (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
         if (typeof window.CosmoTranslate !== 'undefined' && typeof window.CosmoTranslate.toggle === 'function') {
           const isOn = Boolean(window.CosmoTranslate.toggle());
-          btn.dataset.translateOn = isOn ? '1' : '0';
-          btn.classList.toggle('active', isOn);
-          btn.classList.toggle('is-active', isOn);
+          transBtn.dataset.translateOn = isOn ? '1' : '0';
+          transBtn.classList.toggle('active', isOn);
+          transBtn.classList.toggle('is-active', isOn);
         } else {
-          const next = btn.dataset.translateOn !== '1';
-          btn.dataset.translateOn = next ? '1' : '0';
-          btn.classList.toggle('active', next);
-          btn.classList.toggle('is-active', next);
+          const next = transBtn.dataset.translateOn !== '1';
+          transBtn.dataset.translateOn = next ? '1' : '0';
+          transBtn.classList.toggle('active', next);
+          transBtn.classList.toggle('is-active', next);
         }
       });
     }
 
-    // 確保內部一定有明確尺寸的 SVG，防止 Safari 壓扁或字型遺失
-    if (!btn.querySelector('svg')) {
-      btn.innerHTML = ICON_SVG;
+    if (!transBtn.querySelector('svg')) {
+      transBtn.replaceChildren(createTranslateSvgNode());
     }
 
-    // 放在搜尋按鈕旁邊（若搜尋按鈕存在，插在它後面；否則放在 actions 最前面）
-    const searchBtn = document.getElementById('cosmo-member-search-btn');
-    if (searchBtn && searchBtn.parentElement === actions) {
-      if (searchBtn.nextElementSibling !== btn) {
-        searchBtn.insertAdjacentElement('afterend', btn);
+    if (searchBtn.parentElement === actions) {
+      if (searchBtn.nextElementSibling !== transBtn) {
+        searchBtn.insertAdjacentElement('afterend', transBtn);
       }
-    } else if (btn.parentElement !== actions) {
-      actions.prepend(btn);
+    } else if (transBtn.parentElement !== actions) {
+      actions.prepend(transBtn);
     }
 
     if (typeof window.CosmoTranslate !== 'undefined' && typeof window.CosmoTranslate.isEnabled === 'function') {
       const isOn = Boolean(window.CosmoTranslate.isEnabled());
-      btn.dataset.translateOn = isOn ? '1' : '0';
-      btn.classList.toggle('active', isOn);
-      btn.classList.toggle('is-active', isOn);
+      transBtn.dataset.translateOn = isOn ? '1' : '0';
+      transBtn.classList.toggle('active', isOn);
+      transBtn.classList.toggle('is-active', isOn);
     }
   }
 
-  syncTranslateBtnInHeader();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', syncTranslateBtnInHeader, { once: true });
+  function syncAllUi() {
+    syncScheduled = false;
+    syncHeaderSearchAndTranslate();
+    applySidebarThumbBorders();
+    applyEnglishDates();
+    updateScrollBottomVisibility();
   }
-  const mo = new MutationObserver(() => syncTranslateBtnInHeader());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  function scheduleSyncUi() {
+    if (syncScheduled) return;
+    syncScheduled = true;
+    requestAnimationFrame(syncAllUi);
+  }
+
+  window.CosmoOriginalNameColors = window.CosmoOriginalNameColors || {
+    map: ORIGINAL_NAME_COLORS,
+    resolve: resolveColorByOriginalName,
+    applySidebarThumbBorders,
+  };
+
+  function init() {
+    syncAllUi();
+    detectChevronFontFallback();
+
+    window.addEventListener('scroll', updateScrollBottomVisibility, { passive: true, capture: true });
+    window.addEventListener('resize', updateScrollBottomVisibility, { passive: true });
+
+    if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
+      CosmoI18n.onChange(scheduleSyncUi);
+    }
+
+    const targets = [
+      document.getElementById('chat-header'),
+      document.getElementById('member-list'),
+      document.getElementById('chat'),
+      document.getElementById('chat-shell'),
+    ].filter(Boolean);
+
+    const mo = new MutationObserver(scheduleSyncUi);
+    if (targets.length > 0) {
+      for (const el of targets) {
+        mo.observe(el, { childList: true, attributes: true, attributeFilter: ['class', 'style'] });
+      }
+    } else {
+      mo.observe(document.body || document.documentElement, { childList: true, subtree: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
 
 /* --- LOCK USER VIEWPORT ON FETCH & SHOW SCROLL DOWN BUTTON WHEN NEW MSG OFF-SCREEN --- */
@@ -1298,7 +1342,6 @@ const CosmoChatView = (() => {
     window.addEventListener('scroll', check, { passive: true });
   }
 
-  // 供 fetch 完成渲染前後呼叫：鎖定畫面不跳動，若新訊息在視窗下方看不到則顯示按鈕
   function renderWithLockedViewport(renderFn, { hasNewMessages = false, newCount = 1 } = {}) {
     const snap = captureViewportSnapshot();
     renderFn();
@@ -1321,8 +1364,6 @@ const CosmoChatView = (() => {
       bindBottomCheckListeners();
     }, { once: true });
   }
-  const mo = new MutationObserver(() => bindBottomCheckListeners());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 
   window.CosmoViewportLock = {
     renderWithLockedViewport,
@@ -1550,7 +1591,6 @@ const CosmoChatView = (() => {
       if (hasScrolledInitially) return;
       if (performInstantBottomScroll()) {
         hasScrolledInitially = true;
-        // 補一幀避免圖片/字型剛撐開高度造成的微小偏移
         requestAnimationFrame(() => {
           performInstantBottomScroll();
         });

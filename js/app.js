@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { nfc } = CosmoUtils;
+  const { nfc, memberLabel } = CosmoUtils;
 
   const tr = (key, vars) =>
     typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
@@ -223,6 +223,7 @@
     state.membersData = Array.isArray(nextMembers) ? nextMembers : [];
     if (state.membersData.length === 0) {
       state.activeMemberId = null;
+      window.currentMember = null;
       CosmoChatView.renderSidebar(state.membersData, null);
       CosmoChatView.renderChat(null);
       return false;
@@ -230,12 +231,13 @@
 
     if (
       !state.activeMemberId ||
-      !state.membersData.some((m) => m.artistMemberId === state.activeMemberId)
+      !state.membersData.some((m) => String(m.artistMemberId) === String(state.activeMemberId))
     ) {
       state.activeMemberId = state.membersData[0].artistMemberId;
     }
 
     const currentMember = getActiveMember();
+    window.currentMember = currentMember;
     CosmoChatView.renderSidebar(state.membersData, state.activeMemberId);
     CosmoChatView.renderChat(currentMember);
     CosmoComposer.ensureRemainingCountIfNeeded(state.activeMemberId);
@@ -263,6 +265,7 @@
     }
 
     if (String(state.activeMemberId) === targetId) {
+      window.currentMember = updatedMember;
       CosmoChatView.renderSidebar(state.membersData, state.activeMemberId);
       CosmoChatView.renderChat(updatedMember);
     }
@@ -393,6 +396,7 @@
 
     state.membersData = [];
     state.activeMemberId = null;
+    window.currentMember = null;
     CosmoChatView.renderSidebar(state.membersData, null);
     CosmoChatView.renderChat(null);
     showLoginPage(statusMsg);
@@ -481,6 +485,7 @@
     CosmoChatView.init({
       onSelectMember: (member) => {
         state.activeMemberId = member.artistMemberId;
+        window.currentMember = member;
         CosmoChatView.renderSidebar(state.membersData, state.activeMemberId);
         CosmoChatView.renderChat(member);
         CosmoComposer.ensureRemainingCountIfNeeded(state.activeMemberId);
@@ -492,6 +497,21 @@
       getActiveMember,
       onMessageSent: (sentMemberId) => refreshMemberFromNdjson(sentMemberId),
     });
+
+    window.CosmoApp = {
+      get activeMemberId() {
+        return state.activeMemberId;
+      },
+      get currentMember() {
+        return getActiveMember();
+      },
+      get membersData() {
+        return state.membersData;
+      },
+      applyMembersAndRender,
+      refreshMemberFromNdjson,
+    };
+    window.refreshMemberFromNdjson = refreshMemberFromNdjson;
 
     bindEvents();
     updateComposerVisibility();
@@ -567,6 +587,38 @@
     return typeof CosmoSync !== 'undefined' && typeof CosmoSync.syncAllChannels === 'function';
   }
 
+  function resolveCurrentViewedMember(updatedMembers) {
+    const activeMid = String(
+      window.CosmoApp?.activeMemberId ??
+      window.currentMember?.artistMemberId ??
+      document.getElementById('chat')?.dataset?.artistMemberId ??
+      ''
+    ).trim();
+
+    if (activeMid) {
+      const byId = updatedMembers.find(
+        (m) => String(m?.artistMemberId ?? m?.id ?? '').trim() === activeMid
+      );
+      if (byId) return byId;
+    }
+
+    const activeHeaderName =
+      document.querySelector('#chat-header .member-name, #chat-header .header-title')?.textContent?.trim() || '';
+    if (activeHeaderName) {
+      const byLabel = updatedMembers.find((m) => {
+        const lbl = typeof CosmoUtils?.memberLabel === 'function' ? CosmoUtils.memberLabel(m) : '';
+        return (
+          String(lbl).trim() === activeHeaderName ||
+          String(m?.artistMemberName ?? '').trim() === activeHeaderName ||
+          String(m?.name ?? m?.originalName ?? '').trim() === activeHeaderName
+        );
+      });
+      if (byLabel) return byLabel;
+    }
+
+    return updatedMembers[0] || null;
+  }
+
   async function runSilentPollTick() {
     if (pollInFlight || !isChatSessionReadyForPolling()) return;
     pollInFlight = true;
@@ -590,9 +642,8 @@
         }
       }
 
-      // 每次打完訊息 API 後，針對有更新（或當前開啟）的成員自動在背景執行靜默翻譯並存入 Blob
-      const activeHeaderName =
-        document.querySelector('#chat-header .member-name, #chat-header .header-title')?.textContent?.trim() || '';
+      const currentMember = resolveCurrentViewedMember(updatedMembers);
+      const currentMid = String(currentMember?.artistMemberId ?? currentMember?.id ?? '').trim();
 
       for (const m of updatedMembers) {
         const mid = String(m?.artistMemberId ?? m?.id ?? '').trim();
@@ -600,9 +651,7 @@
         if (window.CosmoSilentTranslate?.updateKnownMemberCursor) {
           window.CosmoSilentTranslate.updateKnownMemberCursor(m);
         }
-        const isCurrentViewed =
-          activeHeaderName &&
-          String(m?.name ?? m?.originalName ?? '').trim() === activeHeaderName;
+        const isCurrentViewed = Boolean(currentMid && mid === currentMid);
 
         if ((hasAnyNewCursor || isCurrentViewed) && window.CosmoSilentTranslate?.runSilentBatchTranslateWithCursorCheck) {
           window.CosmoSilentTranslate.runSilentBatchTranslateWithCursorCheck(m, {
@@ -612,27 +661,14 @@
         }
       }
 
-      // 若有新訊息進來，無感刷新側邊欄與當前聊天畫面（鎖定捲動位置不跳動）
-      if (hasAnyNewCursor && typeof CosmoChatView !== 'undefined') {
-        const currentMember =
-          updatedMembers.find(
-            (m) => String(m?.name ?? m?.originalName ?? '').trim() === activeHeaderName
-          ) || updatedMembers[0];
-
+      if (hasAnyNewCursor && typeof CosmoChatView !== 'undefined' && currentMember) {
+        window.currentMember = currentMember;
         const updateDom = () => {
-          if (typeof CosmoChatView.renderSidebar === 'function' && currentMember) {
+          if (typeof CosmoChatView.renderSidebar === 'function') {
             CosmoChatView.renderSidebar(updatedMembers, currentMember.artistMemberId);
           }
-          if (typeof CosmoChatView.renderChat === 'function' && currentMember) {
+          if (typeof CosmoChatView.renderChat === 'function') {
             CosmoChatView.renderChat(currentMember);
-          }
-          if (typeof CosmoTranslate !== 'undefined' && currentMember) {
-            if (typeof CosmoTranslate.setMemberContext === 'function') {
-              CosmoTranslate.setMemberContext(currentMember);
-            }
-            if (typeof window.CosmoAutoFlushTranslations === 'function') {
-              window.CosmoAutoFlushTranslations();
-            }
           }
         };
 

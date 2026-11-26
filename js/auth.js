@@ -3,6 +3,7 @@ const CosmoAuth = (() => {
   const REFRESH_ENDPOINT = `${API_BASE}/bff/v3/users/refresh-access-token`;
   const COSMO_KEY_BASE64 = 'aUkaF3wWVltAI1QYVmxsZXfTV6L7mPTxA5+MMkLV9DE=';
   const REFRESH_BUFFER_SEC = 12 * 60 * 60; // 到期前 12 小時自動刷新
+  const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
   let inflightRefreshPromise = null;
 
@@ -69,7 +70,13 @@ const CosmoAuth = (() => {
   }
 
   function extractCredsFromResponse(obj) {
+    const visited = new WeakSet();
+
     function find(node, camel, snake) {
+      if (!node || typeof node !== 'object') return null;
+      if (visited.has(node)) return null;
+      visited.add(node);
+
       if (Array.isArray(node)) {
         for (const item of node) {
           const found = find(item, camel, snake);
@@ -77,10 +84,18 @@ const CosmoAuth = (() => {
         }
         return null;
       }
-      if (node && typeof node === 'object') {
-        if (node[camel]) return String(node[camel]).trim();
-        if (node[snake]) return String(node[snake]).trim();
-        for (const val of Object.values(node)) {
+
+      if (Object.prototype.hasOwnProperty.call(node, camel) && typeof node[camel] === 'string' && node[camel].trim()) {
+        return node[camel].trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(node, snake) && typeof node[snake] === 'string' && node[snake].trim()) {
+        return node[snake].trim();
+      }
+
+      for (const key of Object.keys(node)) {
+        if (BLOCKED_KEYS.has(key)) continue;
+        const val = node[key];
+        if (val && typeof val === 'object') {
           const found = find(val, camel, snake);
           if (found) return found;
         }
@@ -194,7 +209,6 @@ const CosmoAuth = (() => {
       referrerPolicy: 'no-referrer',
       headers: {
         ...(init.headers || {}),
-
         Authorization: `Bearer ${accessToken}`,
       },
     });
@@ -216,6 +230,7 @@ const CosmoAuth = (() => {
     authorizedFetch,
   };
 })();
+
 /* --- SPLIT FROM APP.JS: JWT PASTE BUTTON & LOGOUT REDIRECT HELPER --- */
 (() => {
   if (typeof window === 'undefined') return;
@@ -224,13 +239,6 @@ const CosmoAuth = (() => {
 
   const PASTE_BTN_ID = 'jwt-paste-btn';
   const PASTE_ROW_CLASS = 'jwt-login-action-row';
-  const CLIPBOARD_SVG =
-    '<svg viewBox="0 0 24 24" width="18" height="18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>' +
-    '<path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />' +
-    '<path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />' +
-    '</svg>';
-
   window.__COSMO_LOGGING_OUT__ = window.__COSMO_LOGGING_OUT__ || false;
 
   function getCleanTargetUrl() {
@@ -331,7 +339,7 @@ const CosmoAuth = (() => {
       pasteBtn.id = PASTE_BTN_ID;
       pasteBtn.setAttribute('aria-label', 'Paste JWT');
       pasteBtn.setAttribute('title', 'Paste JWT');
-      pasteBtn.innerHTML = CLIPBOARD_SVG;
+      CosmoSecurity.setIconFromConst(pasteBtn, 'CLIPBOARD_SVG');
       pasteBtn.addEventListener(
         'click',
         (ev) => {
@@ -364,11 +372,19 @@ const CosmoAuth = (() => {
     }
   }
 
-  ensurePasteBtnBesideLogin();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensurePasteBtnBesideLogin, { once: true });
+  function init() {
+    ensurePasteBtnBesideLogin();
+    window.addEventListener('resize', ensurePasteBtnBesideLogin, { passive: true });
+    const loginPage = document.getElementById('login-page');
+    if (loginPage) {
+      const mo = new MutationObserver(() => ensurePasteBtnBesideLogin());
+      mo.observe(loginPage, { childList: true, subtree: true });
+    }
   }
-  window.addEventListener('resize', ensurePasteBtnBesideLogin, { passive: true });
-  const mo = new MutationObserver(() => ensurePasteBtnBesideLogin());
-  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();
