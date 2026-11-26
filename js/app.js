@@ -692,64 +692,216 @@
   }
 })();
 
-/* --- USE REAL MESSAGE-ID DIFF ONLY (IGNORE TRANSLATION TEXT & CURSOR NOISE) --- */
+/* --- CORE ARCHITECTURE: ANCHOR COMPENSATED TRANSLATE & ID-BASED NEW MSG --- */
 (() => {
   if (typeof window === 'undefined') return;
-  if (window.__COSMO_APP_REAL_NEW_MSG_DIFF_INIT__) return;
-  window.__COSMO_APP_REAL_NEW_MSG_DIFF_INIT__ = true;
+  if (window.__COSMO_CORE_CHAT_ARCH_INIT__) return;
+  window.__COSMO_CORE_CHAT_ARCH_INIT__ = true;
 
-  if (typeof CosmoSync !== 'undefined' && typeof CosmoSync.syncAllChannels === 'function') {
-    const origSync = CosmoSync.syncAllChannels.bind(CosmoSync);
-    if (!origSync.__cosmoRealDiffWrapped) {
-      const wrappedSync = async function (...args) {
-        const members = await origSync(...args);
-        if (Array.isArray(members) && members.length > 0 && window.CosmoRealNewMsg?.diffRealNewMessages) {
-          let totalNew = 0;
-          for (const m of members) {
-            const mid = String(m?.artistMemberId ?? m?.id ?? '').trim();
-            if (!mid) continue;
-            totalNew += window.CosmoRealNewMsg.diffRealNewMessages(mid, m);
-          }
-          if (totalNew > 0 && typeof window.CosmoRealNewMsg.notifyIfRealNewMessages === 'function') {
-            window.CosmoRealNewMsg.notifyIfRealNewMessages(totalNew);
-          }
-        }
-        return members;
-      };
-      wrappedSync.__cosmoRealDiffWrapped = true;
-      CosmoSync.syncAllChannels = wrappedSync;
+  const BTN_ID = 'cosmo-scroll-down-btn';
+  const BOTTOM_THRESHOLD_PX = 48;
+
+  // 各成員已確認的最新訊息 ID（cursor），只由真實訊息 ID 推進
+  const confirmedCursorByMember = new Map();
+  const memberInitialized = new Set();
+
+  let unseenCount = 0;
+  let userScrollingUntil = 0;
+  let translatingDepth = 0;
+
+  // 記錄使用者主動捲動，避免在「使用者正在滑動」時做任何位置補償
+  for (const evName of ['wheel', 'touchstart', 'touchmove', 'pointerdown']) {
+    window.addEventListener(evName, () => {
+      userScrollingUntil = Date.now() + 180;
+    }, { passive: true, capture: true });
+  }
+
+  function getScrollContainer() {
+    const chat = document.getElementById('chat');
+    if (chat && chat.scrollHeight > chat.clientHeight + 2) {
+      return chat;
+    }
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function isNearBottom(sc) {
+    if (!sc) return true;
+    return sc.scrollHeight - sc.scrollTop - sc.clientHeight <= BOTTOM_THRESHOLD_PX;
+  }
+
+  function formatNewMsgLabel(count) {
+    const n = Math.max(1, Number(count) || 1);
+    const text =
+      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
+        ? CosmoI18n.t('new_messages_btn', { count: n })
+        : `新訊息 (${n})`;
+    const trimmed = String(text || '').trim();
+    if (/^[↓⬇▼]/.test(trimmed)) return trimmed;
+    return `↓ ${trimmed}`;
+  }
+
+  function alignButtonAboveInput(btn) {
+    if (!btn) return;
+    const inputs = [...document.querySelectorAll('textarea, input[type="text"]')].filter((el) => {
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return false;
+      const r = el.getBoundingClientRect();
+      return r.width > 50 && r.height > 18;
+    });
+    if (inputs.length === 0) return;
+    inputs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top);
+    const rect = inputs[0].getBoundingClientRect();
+    const h = btn.offsetHeight || 36;
+    btn.style.left = `${Math.max(12, Math.round(rect.left))}px`;
+    btn.style.top = `${Math.max(48, Math.round(rect.top - h - 10))}px`;
+    btn.style.right = 'auto';
+    btn.style.bottom = 'auto';
+  }
+
+  function hideNewMsgButton() {
+    unseenCount = 0;
+    const btn = document.getElementById(BTN_ID);
+    if (btn) {
+      btn.classList.remove('visible');
+      btn.style.display = 'none';
     }
   }
-})();
 
-/* --- CURSOR SYNC WITHOUT /latest.ndjson OR /lasest.ndjson URL REQUESTS --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_NO_NDJSON_URL_FETCH_INIT__) return;
-  window.__COSMO_NO_NDJSON_URL_FETCH_INIT__ = true;
+  // 僅在確認有「真實新增訊息」且不在底部時顯示按鈕
+  function showConfirmedNewMessages(count) {
+    if (translatingDepth > 0) return;
+    const add = Number(count) || 0;
+    if (add <= 0) return;
+    if (document.body.classList.contains('is-login-view')) return;
 
-  const V4_CHANNELS_URL = 'https://api.cosmo.fans/bff/v4/channels/messages?artistId=tripleS';
-  const POLL_INTERVAL_MS = 10000;
+    const sc = getScrollContainer();
+    if (isNearBottom(sc)) {
+      hideNewMsgButton();
+      return;
+    }
 
-  const memberCursorMap = new Map();
-  const memberBaselineReady = new Set();
-  let isPolling = false;
-  let isSyncing = false;
+    unseenCount += add;
+    let btn = document.getElementById(BTN_ID);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = BTN_ID;
+      btn.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const targetSc = getScrollContainer();
+        if (targetSc) {
+          targetSc.scrollTop = targetSc.scrollHeight;
+        }
+        hideNewMsgButton();
+      });
+      document.body.appendChild(btn);
+    }
 
-  function toComparableId(val) {
-    const s = String(val ?? '').trim();
-    if (!s) return { raw: '', num: null };
-    const tail = s.includes(':') ? s.split(':').pop().trim() : s;
-    const n = Number(tail);
-    return {
-      raw: tail,
-      num: Number.isFinite(n) && /^\d+$/.test(tail) ? n : null,
-    };
+    btn.textContent = formatNewMsgLabel(unseenCount);
+    btn.classList.add('visible');
+    btn.style.display = 'inline-flex';
+    alignButtonAboveInput(btn);
   }
 
-  function isAhead(candidate, current) {
-    const a = toComparableId(candidate);
-    const b = toComparableId(current);
+  // 抓取目前可視區頂部訊息元素作為錨點，讓譯文撐高時畫面維持在同一則訊息
+  function captureVisibleAnchor(sc) {
+    if (!sc) return null;
+    const scRect = sc.getBoundingClientRect();
+    const chat = document.getElementById('chat');
+    if (!chat) return { sc, scrollTop: sc.scrollTop, el: null, relTop: 0 };
+
+    const items = chat.querySelectorAll('.msg-wrapper, [data-source-id], [data-message-id]');
+    for (const el of items) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom > scRect.top + 6 && r.top < scRect.bottom) {
+        return {
+          sc,
+          scrollTop: sc.scrollTop,
+          el,
+          relTop: r.top - scRect.top,
+        };
+      }
+    }
+    return { sc, scrollTop: sc.scrollTop, el: null, relTop: 0 };
+  }
+
+  function compensateAnchorAfterLayout(anchor) {
+    if (!anchor || !anchor.sc) return;
+    if (Date.now() < userScrollingUntil) return;
+    const { sc, scrollTop, el, relTop } = anchor;
+
+    // 若原本就在最底部，維持貼底
+    if (scrollTop + sc.clientHeight >= sc.scrollHeight - BOTTOM_THRESHOLD_PX - 24) {
+      return;
+    }
+
+    if (el && el.isConnected) {
+      const scRect = sc.getBoundingClientRect();
+      const currentRelTop = el.getBoundingClientRect().top - scRect.top;
+      const diff = currentRelTop - relTop;
+      if (Math.abs(diff) > 0.5) {
+        sc.scrollTop = sc.scrollTop + diff;
+      }
+    } else if (Math.abs(sc.scrollTop - scrollTop) > 0.5) {
+      sc.scrollTop = scrollTop;
+    }
+  }
+
+  // 包裝翻譯函式：只在翻譯排版前後做一次錨點位移補償，不攔截原型也不觸發新訊息
+  function wrapTranslationExecution(obj, methodName) {
+    if (!obj || typeof obj[methodName] !== 'function') return;
+    const orig = obj[methodName];
+    if (orig.__cosmoCoreTransWrapped) return;
+
+    const wrapped = function (...args) {
+      const sc = getScrollContainer();
+      const anchor = captureVisibleAnchor(sc);
+      translatingDepth += 1;
+
+      const finish = () => {
+        requestAnimationFrame(() => {
+          compensateAnchorAfterLayout(anchor);
+          translatingDepth = Math.max(0, translatingDepth - 1);
+        });
+      };
+
+      try {
+        const res = orig.apply(this, args);
+        if (res && typeof res.then === 'function') {
+          return res.finally(finish);
+        }
+        finish();
+        return res;
+      } catch (err) {
+        finish();
+        throw err;
+      }
+    };
+    wrapped.__cosmoCoreTransWrapped = true;
+    obj[methodName] = wrapped;
+  }
+
+  if (typeof CosmoTranslate !== 'undefined') {
+    for (const key of Object.getOwnPropertyNames(CosmoTranslate)) {
+      if (typeof CosmoTranslate[key] === 'function') {
+        wrapTranslationExecution(CosmoTranslate, key);
+      }
+    }
+  }
+
+  // 訊息 ID 比較（支援數字或 "prefix:id" 格式）
+  function parseMsgId(raw) {
+    const s = String(raw ?? '').trim();
+    if (!s) return { raw: '', num: null };
+    const tail = s.includes(':') ? s.split(':').pop().trim() : s;
+    const num = /^\d+$/.test(tail) ? Number(tail) : null;
+    return { raw: tail, num };
+  }
+
+  function isMsgIdNewer(nextId, prevId) {
+    const a = parseMsgId(nextId);
+    const b = parseMsgId(prevId);
     if (!a.raw) return false;
     if (!b.raw) return true;
     if (a.raw === b.raw) return false;
@@ -757,125 +909,58 @@
     return a.raw > b.raw;
   }
 
-  function getActiveMemberId() {
-    const cur = window.currentMember || window.CosmoApp?.currentMember || null;
-    const activeId =
-      cur?.artistMemberId ??
-      cur?.id ??
-      document.querySelector('#chat')?.getAttribute('data-artist-member-id') ??
-      '';
-    return String(activeId ?? '').trim();
-  }
+  // 供外部以真實訊息 ID 清單比對新增數量（首次建立基準線回傳 0）
+  function diffMemberMessageIds(memberId, messageIds) {
+    const mid = String(memberId ?? '').trim();
+    if (!mid) return 0;
 
-  // 從現有 DOM / 記憶體狀態建立各成員 cursor 基準，不發送任何 ndjson 檔案請求
-  function seedCursorsFromExistingState() {
-    document.querySelectorAll('#chat .msg-wrapper, #chat [data-source-id], #chat [data-message-id]').forEach((el) => {
-      const mid = String(
-        el.getAttribute('data-artist-member-id') ||
-        el.dataset?.artistMemberId ||
-        getActiveMemberId() ||
-        ''
-      ).trim();
-      const rawId = String(
-        el.getAttribute('data-source-id') ||
-        el.getAttribute('data-message-id') ||
-        el.dataset?.sourceId ||
-        el.dataset?.messageId ||
-        ''
-      ).trim();
-      if (!mid || !rawId) return;
-      const prev = memberCursorMap.get(mid);
-      if (!prev || isAhead(rawId, prev)) {
-        memberCursorMap.set(mid, rawId);
+    let maxId = confirmedCursorByMember.get(mid) || '';
+    const list = Array.isArray(messageIds) ? messageIds : [];
+    for (const id of list) {
+      if (isMsgIdNewer(id, maxId)) {
+        maxId = String(id).trim();
       }
-      memberBaselineReady.add(mid);
-    });
-  }
-
-  async function syncLaggingMembers(laggingMemberIds = []) {
-    if (isSyncing) return;
-    isSyncing = true;
-    try {
-      if (typeof CosmoSync?.syncAllChannels === 'function') {
-        await CosmoSync.syncAllChannels(laggingMemberIds);
-      }
-    } catch (_) {
-    } finally {
-      isSyncing = false;
     }
-  }
 
-  async function pollV4ChannelsOnce() {
-    if (isPolling || document.hidden) return;
-    isPolling = true;
-    try {
-      const resp =
-        typeof CosmoAuth !== 'undefined' && typeof CosmoAuth.authorizedFetch === 'function'
-          ? await CosmoAuth.authorizedFetch(V4_CHANNELS_URL, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              cache: 'no-store',
-            })
-          : await fetch(V4_CHANNELS_URL, {
-              method: 'GET',
-              headers: { Accept: 'application/json' },
-              cache: 'no-store',
-              referrerPolicy: 'no-referrer',
-            });
-
-      if (!resp || !resp.ok) return;
-      const payload = await resp.json();
-      const channels = Array.isArray(payload?.channels) ? payload.channels : [];
-      if (channels.length === 0) return;
-
-      const activeMid = getActiveMemberId();
-      const laggingMembers = [];
-      let activeMemberNewCount = 0;
-
-      for (const ch of channels) {
-        const mid = String(ch?.artistMemberId ?? '').trim();
-        const lastMsgId = String(ch?.lastMessage?.id ?? '').trim();
-        if (!mid || !lastMsgId) continue;
-
-        const currentCursor = memberCursorMap.get(mid) || '';
-        if (!memberBaselineReady.has(mid)) {
-          memberBaselineReady.add(mid);
-          if (!currentCursor || isAhead(lastMsgId, currentCursor)) {
-            memberCursorMap.set(mid, lastMsgId);
-          }
-          continue;
-        }
-
-        if (isAhead(lastMsgId, currentCursor)) {
-          memberCursorMap.set(mid, lastMsgId);
-          laggingMembers.push(mid);
-          if (activeMid && mid === activeMid) {
-            activeMemberNewCount += 1;
-          }
-        }
-      }
-
-      if (laggingMembers.length > 0) {
-        await syncLaggingMembers(laggingMembers);
-        if (activeMemberNewCount > 0 && window.CosmoViewportLock?.showScrollDownButton) {
-          window.CosmoViewportLock.showScrollDownButton(activeMemberNewCount);
-        }
-      }
-    } catch (_) {
-    } finally {
-      isPolling = false;
+    if (!memberInitialized.has(mid)) {
+      memberInitialized.add(mid);
+      if (maxId) confirmedCursorByMember.set(mid, maxId);
+      return 0;
     }
+
+    const prevCursor = confirmedCursorByMember.get(mid) || '';
+    let added = 0;
+    for (const id of list) {
+      if (isMsgIdNewer(id, prevCursor)) {
+        added += 1;
+      }
+    }
+    if (isMsgIdNewer(maxId, prevCursor)) {
+      confirmedCursorByMember.set(mid, maxId);
+    }
+    return added;
   }
 
-  seedCursorsFromExistingState();
-  pollV4ChannelsOnce();
+  // 對外暴露乾淨介面
+  window.CosmoViewportLock = Object.assign(window.CosmoViewportLock || {}, {
+    showScrollDownButton: (count = 1) => showConfirmedNewMessages(count),
+    hideScrollDownButton: hideNewMsgButton,
+  });
+  window.showScrollDownButton = (count = 1) => showConfirmedNewMessages(count);
+  window.CosmoNotifyConfirmedNewMessages = (count = 1) => showConfirmedNewMessages(count);
+  window.CosmoDiffMemberMessageIds = diffMemberMessageIds;
 
-  if (!window.__COSMO_V4_POLL_TIMER__) {
-    window.__COSMO_V4_POLL_TIMER__ = setInterval(pollV4ChannelsOnce, POLL_INTERVAL_MS);
-  }
+  window.addEventListener('scroll', () => {
+    const sc = getScrollContainer();
+    if (isNearBottom(sc)) {
+      hideNewMsgButton();
+    }
+  }, { passive: true });
 
-  window.CosmoV4ChannelPoll = {
-    pollNow: pollV4ChannelsOnce,
-    getCursors: () => Object.fromEntries(memberCursorMap.entries()),
-  };
+  window.addEventListener('resize', () => {
+    const btn = document.getElementById(BTN_ID);
+    if (btn && btn.classList.contains('visible')) {
+      alignButtonAboveInput(btn);
+    }
+  }, { passive: true });
 })();
