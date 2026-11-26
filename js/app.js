@@ -319,6 +319,9 @@
       setLoadingProgress(96, tr('sync_rendering'));
       applyMembersAndRender(results);
       setLoadingProgress(100, tr('sync_done'));
+      if (typeof CosmoChatView?.scrollToBottomInitialOnce === 'function') {
+        CosmoChatView.scrollToBottomInitialOnce();
+      }
     } catch (err) {
       if (syncGen === state.activeSyncGeneration) {
         setLoadingOverlay(false);
@@ -765,4 +768,43 @@
     }
     return resp;
   };
+})();
+
+/* --- TRIGGER INITIAL F5 SCROLL TO BOTTOM ON SESSION LOAD --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_APP_INITIAL_SCROLL_TRIGGER__) return;
+  window.__COSMO_APP_INITIAL_SCROLL_TRIGGER__ = true;
+
+  let done = false;
+  let attempts = 0;
+  const MAX_ATTEMPTS = 40;
+
+  function tryScrollOnce() {
+    if (done) return;
+    attempts += 1;
+
+    const overlay = document.getElementById('loading-overlay');
+    const isOverlayActive = Boolean(overlay && overlay.classList.contains('active'));
+    const chatEl = document.getElementById('chat');
+    const hasMessages = Boolean(chatEl && chatEl.querySelectorAll('.msg-wrapper').length > 0);
+
+    if (!isOverlayActive && hasMessages) {
+      done = true;
+      if (typeof window.CosmoScrollToBottomInitialOnce === 'function') {
+        window.CosmoScrollToBottomInitialOnce();
+      }
+      return;
+    }
+
+    if (attempts < MAX_ATTEMPTS) {
+      setTimeout(tryScrollOnce, 100);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryScrollOnce, { once: true });
+  } else {
+    tryScrollOnce();
+  }
 })();

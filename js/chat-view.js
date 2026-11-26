@@ -1498,3 +1498,68 @@ const CosmoChatView = (() => {
   }
   window.addEventListener('load', () => setTimeout(renderDemoJsonIfChatEmpty, 500), { once: true });
 })();
+
+/* --- INITIAL F5 ONCE SCROLL TO BOTTOM --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_INITIAL_F5_SCROLL_BOTTOM_INIT__) return;
+  window.__COSMO_INITIAL_F5_SCROLL_BOTTOM_INIT__ = true;
+
+  let hasScrolledInitially = false;
+
+  function performInstantBottomScroll() {
+    if (document.body?.classList.contains('is-login-view')) return false;
+    const chatShell = document.getElementById('chat-shell');
+    if (!chatShell || !chatShell.classList.contains('active')) return false;
+
+    const chatEl = document.getElementById('chat');
+    if (!chatEl) return false;
+
+    const msgNodes = chatEl.querySelectorAll('.msg-wrapper');
+    if (msgNodes.length === 0) return false;
+
+    const docEl = document.scrollingElement || document.documentElement || document.body;
+    const targets = [chatEl, docEl].filter(Boolean);
+
+    for (const el of targets) {
+      const prevBehavior = el.style?.scrollBehavior;
+      if (el.style) el.style.scrollBehavior = 'auto';
+      el.scrollTop = el.scrollHeight;
+      if (el.style) el.style.scrollBehavior = prevBehavior || '';
+    }
+
+    const maxDocTop = Math.max(
+      document.documentElement?.scrollHeight || 0,
+      document.body?.scrollHeight || 0
+    );
+    window.scrollTo({ top: maxDocTop, behavior: 'auto' });
+
+    if (typeof window.CosmoViewportLock?.hideScrollDownButton === 'function') {
+      window.CosmoViewportLock.hideScrollDownButton();
+    }
+    const floatBtn = document.getElementById('btn-scroll-to-bottom');
+    if (floatBtn) floatBtn.classList.remove('visible');
+
+    return true;
+  }
+
+  function scrollToBottomInitialOnce() {
+    if (hasScrolledInitially) return;
+
+    requestAnimationFrame(() => {
+      if (hasScrolledInitially) return;
+      if (performInstantBottomScroll()) {
+        hasScrolledInitially = true;
+        // 補一幀避免圖片/字型剛撐開高度造成的微小偏移
+        requestAnimationFrame(() => {
+          performInstantBottomScroll();
+        });
+      }
+    });
+  }
+
+  if (typeof CosmoChatView !== 'undefined') {
+    CosmoChatView.scrollToBottomInitialOnce = scrollToBottomInitialOnce;
+  }
+  window.CosmoScrollToBottomInitialOnce = scrollToBottomInitialOnce;
+})();

@@ -520,11 +520,11 @@ if (typeof window !== 'undefined') {
   mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
 })();
 
-/* --- NO-SCROLL TRANSLATION RENDER, BLOB CACHE & CURSOR-AWARE BATCH RUNNER --- */
+/* --- CLEAN SINGLE-SOURCE TRANSLATE SCROLL GUARD --- */
 (() => {
   if (typeof window === 'undefined' || typeof CosmoTranslate === 'undefined') return;
-  if (window.__COSMO_NOSCROLL_CURSOR_TRANSLATE_INIT__) return;
-  window.__COSMO_NOSCROLL_CURSOR_TRANSLATE_INIT__ = true;
+  if (window.__COSMO_CLEAN_TRANSLATE_SCROLL_GUARD_INIT__) return;
+  window.__COSMO_CLEAN_TRANSLATE_SCROLL_GUARD_INIT__ = true;
 
   const MAX_BLOB_ENTRIES = 800;
   const BATCH_SIZE = 25;
@@ -539,10 +539,85 @@ if (typeof window !== 'undefined') {
     ? window.__COSMO_BLOB_URL_POOL__
     : (window.__COSMO_BLOB_URL_POOL__ = []);
 
-  // 記錄各成員已處理到的最新 cursor，供每批次結束時比對
   const latestKnownCursorByMember = new Map();
   const runningMemberSet = new Set();
   const abortByMember = new Map();
+
+  let lastUserInputAt = 0;
+  for (const ev of ['wheel', 'touchstart', 'touchmove', 'pointerdown']) {
+    window.addEventListener(ev, () => {
+      lastUserInputAt = Date.now();
+    }, { passive: true, capture: true });
+  }
+
+  function getActiveScroller() {
+    const chat = document.getElementById('chat');
+    if (chat && chat.scrollHeight > chat.clientHeight + 2) {
+      return chat;
+    }
+    return document.scrollingElement || document.documentElement || document.body;
+  }
+
+  function captureHeightState(sc) {
+    if (!sc) return null;
+    const prevTop = Number(sc.scrollTop || 0);
+    const prevHeight = Number(sc.scrollHeight || 0);
+    const clientH = Number(sc.clientHeight || 0);
+    const wasAtBottom = prevTop + clientH >= prevHeight - 48;
+    return { sc, prevTop, prevHeight, wasAtBottom };
+  }
+
+  function preservePositionWithoutTopJump(snap) {
+    if (!snap || !snap.sc) return;
+    if (Date.now() - lastUserInputAt < 160) return;
+
+    const { sc, prevTop, prevHeight, wasAtBottom } = snap;
+    const nowHeight = Number(sc.scrollHeight || 0);
+    const nowTop = Number(sc.scrollTop || 0);
+
+    if (wasAtBottom) {
+      sc.scrollTop = nowHeight;
+      return;
+    }
+
+    // 僅在內容高度增加且目前意外跳到頂部或偏移時，依差值補償，絕不主動設為 0
+    const heightDelta = nowHeight - prevHeight;
+    if (Math.abs(heightDelta) > 0.5 && prevTop > 4 && nowTop <= 2) {
+      sc.scrollTop = Math.max(0, prevTop + heightDelta);
+    } else if (prevTop > 4 && nowTop === 0) {
+      sc.scrollTop = prevTop;
+    }
+  }
+
+  function runSafelyWithoutJump(fn) {
+    const sc = getActiveScroller();
+    const snap = captureHeightState(sc);
+    const finish = () => {
+      requestAnimationFrame(() => preservePositionWithoutTopJump(snap));
+    };
+    try {
+      const res = fn();
+      if (res && typeof res.then === 'function') {
+        return res.finally(finish);
+      }
+      finish();
+      return res;
+    } catch (err) {
+      finish();
+      throw err;
+    }
+  }
+
+  for (const name of ['toggle', 'setEnabled', 'renderCachedForCurrentView']) {
+    if (typeof CosmoTranslate[name] === 'function' && !CosmoTranslate[name].__cosmoCleanGuard) {
+      const orig = CosmoTranslate[name].bind(CosmoTranslate);
+      const wrapped = function (...args) {
+        return runSafelyWithoutJump(() => orig(...args));
+      };
+      wrapped.__cosmoCleanGuard = true;
+      CosmoTranslate[name] = wrapped;
+    }
+  }
 
   function parseNumericCursor(raw) {
     if (raw === undefined || raw === null) return 0;
@@ -578,126 +653,6 @@ if (typeof window !== 'undefined') {
     return latestKnownCursorByMember.get(mid) || latest;
   }
 
-  // 1. 捲動錨點鎖定器：在 DOM 插入翻譯節點前後維持閱讀視窗完全不跳動
-  function captureScrollAnchor() {
-    const chatEl = document.getElementById('chat');
-    if (!chatEl) return null;
-
-    const chatRect = chatEl.getBoundingClientRect();
-    const wrappers = chatEl.querySelectorAll('.msg-wrapper[data-source-id]');
-    let anchorEl = null;
-    let anchorTopOffset = 0;
-
-    for (let i = 0; i < wrappers.length; i++) {
-      const el = wrappers[i];
-      const rect = el.getBoundingClientRect();
-      if (rect.bottom >= chatRect.top + 4) {
-        anchorEl = el;
-        anchorTopOffset = rect.top - chatRect.top;
-        break;
-      }
-    }
-
-    return {
-      chatEl,
-      scrollTop: chatEl.scrollTop,
-      scrollHeight: chatEl.scrollHeight,
-      anchorSid: anchorEl ? anchorEl.getAttribute('data-source-id') : null,
-      anchorTopOffset,
-      prevScrollBehavior: chatEl.style.scrollBehavior,
-    };
-  }
-
-  function restoreScrollAnchor(snap) {
-    if (!snap || !snap.chatEl) return;
-    const { chatEl, anchorSid, anchorTopOffset, scrollTop, prevScrollBehavior } = snap;
-    chatEl.style.scrollBehavior = 'auto';
-
-    if (anchorSid) {
-      const target = chatEl.querySelector(`.msg-wrapper[data-source-id="${CSS.escape(anchorSid)}"]`);
-      if (target) {
-        const chatRect = chatEl.getBoundingClientRect();
-        const nextOffset = target.getBoundingClientRect().top - chatRect.top;
-        const delta = nextOffset - anchorTopOffset;
-        if (Math.abs(delta) > 0.5) {
-          chatEl.scrollTop += delta;
-        }
-        chatEl.style.scrollBehavior = prevScrollBehavior || '';
-        return;
-      }
-    }
-
-    chatEl.scrollTop = scrollTop;
-    chatEl.style.scrollBehavior = prevScrollBehavior || '';
-  }
-
-  function runWithNoScroll(fn) {
-    const snap = captureScrollAnchor();
-    const res = fn();
-    if (res && typeof res.then === 'function') {
-      return res.finally(() => {
-        requestAnimationFrame(() => restoreScrollAnchor(snap));
-      });
-    }
-    restoreScrollAnchor(snap);
-    requestAnimationFrame(() => restoreScrollAnchor(snap));
-    return res;
-  }
-
-  // 包裝 CosmoTranslate 的 DOM 渲染方法，確保開啟/補繪翻譯時畫面完全不捲動
-  for (const methodName of ['renderCachedForCurrentView', 'applyTranslationsToDom', 'setEnabled', 'toggle']) {
-    if (typeof CosmoTranslate[methodName] === 'function') {
-      const orig = CosmoTranslate[methodName].bind(CosmoTranslate);
-      CosmoTranslate[methodName] = function wrappedNoScrollMethod(...args) {
-        return runWithNoScroll(() => orig(...args));
-      };
-    }
-  }
-
-  // 攔截 .msg-wrapper 內翻譯子節點插入，即時回補捲動差值
-  function installChatDomScrollLockObserver() {
-    const chatEl = document.getElementById('chat');
-    if (!chatEl || chatEl.dataset.cosmoScrollLockObserved === '1') return;
-    chatEl.dataset.cosmoScrollLockObserved = '1';
-
-    let pendingSnap = null;
-    let lockRaf = null;
-
-    const mo = new MutationObserver((mutations) => {
-      let touchedTranslation = false;
-      for (const m of mutations) {
-        if (m.type !== 'childList') continue;
-        for (const node of m.addedNodes) {
-          if (
-            node &&
-            node.nodeType === 1 &&
-            (node.classList?.contains('cosmo-translated-text') ||
-              node.querySelector?.('.cosmo-translated-text'))
-          ) {
-            touchedTranslation = true;
-            break;
-          }
-        }
-        if (touchedTranslation) break;
-      }
-      if (!touchedTranslation) return;
-
-      if (!pendingSnap) {
-        pendingSnap = captureScrollAnchor();
-      }
-      if (lockRaf !== null) return;
-      lockRaf = requestAnimationFrame(() => {
-        const snap = pendingSnap;
-        pendingSnap = null;
-        lockRaf = null;
-        restoreScrollAnchor(snap);
-      });
-    });
-
-    mo.observe(chatEl, { childList: true, subtree: true });
-  }
-
-  // 2. 寫入翻譯結果到 Blob 快取
   function saveTranslationToBlob(mid, sid, translatedContent, cursorVal = 0) {
     const text = String(translatedContent ?? '').trim();
     if (!text) return null;
@@ -863,7 +818,6 @@ if (typeof window !== 'undefined') {
     return { mid, items, latestCursor };
   }
 
-  // 3. 靜默翻譯執行器：每跑完一個 batch 檢查最新訊息指標 cursor，若有更新則優先從最新 cursor 重跑
   async function runSilentBatchTranslateWithCursorCheck(member, { getLatestMember } = {}) {
     if (!member) return;
     const mid = String(member.artistMemberId ?? member.id ?? '').trim();
@@ -906,16 +860,14 @@ if (typeof window !== 'undefined') {
             Array.from({ length: Math.min(CONCURRENCY, batch.length) }, worker)
           );
 
-          // 若目前翻譯開關為開啟狀態，以鎖定捲動的方式無感渲染剛完成的批次譯文
           if (
             typeof CosmoTranslate.isEnabled === 'function' &&
             CosmoTranslate.isEnabled() &&
             typeof CosmoTranslate.renderCachedForCurrentView === 'function'
           ) {
-            runWithNoScroll(() => CosmoTranslate.renderCachedForCurrentView());
+            runSafelyWithoutJump(() => CosmoTranslate.renderCachedForCurrentView());
           }
 
-          // 每跑完一個批次，檢查最新訊息指標 cursor 是否已有推進
           const freshestMember =
             typeof getLatestMember === 'function' ? getLatestMember(mid) : null;
           const freshestCursor = freshestMember
@@ -939,9 +891,9 @@ if (typeof window !== 'undefined') {
     }
   }
 
-  if (typeof CosmoTranslate.setMemberContext === 'function') {
+  if (typeof CosmoTranslate.setMemberContext === 'function' && !CosmoTranslate.setMemberContext.__cosmoSilentHook) {
     const origSetMember = CosmoTranslate.setMemberContext.bind(CosmoTranslate);
-    CosmoTranslate.setMemberContext = function wrappedSetMember(member, ...rest) {
+    const wrappedSetMember = function (member, ...rest) {
       const res = origSetMember(member, ...rest);
       if (member) {
         updateKnownMemberCursor(member);
@@ -949,11 +901,8 @@ if (typeof window !== 'undefined') {
       }
       return res;
     };
-  }
-
-  installChatDomScrollLockObserver();
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installChatDomScrollLockObserver, { once: true });
+    wrappedSetMember.__cosmoSilentHook = true;
+    CosmoTranslate.setMemberContext = wrappedSetMember;
   }
 
   window.CosmoSilentTranslate = Object.assign(window.CosmoSilentTranslate || {}, {
@@ -961,411 +910,6 @@ if (typeof window !== 'undefined') {
     runOnceForCurrentMember: (member, opts) => runSilentBatchTranslateWithCursorCheck(member, opts),
     updateKnownMemberCursor,
     getKnownCursor: (mid) => latestKnownCursorByMember.get(String(mid)) || 0,
-    runWithNoScroll,
     getSilentBlobEntry: (mid, sid) => blobStore.get(`${String(mid)}:${String(sid)}`) || null,
   });
-})();
-
-/* --- STRICT NO-SCROLL LOCK DURING TRANSLATION RENDER & DOM INSERTION --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_STRICT_NO_SCROLL_TRANSLATE_INIT__) return;
-  window.__COSMO_STRICT_NO_SCROLL_TRANSLATE_INIT__ = true;
-
-  let freezeScrollUntil = 0;
-
-  function getScrollTargets() {
-    const list = [];
-    const chat = document.getElementById('chat');
-    if (chat) list.push(chat);
-    const se = document.scrollingElement || document.documentElement;
-    if (se && !list.includes(se)) list.push(se);
-    if (document.body && !list.includes(document.body)) list.push(document.body);
-    return list;
-  }
-
-  function captureAnchor() {
-    const chat = document.getElementById('chat');
-    const sc = chat && chat.scrollHeight > chat.clientHeight + 2
-      ? chat
-      : (document.scrollingElement || document.documentElement);
-
-    let anchorEl = null;
-    let anchorTop = 0;
-    if (chat) {
-      const cRect = chat.getBoundingClientRect();
-      const items = chat.querySelectorAll('.msg-wrapper, [data-source-id], [data-message-id]');
-      for (const el of items) {
-        const r = el.getBoundingClientRect();
-        if (r.bottom > cRect.top + 8 && r.top < cRect.bottom) {
-          anchorEl = el;
-          anchorTop = r.top - cRect.top;
-          break;
-        }
-      }
-    }
-
-    return {
-      sc,
-      scrollTop: sc ? sc.scrollTop : 0,
-      anchorEl,
-      anchorTop,
-    };
-  }
-
-  function restoreAnchor(snap) {
-    if (!snap || !snap.sc) return;
-    const { sc, scrollTop, anchorEl, anchorTop } = snap;
-    const prevBehavior = sc.style.scrollBehavior;
-    sc.style.scrollBehavior = 'auto';
-
-    if (anchorEl && anchorEl.isConnected) {
-      const chat = document.getElementById('chat');
-      const baseTop = chat ? chat.getBoundingClientRect().top : 0;
-      const nowTop = anchorEl.getBoundingClientRect().top - baseTop;
-      const diff = nowTop - anchorTop;
-      if (Math.abs(diff) > 0.5) {
-        sc.scrollTop += diff;
-      }
-    } else {
-      sc.scrollTop = scrollTop;
-    }
-
-    sc.style.scrollBehavior = prevBehavior || '';
-  }
-
-  // 在翻譯渲染視窗內，攔截非使用者主動捲動的 scrollTop 改寫
-  if (typeof Element !== 'undefined' && Element.prototype) {
-    const desc = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
-    if (desc && typeof desc.set === 'function' && !desc.set.__cosmoLockedSet) {
-      const origSet = desc.set;
-      Object.defineProperty(Element.prototype, 'scrollTop', {
-        configurable: true,
-        get: desc.get,
-        set(val) {
-          if (Date.now() < freezeScrollUntil && (this.id === 'chat' || this === document.documentElement || this === document.body)) {
-            return;
-          }
-          return origSet.call(this, val);
-        },
-      });
-    }
-  }
-
-  function runFrozen(fn) {
-    const snap = captureAnchor();
-    freezeScrollUntil = Date.now() + 250;
-    try {
-      const res = fn();
-      restoreAnchor(snap);
-      requestAnimationFrame(() => {
-        restoreAnchor(snap);
-        requestAnimationFrame(() => {
-          restoreAnchor(snap);
-          freezeScrollUntil = 0;
-        });
-      });
-      return res;
-    } catch (e) {
-      freezeScrollUntil = 0;
-      throw e;
-    }
-  }
-
-  if (typeof CosmoTranslate !== 'undefined') {
-    for (const name of ['toggle', 'setEnabled', 'renderCachedForCurrentView', 'applyTranslationsToDom']) {
-      if (typeof CosmoTranslate[name] === 'function' && !CosmoTranslate[name].__cosmoStrictNoScroll) {
-        const orig = CosmoTranslate[name].bind(CosmoTranslate);
-        const wrapped = function (...args) {
-          return runFrozen(() => orig(...args));
-        };
-        wrapped.__cosmoStrictNoScroll = true;
-        CosmoTranslate[name] = wrapped;
-      }
-    }
-  }
-
-  const origForceRender = window.CosmoForceRenderTranslations;
-  if (typeof origForceRender === 'function' && !origForceRender.__cosmoStrictNoScroll) {
-    const wrappedForce = function (...args) {
-      return runFrozen(() => origForceRender(...args));
-    };
-    wrappedForce.__cosmoStrictNoScroll = true;
-    window.CosmoForceRenderTranslations = wrappedForce;
-  }
-
-  window.CosmoFreezeTranslationScroll = runFrozen;
-})();
-
-/* --- CORE ARCHITECTURE: ANCHOR COMPENSATED TRANSLATE & ID-BASED NEW MSG --- */
-(() => {
-  if (typeof window === 'undefined') return;
-  if (window.__COSMO_CORE_CHAT_ARCH_INIT__) return;
-  window.__COSMO_CORE_CHAT_ARCH_INIT__ = true;
-
-  const BTN_ID = 'cosmo-scroll-down-btn';
-  const BOTTOM_THRESHOLD_PX = 48;
-
-  // 各成員已確認的最新訊息 ID（cursor），只由真實訊息 ID 推進
-  const confirmedCursorByMember = new Map();
-  const memberInitialized = new Set();
-
-  let unseenCount = 0;
-  let userScrollingUntil = 0;
-  let translatingDepth = 0;
-
-  // 記錄使用者主動捲動，避免在「使用者正在滑動」時做任何位置補償
-  for (const evName of ['wheel', 'touchstart', 'touchmove', 'pointerdown']) {
-    window.addEventListener(evName, () => {
-      userScrollingUntil = Date.now() + 180;
-    }, { passive: true, capture: true });
-  }
-
-  function getScrollContainer() {
-    const chat = document.getElementById('chat');
-    if (chat && chat.scrollHeight > chat.clientHeight + 2) {
-      return chat;
-    }
-    return document.scrollingElement || document.documentElement;
-  }
-
-  function isNearBottom(sc) {
-    if (!sc) return true;
-    return sc.scrollHeight - sc.scrollTop - sc.clientHeight <= BOTTOM_THRESHOLD_PX;
-  }
-
-  function formatNewMsgLabel(count) {
-    const n = Math.max(1, Number(count) || 1);
-    const text =
-      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
-        ? CosmoI18n.t('new_messages_btn', { count: n })
-        : `新訊息 (${n})`;
-    const trimmed = String(text || '').trim();
-    if (/^[↓⬇▼]/.test(trimmed)) return trimmed;
-    return `↓ ${trimmed}`;
-  }
-
-  function alignButtonAboveInput(btn) {
-    if (!btn) return;
-    const inputs = [...document.querySelectorAll('textarea, input[type="text"]')].filter((el) => {
-      const cs = getComputedStyle(el);
-      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return false;
-      const r = el.getBoundingClientRect();
-      return r.width > 50 && r.height > 18;
-    });
-    if (inputs.length === 0) return;
-    inputs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top);
-    const rect = inputs[0].getBoundingClientRect();
-    const h = btn.offsetHeight || 36;
-    btn.style.left = `${Math.max(12, Math.round(rect.left))}px`;
-    btn.style.top = `${Math.max(48, Math.round(rect.top - h - 10))}px`;
-    btn.style.right = 'auto';
-    btn.style.bottom = 'auto';
-  }
-
-  function hideNewMsgButton() {
-    unseenCount = 0;
-    const btn = document.getElementById(BTN_ID);
-    if (btn) {
-      btn.classList.remove('visible');
-      btn.style.display = 'none';
-    }
-  }
-
-  // 僅在確認有「真實新增訊息」且不在底部時顯示按鈕
-  function showConfirmedNewMessages(count) {
-    if (translatingDepth > 0) return;
-    const add = Number(count) || 0;
-    if (add <= 0) return;
-    if (document.body.classList.contains('is-login-view')) return;
-
-    const sc = getScrollContainer();
-    if (isNearBottom(sc)) {
-      hideNewMsgButton();
-      return;
-    }
-
-    unseenCount += add;
-    let btn = document.getElementById(BTN_ID);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.id = BTN_ID;
-      btn.addEventListener('click', (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const targetSc = getScrollContainer();
-        if (targetSc) {
-          targetSc.scrollTop = targetSc.scrollHeight;
-        }
-        hideNewMsgButton();
-      });
-      document.body.appendChild(btn);
-    }
-
-    btn.textContent = formatNewMsgLabel(unseenCount);
-    btn.classList.add('visible');
-    btn.style.display = 'inline-flex';
-    alignButtonAboveInput(btn);
-  }
-
-  // 抓取目前可視區頂部訊息元素作為錨點，讓譯文撐高時畫面維持在同一則訊息
-  function captureVisibleAnchor(sc) {
-    if (!sc) return null;
-    const scRect = sc.getBoundingClientRect();
-    const chat = document.getElementById('chat');
-    if (!chat) return { sc, scrollTop: sc.scrollTop, el: null, relTop: 0 };
-
-    const items = chat.querySelectorAll('.msg-wrapper, [data-source-id], [data-message-id]');
-    for (const el of items) {
-      const r = el.getBoundingClientRect();
-      if (r.bottom > scRect.top + 6 && r.top < scRect.bottom) {
-        return {
-          sc,
-          scrollTop: sc.scrollTop,
-          el,
-          relTop: r.top - scRect.top,
-        };
-      }
-    }
-    return { sc, scrollTop: sc.scrollTop, el: null, relTop: 0 };
-  }
-
-  function compensateAnchorAfterLayout(anchor) {
-    if (!anchor || !anchor.sc) return;
-    if (Date.now() < userScrollingUntil) return;
-    const { sc, scrollTop, el, relTop } = anchor;
-
-    // 若原本就在最底部，維持貼底
-    if (scrollTop + sc.clientHeight >= sc.scrollHeight - BOTTOM_THRESHOLD_PX - 24) {
-      return;
-    }
-
-    if (el && el.isConnected) {
-      const scRect = sc.getBoundingClientRect();
-      const currentRelTop = el.getBoundingClientRect().top - scRect.top;
-      const diff = currentRelTop - relTop;
-      if (Math.abs(diff) > 0.5) {
-        sc.scrollTop = sc.scrollTop + diff;
-      }
-    } else if (Math.abs(sc.scrollTop - scrollTop) > 0.5) {
-      sc.scrollTop = scrollTop;
-    }
-  }
-
-  // 包裝翻譯函式：只在翻譯排版前後做一次錨點位移補償，不攔截原型也不觸發新訊息
-  function wrapTranslationExecution(obj, methodName) {
-    if (!obj || typeof obj[methodName] !== 'function') return;
-    const orig = obj[methodName];
-    if (orig.__cosmoCoreTransWrapped) return;
-
-    const wrapped = function (...args) {
-      const sc = getScrollContainer();
-      const anchor = captureVisibleAnchor(sc);
-      translatingDepth += 1;
-
-      const finish = () => {
-        requestAnimationFrame(() => {
-          compensateAnchorAfterLayout(anchor);
-          translatingDepth = Math.max(0, translatingDepth - 1);
-        });
-      };
-
-      try {
-        const res = orig.apply(this, args);
-        if (res && typeof res.then === 'function') {
-          return res.finally(finish);
-        }
-        finish();
-        return res;
-      } catch (err) {
-        finish();
-        throw err;
-      }
-    };
-    wrapped.__cosmoCoreTransWrapped = true;
-    obj[methodName] = wrapped;
-  }
-
-  if (typeof CosmoTranslate !== 'undefined') {
-    for (const key of Object.getOwnPropertyNames(CosmoTranslate)) {
-      if (typeof CosmoTranslate[key] === 'function') {
-        wrapTranslationExecution(CosmoTranslate, key);
-      }
-    }
-  }
-
-  // 訊息 ID 比較（支援數字或 "prefix:id" 格式）
-  function parseMsgId(raw) {
-    const s = String(raw ?? '').trim();
-    if (!s) return { raw: '', num: null };
-    const tail = s.includes(':') ? s.split(':').pop().trim() : s;
-    const num = /^\d+$/.test(tail) ? Number(tail) : null;
-    return { raw: tail, num };
-  }
-
-  function isMsgIdNewer(nextId, prevId) {
-    const a = parseMsgId(nextId);
-    const b = parseMsgId(prevId);
-    if (!a.raw) return false;
-    if (!b.raw) return true;
-    if (a.raw === b.raw) return false;
-    if (a.num !== null && b.num !== null) return a.num > b.num;
-    return a.raw > b.raw;
-  }
-
-  // 供外部以真實訊息 ID 清單比對新增數量（首次建立基準線回傳 0）
-  function diffMemberMessageIds(memberId, messageIds) {
-    const mid = String(memberId ?? '').trim();
-    if (!mid) return 0;
-
-    let maxId = confirmedCursorByMember.get(mid) || '';
-    const list = Array.isArray(messageIds) ? messageIds : [];
-    for (const id of list) {
-      if (isMsgIdNewer(id, maxId)) {
-        maxId = String(id).trim();
-      }
-    }
-
-    if (!memberInitialized.has(mid)) {
-      memberInitialized.add(mid);
-      if (maxId) confirmedCursorByMember.set(mid, maxId);
-      return 0;
-    }
-
-    const prevCursor = confirmedCursorByMember.get(mid) || '';
-    let added = 0;
-    for (const id of list) {
-      if (isMsgIdNewer(id, prevCursor)) {
-        added += 1;
-      }
-    }
-    if (isMsgIdNewer(maxId, prevCursor)) {
-      confirmedCursorByMember.set(mid, maxId);
-    }
-    return added;
-  }
-
-  // 對外暴露乾淨介面
-  window.CosmoViewportLock = Object.assign(window.CosmoViewportLock || {}, {
-    showScrollDownButton: (count = 1) => showConfirmedNewMessages(count),
-    hideScrollDownButton: hideNewMsgButton,
-  });
-  window.showScrollDownButton = (count = 1) => showConfirmedNewMessages(count);
-  window.CosmoNotifyConfirmedNewMessages = (count = 1) => showConfirmedNewMessages(count);
-  window.CosmoDiffMemberMessageIds = diffMemberMessageIds;
-
-  window.addEventListener('scroll', () => {
-    const sc = getScrollContainer();
-    if (isNearBottom(sc)) {
-      hideNewMsgButton();
-    }
-  }, { passive: true });
-
-  window.addEventListener('resize', () => {
-    const btn = document.getElementById(BTN_ID);
-    if (btn && btn.classList.contains('visible')) {
-      alignButtonAboveInput(btn);
-    }
-  }, { passive: true });
 })();
