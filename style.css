@@ -2357,3 +2357,124 @@ body.cosmo-has-custom-bg:not(.is-login-view) .msg {
   min-height: 20px !important;
   flex-shrink: 0 !important;
 }
+
+/* --- FLOATING SCROLL DOWN BUTTON FOR UNSEEN NEW MESSAGES --- */
+#cosmo-scroll-down-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 84px;
+  z-index: 45;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background-color: #9576BE;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  transition: opacity 0.16s ease, transform 0.16s ease, filter 0.15s ease;
+}
+
+#cosmo-scroll-down-btn.visible {
+  display: inline-flex;
+}
+
+#cosmo-scroll-down-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+#cosmo-scroll-down-btn:active {
+  transform: scale(0.96);
+}
+
+body.is-login-view #cosmo-scroll-down-btn {
+  display: none !important;
+}
+
+/* --- NEW MESSAGE BUTTON ABOVE TEXT INPUT ALIGNED LEFT TO INPUT --- */
+#cosmo-scroll-down-bar {
+  display: none;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 0 0 6px 0;
+  box-sizing: border-box;
+}
+
+#cosmo-scroll-down-bar.has-new {
+  display: flex;
+}
+
+#cosmo-scroll-down-btn {
+  position: static !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  margin-left: 0 !important;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background-color: #9576BE;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
+}
+
+#cosmo-scroll-down-btn:hover {
+  filter: brightness(1.08);
+}
+
+body.is-login-view #cosmo-scroll-down-bar {
+  display: none !important;
+}
+
+/* --- NEW MESSAGE BUTTON: EXACT INPUT ALIGNMENT, #26123C, 5PX RADIUS --- */
+#cosmo-scroll-down-bar {
+  display: none !important;
+}
+
+#cosmo-scroll-down-btn {
+  position: fixed !important;
+  z-index: 65 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 15px;
+  margin: 0 !important;
+  border-radius: 5px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background-color: #26123C !important;
+  color: #ffffff !important;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: none !important;
+  animation: none !important;
+}
+
+#cosmo-scroll-down-btn.visible {
+  display: inline-flex !important;
+}
+
+body.is-login-view #cosmo-scroll-down-btn {
+  display: none !important;
+}

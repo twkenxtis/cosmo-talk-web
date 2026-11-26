@@ -540,3 +540,43 @@ const CosmoSettings = (() => {
 
   window.CosmoReplyThemeSearch = window.CosmoReplyThemeSearch || { applyTheme };
 })();
+
+/* --- I18N SYNC FOR UPLOAD & REMOVE BACKGROUND BUTTONS --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_BG_BTN_I18N_INIT__) return;
+  window.__COSMO_BG_BTN_I18N_INIT__ = true;
+
+  function applyBgButtonLabels() {
+    const uploadText =
+      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
+        ? CosmoI18n.t('upload_bg_btn')
+        : '上傳背景圖';
+    const clearText =
+      typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.t === 'function'
+        ? CosmoI18n.t('clear_bg_btn')
+        : '移除背景';
+
+    const upBtn = document.getElementById('cosmo-adv-bg-upload-btn');
+    if (upBtn && upBtn.textContent !== uploadText) {
+      upBtn.textContent = uploadText;
+      upBtn.setAttribute('aria-label', uploadText);
+    }
+
+    const clrBtn = document.getElementById('cosmo-adv-bg-clear-btn');
+    if (clrBtn && clrBtn.textContent !== clearText) {
+      clrBtn.textContent = clearText;
+      clrBtn.setAttribute('aria-label', clearText);
+    }
+  }
+
+  applyBgButtonLabels();
+  if (typeof CosmoI18n !== 'undefined' && typeof CosmoI18n.onChange === 'function') {
+    CosmoI18n.onChange(applyBgButtonLabels);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyBgButtonLabels, { once: true });
+  }
+  const mo = new MutationObserver(() => applyBgButtonLabels());
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();

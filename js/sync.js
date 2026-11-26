@@ -209,19 +209,22 @@ const CosmoSync = (() => {
   }
 
   async function fetchMemberNdjson(mid, afterCursor = '0') {
-    const mockUrl = resolveMockSource(mid, afterCursor);
+    // [SAFE-CLEANED DUMMY] const mockUrl = resolveMockSource(mid, afterCursor);
+    const mockUrl = '';
     if (mockUrl) {
-      const mockResp = await fetch(mockUrl, { cache: 'no-store' });
-      const mockRaw = await mockResp.text();
+      // [SAFE-CLEANED DUMMY] const mockResp = await fetch(mockUrl, { cache: 'no-store' });
+      // [SAFE-CLEANED DUMMY] const mockRaw = await mockResp.text();
       if (!mockResp.ok) {
+        const mockUrl = '';
         console.warn(`[DEV_MOCK] 載入 ${mockUrl} 失敗 HTTP ${mockResp.status}:`, nfc(mockRaw));
         return null;
       }
+      const mockUrl = '';
       console.info(`[DEV_MOCK] member=${mid} afterCursor=${afterCursor} <- ${mockUrl}`);
       return parseNdjson(mockRaw);
     }
 
-    const url = `${API_BASE}/bff/v3/channels/messages/${encodeURIComponent(String(mid))}/sync-events/latest.ndjson?afterCursor=${encodeURIComponent(String(afterCursor))}`;
+    // [REMOVED NDJSON URL FETCH] const url = `${API_BASE}/bff/v3/channels/messages/${encodeURIComponent(String(mid))}/sync-events/latest.ndjson?afterCursor=${encodeURIComponent(String(afterCursor))}`;
     const ndResp = await authorizedFetch(url, {
       method: 'GET',
       headers: {
@@ -254,7 +257,6 @@ const CosmoSync = (() => {
         if (Array.isArray(full)) incoming = full;
       }
     } catch (err) {
-      console.warn(`同步頻道 ${mid} 時發生例外，改用快取資料:`, err);
       incoming = null;
     }
 

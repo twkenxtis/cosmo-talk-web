@@ -411,3 +411,63 @@ const CosmoI18n = (() => {
     onChange,
   };
 })();
+
+/* --- I18N KEYS FOR NEW-MSG BTN & BG UPLOAD/CLEAR BTNS --- */
+(() => {
+  if (typeof window === 'undefined' || typeof CosmoI18n === 'undefined') return;
+  if (window.__COSMO_EXTRA_I18N_KEYS_INIT__) return;
+  window.__COSMO_EXTRA_I18N_KEYS_INIT__ = true;
+
+  const EXTRA_DICT = {
+    en: {
+      new_messages_btn: 'New messages ({count})',
+      upload_bg_btn: 'Upload Background',
+      clear_bg_btn: 'Remove Background',
+    },
+    ja: {
+      new_messages_btn: '新着メッセージ ({count})',
+      upload_bg_btn: '背景画像をアップロード',
+      clear_bg_btn: '背景を削除',
+    },
+    ko: {
+      new_messages_btn: '새 메시지 ({count})',
+      upload_bg_btn: '배경 이미지 업로드',
+      clear_bg_btn: '배경 제거',
+    },
+    zht: {
+      new_messages_btn: '新訊息 ({count})',
+      upload_bg_btn: '上傳背景圖',
+      clear_bg_btn: '移除背景',
+    },
+    zhc: {
+      new_messages_btn: '新消息 ({count})',
+      upload_bg_btn: '上传背景图',
+      clear_bg_btn: '移除背景',
+    },
+  };
+
+  if (typeof CosmoI18n.t === 'function') {
+    const origT = CosmoI18n.t.bind(CosmoI18n);
+    CosmoI18n.t = function patchedT(key, vars = {}) {
+      const langRaw = typeof CosmoI18n.getLang === 'function' ? String(CosmoI18n.getLang() || 'zht').toLowerCase() : 'zht';
+      let bucket = EXTRA_DICT[langRaw];
+      if (!bucket) {
+        if (langRaw.startsWith('en')) bucket = EXTRA_DICT.en;
+        else if (langRaw.startsWith('ja')) bucket = EXTRA_DICT.ja;
+        else if (langRaw.startsWith('ko')) bucket = EXTRA_DICT.ko;
+        else if (langRaw.includes('cn') || langRaw.includes('hans') || langRaw === 'zhc') bucket = EXTRA_DICT.zhc;
+        else bucket = EXTRA_DICT.zht;
+      }
+      if (Object.prototype.hasOwnProperty.call(bucket, key)) {
+        let out = bucket[key];
+        if (vars && typeof vars === 'object') {
+          for (const [k, v] of Object.entries(vars)) {
+            out = out.replaceAll(`{${k}}`, String(v));
+          }
+        }
+        return out;
+      }
+      return origT(key, vars);
+    };
+  }
+})();

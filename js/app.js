@@ -524,3 +524,358 @@
 
   bootstrap();
 })();
+
+/* --- 10S SILENT MESSAGE API POLLING & AUTO BLOB TRANSLATION HOOK --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_10S_SILENT_POLL_INIT__) return;
+  window.__COSMO_10S_SILENT_POLL_INIT__ = true;
+
+  const POLL_INTERVAL_MS = 10000;
+  let pollTimer = null;
+  let pollInFlight = false;
+  const memberCursorSnapshot = new Map();
+
+  function getMemberLatestCursor(member) {
+    if (!member || typeof member !== 'object') return '';
+    const records = Array.isArray(member.records) ? member.records : [];
+    const lastRec = records.length > 0 ? records[records.length - 1] : null;
+    const rawCursor =
+      member.latestCursor ??
+      member.cursor ??
+      lastRec?.cursor ??
+      lastRec?.message?.cursor ??
+      lastRec?.sourceId ??
+      lastRec?.message?.sourceId ??
+      '';
+    return `${records.length}:${String(rawCursor)}`;
+  }
+
+  function isChatSessionReadyForPolling() {
+    if (window.__COSMO_LOGGING_OUT__) return false;
+    if (document.hidden) return false;
+    if (document.body.classList.contains('is-login-view')) return false;
+    const chatShell = document.getElementById('chat-shell');
+    if (!chatShell || !chatShell.classList.contains('active')) return false;
+    const isDemo =
+      window.__FORCE_PROD_SESSION__ !== true &&
+      (window.IS_DEMO_MODE === true || window.FORCE_DEMO_MODE === true);
+    if (isDemo) return false;
+    return typeof CosmoSync !== 'undefined' && typeof CosmoSync.syncAllChannels === 'function';
+  }
+
+  async function runSilentPollTick() {
+    if (pollInFlight || !isChatSessionReadyForPolling()) return;
+    pollInFlight = true;
+
+    try {
+      const updatedMembers = await CosmoSync.syncAllChannels({
+        silent: true,
+        isCancelled: () => Boolean(window.__COSMO_LOGGING_OUT__),
+      });
+
+      if (!Array.isArray(updatedMembers) || updatedMembers.length === 0) return;
+
+      let hasAnyNewCursor = false;
+      for (const m of updatedMembers) {
+        const mid = String(m?.artistMemberId ?? m?.id ?? '').trim();
+        if (!mid) continue;
+        const sig = getMemberLatestCursor(m);
+        if (memberCursorSnapshot.get(mid) !== sig) {
+          memberCursorSnapshot.set(mid, sig);
+          hasAnyNewCursor = true;
+        }
+      }
+
+      // 每次打完訊息 API 後，針對有更新（或當前開啟）的成員自動在背景執行靜默翻譯並存入 Blob
+      const activeHeaderName =
+        document.querySelector('#chat-header .member-name, #chat-header .header-title')?.textContent?.trim() || '';
+
+      for (const m of updatedMembers) {
+        const mid = String(m?.artistMemberId ?? m?.id ?? '').trim();
+        if (!mid) continue;
+        if (window.CosmoSilentTranslate?.updateKnownMemberCursor) {
+          window.CosmoSilentTranslate.updateKnownMemberCursor(m);
+        }
+        const isCurrentViewed =
+          activeHeaderName &&
+          String(m?.name ?? m?.originalName ?? '').trim() === activeHeaderName;
+
+        if ((hasAnyNewCursor || isCurrentViewed) && window.CosmoSilentTranslate?.runSilentBatchTranslateWithCursorCheck) {
+          window.CosmoSilentTranslate.runSilentBatchTranslateWithCursorCheck(m, {
+            getLatestMember: (targetMid) =>
+              updatedMembers.find((item) => String(item?.artistMemberId ?? item?.id) === String(targetMid)) || null,
+          });
+        }
+      }
+
+      // 若有新訊息進來，無感刷新側邊欄與當前聊天畫面（鎖定捲動位置不跳動）
+      if (hasAnyNewCursor && typeof CosmoChatView !== 'undefined') {
+        const currentMember =
+          updatedMembers.find(
+            (m) => String(m?.name ?? m?.originalName ?? '').trim() === activeHeaderName
+          ) || updatedMembers[0];
+
+        const updateDom = () => {
+          if (typeof CosmoChatView.renderSidebar === 'function' && currentMember) {
+            CosmoChatView.renderSidebar(updatedMembers, currentMember.artistMemberId);
+          }
+          if (typeof CosmoChatView.renderChat === 'function' && currentMember) {
+            CosmoChatView.renderChat(currentMember);
+          }
+          if (typeof CosmoTranslate !== 'undefined' && currentMember) {
+            if (typeof CosmoTranslate.setMemberContext === 'function') {
+              CosmoTranslate.setMemberContext(currentMember);
+            }
+            if (typeof window.CosmoAutoFlushTranslations === 'function') {
+              window.CosmoAutoFlushTranslations();
+            }
+          }
+        };
+
+        if (window.CosmoViewportLock?.renderWithLockedViewport) {
+          window.CosmoViewportLock.renderWithLockedViewport(updateDom, {
+            hasNewMessages: true,
+            newCount: 1,
+          });
+        } else {
+          updateDom();
+        }
+      }
+    } catch (err) {
+      console.debug('[10s Silent Poll] skipped:', err);
+    } finally {
+      pollInFlight = false;
+    }
+  }
+
+  function startPollingLoop() {
+    if (pollTimer !== null) return;
+    pollTimer = setInterval(runSilentPollTick, POLL_INTERVAL_MS);
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      runSilentPollTick();
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    if (pollTimer !== null) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  });
+
+  startPollingLoop();
+})();
+
+/* --- TRIGGER SILENT BLOB TRANSLATION ON EVERY 10S FETCH --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_10S_FETCH_BLOB_HOOK_INIT__) return;
+  window.__COSMO_10S_FETCH_BLOB_HOOK_INIT__ = true;
+
+  if (typeof CosmoSync !== 'undefined' && typeof CosmoSync.syncAllChannels === 'function') {
+    const origSync = CosmoSync.syncAllChannels.bind(CosmoSync);
+    if (!origSync.__cosmoBlobHooked) {
+      const wrapped = async function (...args) {
+        const res = await origSync(...args);
+        if (Array.isArray(res) && res.length > 0 && window.CosmoSilentPollBlob?.translateMembers) {
+          window.CosmoSilentPollBlob.translateMembers(res);
+        }
+        return res;
+      };
+      wrapped.__cosmoBlobHooked = true;
+      CosmoSync.syncAllChannels = wrapped;
+    }
+  }
+})();
+
+/* --- USE REAL MESSAGE-ID DIFF ONLY (IGNORE TRANSLATION TEXT & CURSOR NOISE) --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_APP_REAL_NEW_MSG_DIFF_INIT__) return;
+  window.__COSMO_APP_REAL_NEW_MSG_DIFF_INIT__ = true;
+
+  if (typeof CosmoSync !== 'undefined' && typeof CosmoSync.syncAllChannels === 'function') {
+    const origSync = CosmoSync.syncAllChannels.bind(CosmoSync);
+    if (!origSync.__cosmoRealDiffWrapped) {
+      const wrappedSync = async function (...args) {
+        const members = await origSync(...args);
+        if (Array.isArray(members) && members.length > 0 && window.CosmoRealNewMsg?.diffRealNewMessages) {
+          let totalNew = 0;
+          for (const m of members) {
+            const mid = String(m?.artistMemberId ?? m?.id ?? '').trim();
+            if (!mid) continue;
+            totalNew += window.CosmoRealNewMsg.diffRealNewMessages(mid, m);
+          }
+          if (totalNew > 0 && typeof window.CosmoRealNewMsg.notifyIfRealNewMessages === 'function') {
+            window.CosmoRealNewMsg.notifyIfRealNewMessages(totalNew);
+          }
+        }
+        return members;
+      };
+      wrappedSync.__cosmoRealDiffWrapped = true;
+      CosmoSync.syncAllChannels = wrappedSync;
+    }
+  }
+})();
+
+/* --- CURSOR SYNC WITHOUT /latest.ndjson OR /lasest.ndjson URL REQUESTS --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_NO_NDJSON_URL_FETCH_INIT__) return;
+  window.__COSMO_NO_NDJSON_URL_FETCH_INIT__ = true;
+
+  const V4_CHANNELS_URL = 'https://api.cosmo.fans/bff/v4/channels/messages?artistId=tripleS';
+  const POLL_INTERVAL_MS = 10000;
+
+  const memberCursorMap = new Map();
+  const memberBaselineReady = new Set();
+  let isPolling = false;
+  let isSyncing = false;
+
+  function toComparableId(val) {
+    const s = String(val ?? '').trim();
+    if (!s) return { raw: '', num: null };
+    const tail = s.includes(':') ? s.split(':').pop().trim() : s;
+    const n = Number(tail);
+    return {
+      raw: tail,
+      num: Number.isFinite(n) && /^\d+$/.test(tail) ? n : null,
+    };
+  }
+
+  function isAhead(candidate, current) {
+    const a = toComparableId(candidate);
+    const b = toComparableId(current);
+    if (!a.raw) return false;
+    if (!b.raw) return true;
+    if (a.raw === b.raw) return false;
+    if (a.num !== null && b.num !== null) return a.num > b.num;
+    return a.raw > b.raw;
+  }
+
+  function getActiveMemberId() {
+    const cur = window.currentMember || window.CosmoApp?.currentMember || null;
+    const activeId =
+      cur?.artistMemberId ??
+      cur?.id ??
+      document.querySelector('#chat')?.getAttribute('data-artist-member-id') ??
+      '';
+    return String(activeId ?? '').trim();
+  }
+
+  // 從現有 DOM / 記憶體狀態建立各成員 cursor 基準，不發送任何 ndjson 檔案請求
+  function seedCursorsFromExistingState() {
+    document.querySelectorAll('#chat .msg-wrapper, #chat [data-source-id], #chat [data-message-id]').forEach((el) => {
+      const mid = String(
+        el.getAttribute('data-artist-member-id') ||
+        el.dataset?.artistMemberId ||
+        getActiveMemberId() ||
+        ''
+      ).trim();
+      const rawId = String(
+        el.getAttribute('data-source-id') ||
+        el.getAttribute('data-message-id') ||
+        el.dataset?.sourceId ||
+        el.dataset?.messageId ||
+        ''
+      ).trim();
+      if (!mid || !rawId) return;
+      const prev = memberCursorMap.get(mid);
+      if (!prev || isAhead(rawId, prev)) {
+        memberCursorMap.set(mid, rawId);
+      }
+      memberBaselineReady.add(mid);
+    });
+  }
+
+  async function syncLaggingMembers(laggingMemberIds = []) {
+    if (isSyncing) return;
+    isSyncing = true;
+    try {
+      if (typeof CosmoSync?.syncAllChannels === 'function') {
+        await CosmoSync.syncAllChannels(laggingMemberIds);
+      }
+    } catch (_) {
+    } finally {
+      isSyncing = false;
+    }
+  }
+
+  async function pollV4ChannelsOnce() {
+    if (isPolling || document.hidden) return;
+    isPolling = true;
+    try {
+      const resp =
+        typeof CosmoAuth !== 'undefined' && typeof CosmoAuth.authorizedFetch === 'function'
+          ? await CosmoAuth.authorizedFetch(V4_CHANNELS_URL, {
+              method: 'GET',
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+            })
+          : await fetch(V4_CHANNELS_URL, {
+              method: 'GET',
+              headers: { Accept: 'application/json' },
+              cache: 'no-store',
+              referrerPolicy: 'no-referrer',
+            });
+
+      if (!resp || !resp.ok) return;
+      const payload = await resp.json();
+      const channels = Array.isArray(payload?.channels) ? payload.channels : [];
+      if (channels.length === 0) return;
+
+      const activeMid = getActiveMemberId();
+      const laggingMembers = [];
+      let activeMemberNewCount = 0;
+
+      for (const ch of channels) {
+        const mid = String(ch?.artistMemberId ?? '').trim();
+        const lastMsgId = String(ch?.lastMessage?.id ?? '').trim();
+        if (!mid || !lastMsgId) continue;
+
+        const currentCursor = memberCursorMap.get(mid) || '';
+        if (!memberBaselineReady.has(mid)) {
+          memberBaselineReady.add(mid);
+          if (!currentCursor || isAhead(lastMsgId, currentCursor)) {
+            memberCursorMap.set(mid, lastMsgId);
+          }
+          continue;
+        }
+
+        if (isAhead(lastMsgId, currentCursor)) {
+          memberCursorMap.set(mid, lastMsgId);
+          laggingMembers.push(mid);
+          if (activeMid && mid === activeMid) {
+            activeMemberNewCount += 1;
+          }
+        }
+      }
+
+      if (laggingMembers.length > 0) {
+        await syncLaggingMembers(laggingMembers);
+        if (activeMemberNewCount > 0 && window.CosmoViewportLock?.showScrollDownButton) {
+          window.CosmoViewportLock.showScrollDownButton(activeMemberNewCount);
+        }
+      }
+    } catch (_) {
+    } finally {
+      isPolling = false;
+    }
+  }
+
+  seedCursorsFromExistingState();
+  pollV4ChannelsOnce();
+
+  if (!window.__COSMO_V4_POLL_TIMER__) {
+    window.__COSMO_V4_POLL_TIMER__ = setInterval(pollV4ChannelsOnce, POLL_INTERVAL_MS);
+  }
+
+  window.CosmoV4ChannelPoll = {
+    pollNow: pollV4ChannelsOnce,
+    getCursors: () => Object.fromEntries(memberCursorMap.entries()),
+  };
+})();
