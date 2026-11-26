@@ -209,23 +209,10 @@ const CosmoSync = (() => {
   }
 
   async function fetchMemberNdjson(mid, afterCursor = '0') {
-    // [SAFE-CLEANED DUMMY] const mockUrl = resolveMockSource(mid, afterCursor);
-    const mockUrl = '';
-    if (mockUrl) {
-      // [SAFE-CLEANED DUMMY] const mockResp = await fetch(mockUrl, { cache: 'no-store' });
-      // [SAFE-CLEANED DUMMY] const mockRaw = await mockResp.text();
-      if (!mockResp.ok) {
-        const mockUrl = '';
-        console.warn(`[DEV_MOCK] 載入 ${mockUrl} 失敗 HTTP ${mockResp.status}:`, nfc(mockRaw));
-        return null;
-      }
-      const mockUrl = '';
-      console.info(`[DEV_MOCK] member=${mid} afterCursor=${afterCursor} <- ${mockUrl}`);
-      return parseNdjson(mockRaw);
-    }
-
-    // [REMOVED NDJSON URL FETCH] const url = `${API_BASE}/bff/v3/channels/messages/${encodeURIComponent(String(mid))}/sync-events/latest.ndjson?afterCursor=${encodeURIComponent(String(afterCursor))}`;
-    const ndResp = await authorizedFetch(url, {
+    const memberId = encodeURIComponent(String(mid ?? '').trim());
+    const cursorParam = encodeURIComponent(String(afterCursor ?? '0').trim() || '0');
+    const targetUrl = `${API_BASE}/bff/v3/channels/messages/${memberId}/sync-events/latest.ndjson?afterCursor=${cursorParam}`;
+    const ndResp = await authorizedFetch(targetUrl, {
       method: 'GET',
       headers: {
         Accept: 'application/x-ndjson',
@@ -238,11 +225,10 @@ const CosmoSync = (() => {
     }
     return parseNdjson(ndRaw);
   }
-
   async function syncSingleChannel(ch, cachedEntry, isCancelled = () => false) {
     const mid = ch.artistMemberId;
     const { lastMessageId, lastMessage } = extractChannelLastMessage(ch);
-    const isMocked = Boolean(resolveMockSource(mid, '0'));
+    const isMocked = Boolean((typeof resolveMockSource === 'function' ? resolveMockSource(mid, '0') : ''));
     const cachedRecords = Array.isArray(cachedEntry?.records) ? cachedEntry.records : [];
     const cursor = cachedRecords.length > 0 ? (cachedEntry?.lastCursor || extractCursor(cachedRecords, '0')) : '0';
 
@@ -449,4 +435,165 @@ return {
   syncMemberNow,
   syncAllChannels,
 };
+})();
+
+/* --- JWT NATIVE NDJSON TRIGGER --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_JWT_NATIVE_NDJSON_INIT__) return;
+  window.__COSMO_JWT_NATIVE_NDJSON_INIT__ = true;
+
+  let triggering = false;
+
+  function isDemoSession() {
+    try {
+      const q = new URLSearchParams(window.location.search || '');
+      if (window.FORCE_DEMO_MODE === true) return true;
+      if (window.__FORCE_PROD_SESSION__ === true) return false;
+      const v = q.get('demo');
+      if (v === '1' || v === 'true') return true;
+      if (v === '0' || v === 'false') return false;
+    } catch (_) {}
+    return Boolean(window.IS_DEMO_MODE === true);
+  }
+
+  async function runJwtNdjsonSyncAfterV4(resp) {
+    if (isDemoSession() || triggering) return;
+    triggering = true;
+    try {
+      let channels = [];
+      try {
+        const data = await resp.clone().json();
+        if (Array.isArray(data?.channels)) {
+          channels = data.channels;
+        }
+      } catch (_) {}
+
+      const cur = window.currentMember || window.CosmoApp?.currentMember || null;
+      const activeMid = String(
+        cur?.artistMemberId ??
+        cur?.id ??
+        document.getElementById('chat')?.getAttribute('data-artist-member-id') ??
+        ''
+      ).trim();
+
+      const targetIds = activeMid
+        ? [activeMid]
+        : channels.map((c) => String(c?.artistMemberId ?? '').trim()).filter(Boolean);
+
+      if (typeof window.refreshMemberFromNdjson === 'function' && targetIds.length > 0) {
+        for (const mid of targetIds.slice(0, 1)) {
+          await window.refreshMemberFromNdjson(mid);
+        }
+      } else if (typeof window.CosmoSync?.syncAllChannels === 'function') {
+        await window.CosmoSync.syncAllChannels({
+          memberIds: targetIds.length > 0 ? targetIds : undefined,
+        });
+      }
+    } catch (_) {
+    } finally {
+      triggering = false;
+    }
+  }
+
+  const baseFetch =
+    typeof window.__COSMO_NATIVE_FETCH__ === 'function'
+      ? window.__COSMO_NATIVE_FETCH__
+      : window.fetch.bind(window);
+  window.__COSMO_NATIVE_FETCH__ = baseFetch;
+
+  window.fetch = async function (input, init) {
+    const urlStr = String(typeof input === 'string' ? input : (input?.url || ''));
+    const resp = await baseFetch(input, init);
+    if (!isDemoSession() && urlStr.includes('/bff/v4/channels/messages') && resp && resp.ok) {
+      runJwtNdjsonSyncAfterV4(resp).catch(() => {});
+    }
+    return resp;
+  };
+})();
+
+/* --- JWT SYNC-EVENTS LATEST.NDJSON & V4 TRIGGER --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_JWT_SYNC_EVENTS_NDJSON_INIT__) return;
+  window.__COSMO_JWT_SYNC_EVENTS_NDJSON_INIT__ = true;
+
+  const DEFAULT_API_BASE = 'https://api.cosmo.fans';
+  let runningSyncFromV4 = false;
+
+  function isDemoActive() {
+    try {
+      const q = new URLSearchParams(window.location.search || '');
+      if (window.FORCE_DEMO_MODE === true) return true;
+      if (window.__FORCE_PROD_SESSION__ === true) return false;
+      const d = q.get('demo');
+      if (d === '1' || d === 'true') return true;
+      if (d === '0' || d === 'false') return false;
+    } catch (_) {}
+    return Boolean(window.IS_DEMO_MODE === true);
+  }
+
+  function buildSyncEventsNdjsonUrl(mid, afterCursor = '0') {
+    const apiRoot =
+      typeof API_BASE === 'string' && API_BASE.trim()
+        ? API_BASE.trim().replace(/\/+$/, '')
+        : DEFAULT_API_BASE;
+    const memberId = encodeURIComponent(String(mid ?? '').trim());
+    const cursor = encodeURIComponent(String(afterCursor ?? '0').trim() || '0');
+    return `${apiRoot}/bff/v3/channels/messages/${memberId}/sync-events/latest.ndjson?afterCursor=${cursor}`;
+  }
+
+  async function triggerJwtSyncEventsNdjson(resp) {
+    if (isDemoActive() || runningSyncFromV4) return;
+    runningSyncFromV4 = true;
+    try {
+      let channels = [];
+      try {
+        const payload = await resp.clone().json();
+        if (Array.isArray(payload?.channels)) channels = payload.channels;
+      } catch (_) {}
+
+      const cur = window.currentMember || window.CosmoApp?.currentMember || null;
+      const activeMid = String(
+        cur?.artistMemberId ??
+        cur?.id ??
+        document.getElementById('chat')?.getAttribute('data-artist-member-id') ??
+        ''
+      ).trim();
+
+      const memberIds = activeMid
+        ? [activeMid]
+        : channels.map((c) => String(c?.artistMemberId ?? '').trim()).filter(Boolean);
+
+      if (typeof window.refreshMemberFromNdjson === 'function' && memberIds.length > 0) {
+        await window.refreshMemberFromNdjson(memberIds[0]);
+      } else if (typeof window.CosmoSync?.syncAllChannels === 'function') {
+        await window.CosmoSync.syncAllChannels({ memberIds });
+      }
+    } catch (_) {
+    } finally {
+      runningSyncFromV4 = false;
+    }
+  }
+
+  const baseFetch =
+    typeof window.__COSMO_NATIVE_FETCH__ === 'function'
+      ? window.__COSMO_NATIVE_FETCH__
+      : window.fetch.bind(window);
+  window.__COSMO_NATIVE_FETCH__ = baseFetch;
+
+  window.fetch = async function (input, init) {
+    const rawUrl = typeof input === 'string' ? input : (input?.url || '');
+    const urlStr = String(rawUrl);
+    const resp = await baseFetch(input, init);
+
+    if (!isDemoActive() && urlStr.includes('/bff/v4/channels/messages') && resp && resp.ok) {
+      triggerJwtSyncEventsNdjson(resp).catch(() => {});
+    }
+    return resp;
+  };
+
+  window.CosmoSyncEventsNdjson = {
+    buildUrl: buildSyncEventsNdjsonUrl,
+  };
 })();

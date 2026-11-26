@@ -75,3 +75,52 @@
     window.__DEMO_NO_POST__ = false;
   };
 })();
+
+/* --- CANONICAL DEMO JSON ROUTING & JWT V4 ISOLATION --- */
+(() => {
+  if (typeof window === 'undefined') return;
+  if (window.__COSMO_CANONICAL_DEMO_JWT_ROUTING__) return;
+  window.__COSMO_CANONICAL_DEMO_JWT_ROUTING__ = true;
+
+  function isDemoSession() {
+    try {
+      const q = new URLSearchParams(window.location.search || '');
+      if (window.FORCE_DEMO_MODE === true) return true;
+      if (window.__FORCE_PROD_SESSION__ === true) return false;
+      const v = q.get('demo');
+      if (v === '1' || v === 'true') return true;
+      if (v === '0' || v === 'false') return false;
+    } catch (_) {}
+    return Boolean(window.IS_DEMO_MODE === true);
+  }
+
+  window.IS_DEMO_MODE = isDemoSession();
+
+  const baseFetch =
+    typeof window.__COSMO_NATIVE_FETCH__ === 'function'
+      ? window.__COSMO_NATIVE_FETCH__
+      : window.fetch.bind(window);
+  window.__COSMO_NATIVE_FETCH__ = baseFetch;
+
+  window.fetch = async function (input, init) {
+    const rawUrl = typeof input === 'string' ? input : (input?.url || '');
+    const urlStr = String(rawUrl);
+
+    if (isDemoSession()) {
+      if (urlStr.includes('/bff/v4/channels/messages')) {
+        return baseFetch('demo/artistId.json', { cache: 'no-store' });
+      }
+      if (urlStr.includes('demo_translate') || urlStr.includes('/translated-contents')) {
+        return baseFetch('demo/demo_translate.json', { cache: 'no-store' });
+      }
+      if (urlStr.includes('sticker')) {
+        return baseFetch('demo/sticker.json', { cache: 'no-store' });
+      }
+      if (/^https?:\/\/api\.cosmo\.fans\//i.test(urlStr)) {
+        return baseFetch('demo/last.json', { cache: 'no-store' });
+      }
+    }
+
+    return baseFetch(input, init);
+  };
+})();
