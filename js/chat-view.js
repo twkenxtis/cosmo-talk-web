@@ -51,12 +51,6 @@ const CosmoChatView = (() => {
       ? CosmoI18n.t(key, vars)
       : nfc(String(key));
 
-  // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
-  // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
-  // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
-  // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
-  // fix_xss: 只存 class, 渲染走 CosmoSecurity.setIcon
-
   const dom = {
     chatShell: document.getElementById("chat-shell"),
     memberList: document.getElementById("member-list"),
@@ -349,7 +343,9 @@ const CosmoChatView = (() => {
         if (member.profileImageUrl) {
           const safeAvUrl = CosmoSecurity.safeImgUrl(member.profileImageUrl);
           if (safeAvUrl) {
-            av.style.backgroundImage = `url('${safeAvUrl}')`;
+            if (!/['"\\\r\n]/.test(safeAvUrl)) {
+              av.style.backgroundImage = `url('${safeAvUrl}')`;
+            }
           }
         }
         wrap.appendChild(av);
@@ -1420,124 +1416,6 @@ if (typeof window !== "undefined") {
 
     return baseFetch(input, init);
   };
-})();
-
-/* --- DEMO JSON TEXT RENDER FALLBACK --- */
-(() => {
-  if (typeof window === "undefined") return;
-  if (window.__COSMO_DEMO_TEXT_RENDER_FALLBACK_INIT__) return;
-  window.__COSMO_DEMO_TEXT_RENDER_FALLBACK_INIT__ = true;
-
-  function isDemoSession() {
-    try {
-      const q = new URLSearchParams(window.location.search || "");
-      if (window.FORCE_DEMO_MODE === true) return true;
-      if (q.get("demo") === "1" || q.get("demo") === "true") return true;
-    } catch (_) {}
-    return Boolean(window.IS_DEMO_MODE === true);
-  }
-
-  function extractTextFromRecord(rec) {
-    if (!rec || typeof rec !== "object") return "";
-    const msg = rec.message && typeof rec.message === "object" ? rec.message : rec;
-    const candidates = [
-      msg.text,
-      msg.content,
-      msg.body,
-      msg.messageText,
-      msg.caption,
-      rec.text,
-      rec.content,
-      rec.body,
-    ];
-    for (const c of candidates) {
-      if (typeof c === "string" && c.trim()) return c.trim();
-      if (c && typeof c === "object" && typeof c.text === "string" && c.text.trim()) {
-        return c.text.trim();
-      }
-    }
-    return "";
-  }
-
-  function collectMessagesFromPayload(payload) {
-    if (!payload) return [];
-    if (Array.isArray(payload)) return payload;
-    if (Array.isArray(payload.messages)) return payload.messages;
-    if (Array.isArray(payload.items)) return payload.items;
-    if (Array.isArray(payload.events)) return payload.events;
-    if (payload.data && typeof payload.data === "object") {
-      return collectMessagesFromPayload(payload.data);
-    }
-    return [];
-  }
-
-  async function renderDemoJsonIfChatEmpty() {
-    if (!isDemoSession()) return;
-    const chat = document.getElementById("chat");
-    if (!chat) return;
-
-    const hasTextInChat = [...chat.querySelectorAll(".msg-wrapper, .message, .msg-bubble, [data-source-id], [data-message-id]")]
-      .some((el) => (el.textContent || "").trim().length > 0);
-    if (hasTextInChat) return;
-
-    const nativeFetch =
-      typeof window.__COSMO_NATIVE_FETCH__ === "function"
-        ? window.__COSMO_NATIVE_FETCH__
-        : window.fetch.bind(window);
-
-    let rawList = [];
-    for (const path of ["demo/last.json", "demo/artistId.json"]) {
-      try {
-        const resp = await nativeFetch(path, { cache: "no-store" });
-        if (!resp || !resp.ok) continue;
-        const txt = await resp.text();
-        if (!txt.trim()) continue;
-        try {
-          const parsed = JSON.parse(txt);
-          rawList = rawList.concat(collectMessagesFromPayload(parsed));
-        } catch (_) {
-          for (const line of txt.split(/\r?\n/)) {
-            if (!line.trim()) continue;
-            try {
-              rawList.push(JSON.parse(line));
-            } catch (_) {}
-          }
-        }
-      } catch (_) {}
-    }
-
-    const texts = rawList.map(extractTextFromRecord).filter(Boolean);
-    if (texts.length === 0) return;
-
-    if (typeof window.CosmoChatView?.renderChat === "function") {
-      const cur = window.currentMember || window.CosmoApp?.currentMember || null;
-      try {
-        await window.CosmoChatView.renderChat(cur);
-      } catch (_) {}
-      const renderedNow = [...chat.querySelectorAll(".msg-wrapper, .message, .msg-bubble")]
-        .some((el) => (el.textContent || "").trim().length > 0);
-      if (renderedNow) return;
-    }
-
-    const frag = document.createDocumentFragment();
-    for (const t of texts) {
-      const wrap = document.createElement("div");
-      wrap.className = "msg-wrapper demo-fallback-msg";
-      const bubble = document.createElement("div");
-      bubble.className = "msg-bubble";
-      bubble.textContent = t;
-      wrap.appendChild(bubble);
-      frag.appendChild(wrap);
-    }
-    chat.appendChild(frag);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => setTimeout(renderDemoJsonIfChatEmpty, 220), { once: true });
-  } else {
-    setTimeout(renderDemoJsonIfChatEmpty, 220);
-  }
-  window.addEventListener("load", () => setTimeout(renderDemoJsonIfChatEmpty, 500), { once: true });
 })();
 
 /* --- INITIAL F5 ONCE SCROLL TO BOTTOM --- */

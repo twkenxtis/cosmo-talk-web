@@ -238,7 +238,6 @@ body.is-login-view {
   border-color: var(--purple-text);
 }
 
-
 .login-status {
   min-height: 18px;
   max-height: 180px;
@@ -1953,142 +1952,6 @@ body.cosmo-has-custom-bg:not(.is-login-view) .msg {
   z-index: 2;
 }
 
-/* --- CANONICAL PASTE BTN (#jwt-paste-btn) & BG LAYER UNDER BUBBLE CHAT --- */
-.jwt-login-action-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  width: 100%;
-}
-
-.jwt-login-action-row > #jwt-login-btn {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-#jwt-paste-btn {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
-  min-height: 42px;
-  padding: 0;
-  margin: 0 !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #9576BE !important;
-  border: 1px solid #9576BE !important;
-  border-radius: 0 !important;
-  color: #ffffff !important;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: filter 0.15s ease, transform 0.1s ease;
-}
-
-#jwt-paste-btn:hover {
-  filter: brightness(1.08);
-}
-
-#jwt-paste-btn:active {
-  transform: scale(0.96);
-}
-
-#jwt-paste-btn svg {
-  width: 18px;
-  height: 18px;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  stroke: #ffffff;
-  fill: none;
-  pointer-events: none;
-}
-
-.adv-bg-upload-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  width: 100%;
-  margin-top: 8px;
-}
-
-.adv-bg-upload-row > #cosmo-adv-bg-upload-btn,
-.adv-bg-upload-row > #cosmo-adv-bg-clear-btn {
-  flex: 1 1 0 !important;
-  width: 50% !important;
-  min-width: 0 !important;
-  box-sizing: border-box;
-  margin: 0 !important;
-}
-
-#cosmo-custom-bg-layer {
-  position: fixed !important;
-  top: var(--topbar-h, 52px) !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: calc(100vh - var(--topbar-h, 52px)) !important;
-  max-height: calc(100dvh - var(--topbar-h, 52px)) !important;
-  z-index: 0 !important;
-  pointer-events: none !important;
-  display: none;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  background: transparent !important;
-}
-
-#cosmo-custom-bg-layer.has-bg {
-  display: flex !important;
-}
-
-#cosmo-custom-bg-img {
-  display: block !important;
-  width: auto !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-  pointer-events: none !important;
-}
-
-body.is-login-view #cosmo-custom-bg-layer,
-body.is-login-view #cosmo-custom-bg-layer.has-bg {
-  display: none !important;
-}
-
-body:not(.is-login-view) #app,
-body:not(.is-login-view) main,
-body:not(.is-login-view) #chat,
-body:not(.is-login-view) .chat-container,
-body:not(.is-login-view) .chat-main,
-body:not(.is-login-view) .chat-view,
-body:not(.is-login-view) .messages,
-body:not(.is-login-view) #messages,
-body:not(.is-login-view) .timeline {
-  position: relative;
-  z-index: 1;
-}
-
-body.cosmo-has-custom-bg:not(.is-login-view) #chat,
-body.cosmo-has-custom-bg:not(.is-login-view) .chat-container,
-body.cosmo-has-custom-bg:not(.is-login-view) .chat-main,
-body.cosmo-has-custom-bg:not(.is-login-view) .chat-view,
-body.cosmo-has-custom-bg:not(.is-login-view) .messages,
-body.cosmo-has-custom-bg:not(.is-login-view) #messages,
-body.cosmo-has-custom-bg:not(.is-login-view) .timeline {
-  background-color: transparent !important;
-}
-
-body.cosmo-has-custom-bg:not(.is-login-view) [class*="bubble" i],
-body.cosmo-has-custom-bg:not(.is-login-view) .message,
-body.cosmo-has-custom-bg:not(.is-login-view) .msg {
-  position: relative;
-  z-index: 2;
-}
-
 /* --- LIGHT / WHITE THEME: LOGIN 3 BUTTONS WHITE TEXT & JWT INPUT LIGHT BG --- */
 :is(
   :root[data-theme="light"],
@@ -2182,58 +2045,6 @@ body.cosmo-has-custom-bg:not(.is-login-view) .msg {
   input#jwt-login-input
 )::placeholder {
   color: #64748b !important;
-}
-
-/* --- LIGHT THEME: TRY DEMO & HOW TO GET JWT BUTTONS BG #404040 --- */
-:is(
-  :root[data-theme="light"],
-  :root[data-theme="white"],
-  [data-theme="light"],
-  [data-theme="white"],
-  body.theme-light,
-  body.theme-white,
-  body.light-theme,
-  body.white-theme
-) :is(
-  #jwt-guide-btn,
-  [id*="guide" i][id*="jwt" i],
-  [id*="how-to-get-jwt" i],
-  [id*="get-jwt" i],
-  [id*="jwt-guide" i],
-  [data-action*="guide" i],
-  [data-action*="jwt-guide" i],
-  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
-  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
-  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
-) {
-  background-color: #404040 !important;
-  border-color: #404040 !important;
-  color: #ffffff !important;
-}
-
-:is(
-  :root[data-theme="light"],
-  :root[data-theme="white"],
-  [data-theme="light"],
-  [data-theme="white"],
-  body.theme-light,
-  body.theme-white,
-  body.light-theme,
-  body.white-theme
-) :is(
-  #jwt-guide-btn,
-  [id*="guide" i][id*="jwt" i],
-  [id*="how-to-get-jwt" i],
-  [id*="get-jwt" i],
-  [id*="jwt-guide" i],
-  [data-action*="guide" i],
-  [data-action*="jwt-guide" i],
-  [id*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
-  [class*="demo" i][class*="btn" i]:not(#jwt-login-btn):not(#jwt-paste-btn),
-  [data-action*="demo" i]:not(#jwt-login-btn):not(#jwt-paste-btn)
-) :is(*, svg) {
-  color: #ffffff !important;
-  stroke: #ffffff !important;
 }
 
 /* --- LIGHT THEME: TRY DEMO & HOW TO GET JWT BUTTONS BG #BFBFBF --- */
@@ -2358,121 +2169,34 @@ body.cosmo-has-custom-bg:not(.is-login-view) .msg {
   flex-shrink: 0 !important;
 }
 
-/* --- FLOATING SCROLL DOWN BUTTON FOR UNSEEN NEW MESSAGES --- */
+/* --- UNIFIED SCROLL DOWN BUTTON (#26123C, 5PX RADIUS) --- */
+#cosmo-scroll-down-bar {
+  display: none !important;
+}
+
 #cosmo-scroll-down-btn {
   position: fixed;
-  right: 20px;
-  bottom: 84px;
-  z-index: 45;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-width: 38px;
-  height: 38px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background-color: #9576BE;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
-  cursor: pointer;
-  transition: opacity 0.16s ease, transform 0.16s ease, filter 0.15s ease;
-}
-
-#cosmo-scroll-down-btn.visible {
-  display: inline-flex;
-}
-
-#cosmo-scroll-down-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-#cosmo-scroll-down-btn:active {
-  transform: scale(0.96);
-}
-
-body.is-login-view #cosmo-scroll-down-btn {
-  display: none !important;
-}
-
-/* --- NEW MESSAGE BUTTON ABOVE TEXT INPUT ALIGNED LEFT TO INPUT --- */
-#cosmo-scroll-down-bar {
-  display: none;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  padding: 0 0 6px 0;
-  box-sizing: border-box;
-}
-
-#cosmo-scroll-down-bar.has-new {
-  display: flex;
-}
-
-#cosmo-scroll-down-btn {
-  position: static !important;
-  right: auto !important;
-  bottom: auto !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
-  margin-left: 0 !important;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background-color: #9576BE;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22);
-}
-
-#cosmo-scroll-down-btn:hover {
-  filter: brightness(1.08);
-}
-
-body.is-login-view #cosmo-scroll-down-bar {
-  display: none !important;
-}
-
-/* --- NEW MESSAGE BUTTON: EXACT INPUT ALIGNMENT, #26123C, 5PX RADIUS --- */
-#cosmo-scroll-down-bar {
-  display: none !important;
-}
-
-#cosmo-scroll-down-btn {
-  position: fixed !important;
-  z-index: 65 !important;
+  z-index: 65;
   display: none;
   align-items: center;
   justify-content: center;
   gap: 6px;
   height: 36px;
   padding: 0 15px;
-  margin: 0 !important;
-  border-radius: 5px !important;
+  border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  background-color: #26123C !important;
-  color: #ffffff !important;
+  background-color: #26123C;
+  color: #ffffff;
   font-size: 13.5px;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  transition: none !important;
-  animation: none !important;
 }
 
 #cosmo-scroll-down-btn.visible {
-  display: inline-flex !important;
+  display: inline-flex;
 }
 
 body.is-login-view #cosmo-scroll-down-btn {

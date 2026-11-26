@@ -39,7 +39,6 @@ if (typeof window !== "undefined" && !window.__DEMO_PATCH_SYNC_PAYLOAD__) {
 }
 
 if (typeof window !== "undefined" && !window.__DEMO_SHARED_MSG_TRANSFORM__) {
-  window.__DEMO_SHARED_MSG_TRANSFORM__ = true;
   window.__DEMO_SHARED_MSG_TRANSFORM__ = function (eventObj, memberId) {
     if (!(typeof window !== "undefined" && window.IS_DEMO_MODE)) return eventObj;
     const copy = eventObj && typeof eventObj === "object" ? { ...eventObj } : {};
