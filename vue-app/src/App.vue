@@ -31,10 +31,29 @@ function handleExportText() {
 async function handleCopyText() {
   if (!msgListRef.value) return;
   const text = msgListRef.value.buildExportPlainText();
-  if (!text) return;
+  if (!text || !text.trim()) {
+    showToast(t("no_channel_data"), "error");
+    return;
+  }
   try {
     await navigator.clipboard.writeText(text);
+    showToast(t("copied"));
   } catch (_) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      ta.remove();
+      if (ok) {
+        showToast(t("copied"));
+        return;
+      }
+    } catch (_) {}
     showToast(t("copy_failed"), "error");
   }
 }

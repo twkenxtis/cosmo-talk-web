@@ -89,12 +89,21 @@ const CosmoExport = (() => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = CosmoSecurity.safeLinkUrl(url);
+    if (!text || !String(text).trim()) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    const safeHref = CosmoSecurity.safeUrl(url, { allowBlob: true, allowDataImage: false });
+    if (!safeHref) {
+      URL.revokeObjectURL(url);
+      return;
+    }
+    a.href = safeHref;
     a.download = `${safeName}_from_${startTag}_chat.txt`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return {
