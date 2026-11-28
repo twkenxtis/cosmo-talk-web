@@ -128,7 +128,7 @@ watch(
 </script>
 
 <template>
-  <div class="fixed bottom-3 left-1/2 -translate-x-1/2 w-[calc(100%-24px)] max-w-[640px] z-22 flex flex-col gap-2">
+  <div class="fixed bottom-3 lg:bottom-4 left-1/2 lg:left-[calc(50%+130px)] -translate-x-1/2 w-[calc(100%-24px)] lg:w-[calc(100%-300px)] max-w-[640px] lg:max-w-[780px] z-22 flex flex-col gap-2">
     <div
       v-if="selectedSticker"
       class="relative self-center w-44 h-44 rounded-[22px] bg-(--bubble-reply-bg) border border-(--border-color) shadow-xl flex items-center justify-center p-4"
@@ -157,7 +157,7 @@ watch(
           <IconX :size="15" />
         </button>
       </div>
-      <div class="grid grid-cols-4 gap-2 max-h-[320px] overflow-y-auto">
+      <div class="grid grid-cols-4 lg:grid-cols-6 gap-2 max-h-[260px] overflow-y-auto">
         <button
           v-for="st in stickers"
           :key="st.id || st.codepointHex"

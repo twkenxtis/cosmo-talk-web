@@ -8,7 +8,7 @@ const { store, getMemberRingColor } = useChatStore();
 
 function selectMember(mid) {
   store.activeMemberId = mid;
-  store.sidebarOpen = false;
+  if (window.innerWidth < 1024) store.sidebarOpen = false;
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 </script>
@@ -16,19 +16,19 @@ function selectMember(mid) {
 <template>
   <div
     v-if="store.sidebarOpen"
-    class="fixed inset-0 bg-black/55 z-30"
+    class="fixed inset-0 bg-black/55 z-30 lg:hidden"
     @click="store.sidebarOpen = false"
   />
 
   <aside
-    class="fixed left-0 top-0 h-dvh w-[260px] bg-(--sidebar-bg) border-r border-(--border-color) z-35 flex flex-col transition-transform duration-200"
+    class="fixed left-0 top-0 h-dvh w-[260px] bg-(--sidebar-bg) border-r border-(--border-color) z-35 lg:z-26 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:pointer-events-auto"
     :class="store.sidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'"
   >
     <div class="flex items-center justify-between px-3 py-2.5 border-b border-(--border-color) shrink-0">
       <span class="text-xs text-(--text-muted)">Members ({{ store.members.length }})</span>
       <button
         type="button"
-        class="w-8 h-8 inline-flex items-center justify-center text-(--text-color) cursor-pointer"
+        class="w-8 h-8 inline-flex lg:hidden items-center justify-center text-(--text-color) cursor-pointer"
         @click="store.sidebarOpen = false"
       >
         <IconX :size="18" />

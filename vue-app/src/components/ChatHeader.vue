@@ -30,12 +30,12 @@ function handleCopy() {
 </script>
 
 <template>
-  <header class="sticky top-0 z-25 w-full max-w-[640px] min-h-[57px] px-2 py-3 bg-(--bg-color) border-b border-(--border-color) flex items-center justify-between gap-2">
+  <header class="sticky top-0 z-25 w-full max-w-[640px] lg:max-w-[780px] min-h-[57px] px-2 py-3 bg-(--bg-color) border-b border-(--border-color) flex items-center justify-between gap-2">
     <div class="flex items-center gap-2.5 min-w-0">
       <button
         type="button"
         :title="t('toggle_sidebar')"
-        class="w-8 h-8 inline-flex items-center justify-center shrink-0 cursor-pointer"
+        class="w-8 h-8 inline-flex lg:hidden items-center justify-center shrink-0 cursor-pointer"
         @click="store.sidebarOpen = !store.sidebarOpen"
       >
         <IconMenu2 :size="20" />
@@ -45,7 +45,7 @@ function handleCopy() {
       </h2>
     </div>
 
-    <div class="flex items-center gap-1 shrink-0">
+    <div class="flex items-center gap-1 lg:gap-1.5 shrink-0">
       <button
         type="button"
         :title="t('search_member_placeholder')"
@@ -107,7 +107,7 @@ function handleCopy() {
 
   <div
     v-if="store.searchOpen"
-    class="sticky top-[57px] z-24 w-full max-w-[640px] px-2.5 py-1.5 bg-(--sidebar-bg) border-b border-(--border-color) flex items-center gap-1.5"
+    class="sticky top-[57px] z-24 w-full max-w-[640px] lg:max-w-[780px] px-2.5 py-1.5 bg-(--sidebar-bg) border-b border-(--border-color) flex items-center gap-1.5"
   >
     <input
       v-model="store.searchQuery"

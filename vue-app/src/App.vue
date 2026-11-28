@@ -57,11 +57,11 @@ onMounted(() => {
 
   <LoginPage v-else-if="store.view === 'login'" />
 
-  <section v-else class="min-h-screen w-full bg-(--bg-color) text-(--text-color) flex flex-col items-center">
+  <section v-else class="min-h-screen w-full bg-(--bg-color) text-(--text-color) flex flex-col items-center lg:pl-[260px]">
     <div
       v-if="store.customBgDataUrl"
       aria-hidden="true"
-      class="fixed top-[57px] inset-x-0 bottom-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden"
+      class="fixed top-[57px] inset-x-0 lg:left-[260px] bottom-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden"
     >
       <img :src="store.customBgDataUrl" alt="" class="h-full w-auto max-w-full object-contain" />
     </div>

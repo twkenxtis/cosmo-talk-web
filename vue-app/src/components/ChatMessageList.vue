@@ -319,6 +319,7 @@ defineExpose({ stepSearch, buildExportPlainText, scrollToBottom });
       :key="seg.id"
       type="button"
       class="shrink-0 min-h-8 md:min-h-0 px-3 py-1.5 md:px-1.5 md:py-0.5 text-xs md:text-xs font-medium rounded-md md:rounded-none border border-(--border-color) bg-(--sidebar-bg) hover:bg-(--sidebar-hover) active:opacity-80 text-(--text-color) cursor-pointer whitespace-nowrap"
+      :class="activeTimelineKey === seg.key ? 'bg-(--sidebar-active) text-(--purple-text) border-(--purple-text)/60 font-semibold' : 'bg-(--bg-color)/80 text-(--text-color)/85 border-(--border-color)/80 hover:bg-(--sidebar-hover) hover:text-(--text-color)'"
       @click="jumpToAnchor(seg.id)"
     >
       {{ seg.label }}
@@ -440,12 +441,12 @@ defineExpose({ stepSearch, buildExportPlainText, scrollToBottom });
   </div>
 
   <button
-    v-if="showScrollBottom"
-    type="button"
-    title="Scroll to bottom"
-    class="fixed bottom-[72px] right-[max(12px,50vw-326px)] z-24 w-10 h-10 rounded-full bg-[#99d6ff] hover:bg-[#82cbff] text-[#10202b] shadow-lg inline-flex items-center justify-center cursor-pointer"
-    @click="scrollToBottom(true)"
-  >
-    <IconChevronDown :size="22" />
-  </button>
+      v-if="showScrollBottom"
+      type="button"
+      title="Scroll to bottom"
+      class="fixed bottom-18 lg:bottom-20 right-[calc(50%-min(50vw-12px,320px)+4px)] lg:right-[calc(50%-130px-min(50vw-150px,390px)+4px)] w-9 h-9 rounded-full bg-(--sidebar-bg)/95 hover:bg-(--sidebar-hover) text-(--purple-text) border border-(--border-color) shadow-lg inline-flex items-center justify-center transition-colors z-23 cursor-pointer"
+      @click="scrollToBottom(true)"
+    >
+      <IconChevronDown :size="20" />
+    </button>
 </template>
