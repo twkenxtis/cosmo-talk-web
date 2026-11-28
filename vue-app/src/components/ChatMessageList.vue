@@ -97,7 +97,8 @@ const displayItems = computed(() => {
       items[items.length - 1].showTime = false;
     }
 
-    const isArtist = msg.senderType === "artistMember" && !isUserReply;
+    const isArtist = (msg.senderType === "artistMember" || sourceType === "artistReply") && !isUserReply;
+    const hasTranslatableText = Boolean(hasText || (isArtist && isReply && !CosmoUtils.isEmpty(msg.replyContent)));
     const sourceId = String(msg.sourceId || rec?.sourceId || "");
     const translatedText = sourceId
       ? store.translationsMap[`${member.artistMemberId}:${sourceId}`] || ""
@@ -126,6 +127,7 @@ const displayItems = computed(() => {
       isUserReply,
       isReply,
       hasText,
+      hasTranslatableText,
       hasSticker: hasStickerImage,
       stickerUrl,
       mediaList,
@@ -178,7 +180,7 @@ function queueVisibleTranslations() {
   const visibleSourceIds = [];
 
   for (const item of displayItems.value) {
-    if (!item.isArtist || !item.hasText || !item.sourceId || item.translatedText) continue;
+    if (!item.isArtist || !item.hasTranslatableText || !item.sourceId || item.translatedText) continue;
     const el = document.getElementById(item.anchorId);
     if (!el) continue;
     const rect = el.getBoundingClientRect();
@@ -383,6 +385,13 @@ defineExpose({ stepSearch, buildExportPlainText, scrollToBottom });
                   {{ t("replied_by", { name: activeMember?.artistMemberName || "" }) }}
                 </div>
                 <div class="whitespace-pre-wrap">{{ CosmoUtils.nfc(typeof item.msg.replyContent === "object" ? JSON.stringify(item.msg.replyContent) : item.msg.replyContent) }}</div>
+                <div v-if="item.hasText" class="mt-1 whitespace-pre-wrap">{{ CosmoUtils.nfc(String(item.msg.content)) }}</div>
+                <div
+                  v-if="store.translateEnabled && item.translatedText"
+                  class="mt-1 pt-1 border-t border-white/10 text-[14px] leading-snug text-[#b49dff] whitespace-pre-wrap"
+                >
+                  {{ item.translatedText }}
+                </div>
               </template>
 
               <template v-else>

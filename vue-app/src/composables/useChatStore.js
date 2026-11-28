@@ -174,7 +174,14 @@ export function useChatStore() {
     const records = Array.isArray(member.records) ? member.records : [];
     const sids = records
       .map((r) => r?.message || r)
-      .filter((m) => m?.senderType === "artistMember" && !CosmoUtils.isEmpty(m?.content) && m?.sourceId)
+      .filter((m) => {
+        if (!m?.sourceId) return false;
+        const st = String(m?.sourceType || "");
+        if (st === "userReply") return false;
+        const isArtistSide = m?.senderType === "artistMember" || st === "artistReply";
+        const hasTranslatableText = !CosmoUtils.isEmpty(m?.content) || !CosmoUtils.isEmpty(m?.replyContent);
+        return isArtistSide && hasTranslatableText;
+      })
       .slice(-limit)
       .reverse()
       .map((m) => String(m.sourceId));
