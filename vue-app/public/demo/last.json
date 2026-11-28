@@ -1,0 +1,618 @@
+{
+    "cursor": "5",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:5",
+        "artistMemberId": 11,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "5",
+        "senderType": "artistMember",
+        "senderId": 11,
+        "messageType": "text",
+        "content": "[Demo] 訊息展示開始 你好 我好 大家好 wav",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-07-01T05:00:00.000Z"
+    }
+}
+{
+    "cursor": "11111",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:11111",
+        "artistMemberId": 1,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "11111",
+        "senderType": "artistMember",
+        "senderId": 1,
+        "messageType": "text",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": "開通後第一則 Cosmo Talk Message!",
+        "replyMetadata": {
+            "id": "userReply:111115",
+            "isMe": false,
+            "type": "text",
+            "sticker": null
+        },
+        "stickerMetadata": null,
+        "createdAt": "2026-07-01T05:00:00.001Z"
+    }
+}
+{
+    "cursor": "230354",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:3826",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "3826",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "image",
+        "content": null,
+        "mentionIndexList": null,
+        "mediaMetadata": {
+            "originalUrl": "https://i.ibb.co/mrfK48Kc/HX3-Rf5ba-EAAiqf8.webp",
+            "thumbnailUrl": "",
+            "aspectRatio": 0.75
+        },
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-07-03T16:25:34.668Z"
+    }
+}
+{
+    "cursor": "273142",
+    "op": "upsert",
+    "message": {
+        "syncId": "userReply:00000",
+        "artistMemberId": -1,
+        "sourceType": "userReply",
+        "sourceId": "00000",
+        "senderType": "user",
+        "senderId": "00000",
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 181,
+            "codepointHex": "\\uE207",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/3.gif"
+        },
+        "createdAt": "2026-07-03T19:25:34.668Z"
+    }
+}
+{
+    "cursor": "2731423",
+    "op": "upsert",
+    "message": {
+        "syncId": "userReply:00000",
+        "artistMemberId": -1,
+        "sourceType": "userReply",
+        "sourceId": "00000",
+        "senderType": "user",
+        "senderId": "00000",
+        "messageType": "text",
+        "content": "很漂亮的相片!",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-07-03T19:26:34.668Z"
+    }
+}
+{
+    "cursor": "230423",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:3827",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "3827",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "text",
+        "content": "很快就會回歸",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": "請問什麼時候回歸",
+        "replyMetadata": {
+            "id": "userReply:226563",
+            "isMe": false,
+            "type": "text",
+            "sticker": null
+        },
+        "stickerMetadata": null,
+        "createdAt": "2026-07-13T16:25:57.830Z"
+    }
+}
+{
+    "cursor": "2557779",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:3828",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "3828",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "Hmm ... 很快就會回歸.",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-07-13T16:25:57.930Z"
+    }
+}
+{
+    "cursor": "2557779",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:129980",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "129980",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "展示一段影片",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-10-26T09:29:20.409Z"
+    }
+}
+{
+    "cursor": "2403582",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:119652",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "119652",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "audio",
+        "content": null,
+        "mentionIndexList": null,
+        "mediaMetadata": {
+            "originalUrl": "https://resources.cosmo.fans/artist-member-messages/26/219f34cda618492d95ef2ed89fd301d820261114115555199.mp4",
+            "thumbnailUrl": "https://static.cosmo.fans/uploads/member-profile/4a8d2137-fadb-49d1-a706-e8aba50f7dc2.jpg",
+            "duration": 100
+        },
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-10-26T09:29:20.549Z"
+    }
+}
+{
+    "cursor": "2557779",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:129980",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "129980",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "第一段文字",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-09T15:25:10.040Z"
+    }
+}
+{
+    "cursor": "2557908",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:129981",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "129981",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "第二段文字",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-09T15:25:10.066Z"
+    }
+}
+{
+    "cursor": "2557912",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:129982",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "129982",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "第三段文字",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-09T15:25:10.093Z"
+    }
+}
+{
+    "cursor": "2800012",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800012",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800012",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 175,
+            "codepointHex": "\\uE210",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/17.gif"
+        },
+        "createdAt": "2026-11-11T01:47:38.692Z"
+    }
+}
+{
+    "cursor": "2800017",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800017",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800017",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "text",
+        "content": "大家早安，今天天氣真不錯！",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:04.118Z"
+    }
+}
+{
+    "cursor": "2800018",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800018",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800018",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "text",
+        "content": "오늘 일정 끝나고 뭐 할 거예요?",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:19.482Z"
+    }
+}
+{
+    "cursor": "2800019",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800019",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800019",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "text",
+        "content": "Don't forget to drink water today!",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:33.705Z"
+    }
+}
+{
+    "cursor": "2800020",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800020",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800020",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "剛剛彩排超順利，超期待舞臺！",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:41.926Z"
+    }
+}
+{
+    "cursor": "2800021",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800021",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800021",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "배고파서 지금 간식 고르는 중이에요",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:52.264Z"
+    }
+}
+{
+    "cursor": "2800022",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800022",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800022",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "text",
+        "content": "See you soon, WAV!",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T05:14:58.831Z"
+    }
+}
+{
+    "cursor": "2800013",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800013",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800013",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 176,
+            "codepointHex": "\\uE28E",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/9a2c11896f564fa5bdd742ea8f49c7d020260820092024501.png"
+        },
+        "createdAt": "2026-11-16T12:22:05.148Z"
+    }
+}
+{
+    "cursor": "280033",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:280033",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "280033",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "image",
+        "content": null,
+        "mentionIndexList": null,
+        "mediaMetadata": {
+            "originalUrl": "https://i.ibb.co/Fb4Xr9tr/HXiuu-Z1-XMAAOZic.jpg",
+            "thumbnailUrl": "",
+            "aspectRatio": 0.75
+        },
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-19T18:56:28.765Z"
+    }
+}
+{
+    "cursor": "280033",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:280033",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "280033",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "image",
+        "content": null,
+        "mentionIndexList": null,
+        "mediaMetadata": {
+            "originalUrl": "https://i.ibb.co/HLZGKMW1/HXiuu-Z0-Xo-AAu-Ib1.jpg",
+            "thumbnailUrl": "",
+            "aspectRatio": 0.75
+        },
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-19T18:56:28.766Z"
+    }
+}
+{
+    "cursor": "2800014",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800014",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800014",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 64,
+            "codepointHex": "\\uE23F",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/102.gif"
+        },
+        "createdAt": "2026-11-19T18:56:29.731Z"
+    }
+}
+{
+    "cursor": "2800015",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800015",
+        "artistMemberId": 26,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800015",
+        "senderType": "artistMember",
+        "senderId": 26,
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 179,
+            "codepointHex": "\\uE291",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/61bea622d58b4823ae812c4ce2776a7f20260727063624098.png"
+        },
+        "createdAt": "2026-11-22T07:31:54.405Z"
+    }
+}
+{
+    "cursor": "2800016",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:2800016",
+        "artistMemberId": 3,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "2800016",
+        "senderType": "artistMember",
+        "senderId": 3,
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 181,
+            "codepointHex": "\\uE293",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/b2ecb5e77f55446fb963d8285394c81f20260820092139108.png"
+        },
+        "createdAt": "2026-11-24T21:19:41.902Z"
+    }
+}
+{
+    "cursor": "0101",
+    "op": "upsert",
+    "message": {
+        "syncId": "artistMemberMessage:0101",
+        "artistMemberId": 13,
+        "sourceType": "artistMemberMessage",
+        "sourceId": "0101",
+        "senderType": "artistMember",
+        "senderId": 13,
+        "messageType": "text",
+        "content": "這是小狗貼圖.",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-24T21:19:41.912Z"
+    }
+}
+{
+    "cursor": "2731421",
+    "op": "upsert",
+    "message": {
+        "syncId": "userReply:00000",
+        "artistMemberId": -1,
+        "sourceType": "userReply",
+        "sourceId": "00000",
+        "senderType": "user",
+        "senderId": "00000",
+        "messageType": "text",
+        "content": "我向藝人發送一則消息，我愛tripleS.",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": null,
+        "createdAt": "2026-11-25T0:11:08.296Z"
+    }
+}
+{
+    "cursor": "2731421",
+    "op": "upsert",
+    "message": {
+        "syncId": "userReply:00000",
+        "artistMemberId": -1,
+        "sourceType": "userReply",
+        "sourceId": "00000",
+        "senderType": "user",
+        "senderId": "00000",
+        "messageType": "sticker",
+        "content": "",
+        "mentionIndexList": null,
+        "mediaMetadata": null,
+        "replyContent": null,
+        "replyMetadata": null,
+        "stickerMetadata": {
+            "id": 181,
+            "codepointHex": "\\uE207",
+            "imageUrl": "https://resources.cosmo.fans/images/stickers/8.gif"
+        },
+        "createdAt": "2026-11-25T0:11:09.296Z"
+    }
+}
+{
+    "eof": true,
+    "toCursor": "2731425"
+}

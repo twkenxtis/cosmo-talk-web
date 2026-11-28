@@ -282,3 +282,5 @@ README.md
 *.bak
 eslint.config.js
 prompt_for_vscode.md
+bun.lock
+package-lock.json

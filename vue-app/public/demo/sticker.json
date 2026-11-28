@@ -1,0 +1,872 @@
+[
+    {
+        "id": 1,
+        "codepointHex": "\\uE200",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/1.gif",
+        "order": 1
+    },
+    {
+        "id": 2,
+        "codepointHex": "\\uE201",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/2.gif",
+        "order": 2
+    },
+    {
+        "id": 3,
+        "codepointHex": "\\uE202",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/3.gif",
+        "order": 3
+    },
+    {
+        "id": 4,
+        "codepointHex": "\\uE203",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/4.gif",
+        "order": 4
+    },
+    {
+        "id": 5,
+        "codepointHex": "\\uE204",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/5.gif",
+        "order": 5
+    },
+    {
+        "id": 6,
+        "codepointHex": "\\uE205",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/6.gif",
+        "order": 6
+    },
+    {
+        "id": 7,
+        "codepointHex": "\\uE206",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/7.gif",
+        "order": 7
+    },
+    {
+        "id": 8,
+        "codepointHex": "\\uE207",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/8.gif",
+        "order": 8
+    },
+    {
+        "id": 9,
+        "codepointHex": "\\uE208",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/9.gif",
+        "order": 9
+    },
+    {
+        "id": 10,
+        "codepointHex": "\\uE209",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/10.gif",
+        "order": 10
+    },
+    {
+        "id": 11,
+        "codepointHex": "\\uE20A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/11.gif",
+        "order": 11
+    },
+    {
+        "id": 12,
+        "codepointHex": "\\uE20B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/12.gif",
+        "order": 12
+    },
+    {
+        "id": 13,
+        "codepointHex": "\\uE20C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/13.gif",
+        "order": 13
+    },
+    {
+        "id": 14,
+        "codepointHex": "\\uE20D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/14.gif",
+        "order": 14
+    },
+    {
+        "id": 15,
+        "codepointHex": "\\uE20E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/15.gif",
+        "order": 15
+    },
+    {
+        "id": 16,
+        "codepointHex": "\\uE20F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/16.gif",
+        "order": 16
+    },
+    {
+        "id": 17,
+        "codepointHex": "\\uE210",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/17.gif",
+        "order": 17
+    },
+    {
+        "id": 18,
+        "codepointHex": "\\uE211",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/18.gif",
+        "order": 18
+    },
+    {
+        "id": 19,
+        "codepointHex": "\\uE212",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/19.gif",
+        "order": 19
+    },
+    {
+        "id": 20,
+        "codepointHex": "\\uE213",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/20.gif",
+        "order": 20
+    },
+    {
+        "id": 21,
+        "codepointHex": "\\uE214",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/21.gif",
+        "order": 21
+    },
+    {
+        "id": 22,
+        "codepointHex": "\\uE215",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/22.gif",
+        "order": 22
+    },
+    {
+        "id": 23,
+        "codepointHex": "\\uE216",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/23.gif",
+        "order": 23
+    },
+    {
+        "id": 24,
+        "codepointHex": "\\uE217",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/24.gif",
+        "order": 24
+    },
+    {
+        "id": 99,
+        "codepointHex": "\\uE262",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/c6267ab0988e4ade89003e37188b7ae720260727063545580.png",
+        "order": 25
+    },
+    {
+        "id": 100,
+        "codepointHex": "\\uE263",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/61bea622d58b4823ae812c4ce2776a7f20260727063624098.png",
+        "order": 26
+    },
+    {
+        "id": 101,
+        "codepointHex": "\\uE264",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/3995c6d2eaa4426e8836d69f771efd4920260727063651856.png",
+        "order": 27
+    },
+    {
+        "id": 102,
+        "codepointHex": "\\uE265",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/5412ded7656e4d3cbbec3f7926ec14d120260727063721484.png",
+        "order": 28
+    },
+    {
+        "id": 103,
+        "codepointHex": "\\uE266",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/5957644ca12047ab982d8ae2c6b5fc5720260727063744939.png",
+        "order": 29
+    },
+    {
+        "id": 104,
+        "codepointHex": "\\uE267",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/e3fcf3ea8c034a928b175df3f2cf9bd120260727063813152.png",
+        "order": 30
+    },
+    {
+        "id": 105,
+        "codepointHex": "\\uE268",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/73495afeb3524efbbbf4fc676cd3dff320260727063929293.png",
+        "order": 31
+    },
+    {
+        "id": 106,
+        "codepointHex": "\\uE269",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/f980737f11f74108beced922ab97a57a20260727064000558.png",
+        "order": 32
+    },
+    {
+        "id": 107,
+        "codepointHex": "\\uE26A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/f49dcdfefe584e0db6cbe43eb204534720260727064023937.png",
+        "order": 33
+    },
+    {
+        "id": 108,
+        "codepointHex": "\\uE26B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/43a1b253212c4ba088d323ece1555c4e20260727064048281.png",
+        "order": 34
+    },
+    {
+        "id": 109,
+        "codepointHex": "\\uE26C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/23defaf632dc42a7bde1b190fcb5062920260727064119152.png",
+        "order": 35
+    },
+    {
+        "id": 110,
+        "codepointHex": "\\uE26D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/f94fa6ba29ee4d1a91e7db1f8cf4582e20260727064153622.png",
+        "order": 36
+    },
+    {
+        "id": 111,
+        "codepointHex": "\\uE26E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/9a2151f21d354735a7c2cf29fc63416e20260727064218760.png",
+        "order": 37
+    },
+    {
+        "id": 112,
+        "codepointHex": "\\uE26F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/9d96e1f8e46549dc8e889a7622a3b9aa20260727064245076.png",
+        "order": 38
+    },
+    {
+        "id": 113,
+        "codepointHex": "\\uE270",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/7a87ef07eea14ff687f30c9e3aeeccc620260727064314206.png",
+        "order": 39
+    },
+    {
+        "id": 114,
+        "codepointHex": "\\uE271",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/1b3422cfddcb4ca8af843961540f056d20260727064334781.png",
+        "order": 40
+    },
+    {
+        "id": 115,
+        "codepointHex": "\\uE272",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/4e52ebf5ef8647fc8da174ec04c372c820260727064401915.png",
+        "order": 41
+    },
+    {
+        "id": 116,
+        "codepointHex": "\\uE273",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/eab9ee68a1f645839263951c6f18565220260727064432016.png",
+        "order": 42
+    },
+    {
+        "id": 117,
+        "codepointHex": "\\uE274",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/a794471d11114f1b8fdfacb6afca856f20260727064451631.png",
+        "order": 43
+    },
+    {
+        "id": 118,
+        "codepointHex": "\\uE275",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/72115df09f3c4aa68de70d11e161693e20260727064518565.png",
+        "order": 44
+    },
+    {
+        "id": 119,
+        "codepointHex": "\\uE276",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/f510e3bbcb3345f29d85cd2288acaa4320260727064548014.png",
+        "order": 45
+    },
+    {
+        "id": 120,
+        "codepointHex": "\\uE277",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/c5ae7b6b370a45d48413869869979a9120260727064635916.png",
+        "order": 46
+    },
+    {
+        "id": 121,
+        "codepointHex": "\\uE278",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/3969ff89816f46bab0ccb516951268e720260727064700798.png",
+        "order": 47
+    },
+    {
+        "id": 122,
+        "codepointHex": "\\uE279",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/6038b231847046fa94f5551edf3176a920260727064724394.png",
+        "order": 48
+    },
+    {
+        "id": 123,
+        "codepointHex": "\\uE27A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/dab35b5ec74345e1a761f5cbf8eb8d0d20260727064748205.png",
+        "order": 49
+    },
+    {
+        "id": 25,
+        "codepointHex": "\\uE218",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/25.png",
+        "order": 50
+    },
+    {
+        "id": 26,
+        "codepointHex": "\\uE219",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/26.png",
+        "order": 51
+    },
+    {
+        "id": 27,
+        "codepointHex": "\\uE21A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/27.png",
+        "order": 52
+    },
+    {
+        "id": 28,
+        "codepointHex": "\\uE21B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/28.png",
+        "order": 53
+    },
+    {
+        "id": 29,
+        "codepointHex": "\\uE21C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/29.png",
+        "order": 54
+    },
+    {
+        "id": 30,
+        "codepointHex": "\\uE21D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/30.png",
+        "order": 55
+    },
+    {
+        "id": 31,
+        "codepointHex": "\\uE21E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/31.png",
+        "order": 56
+    },
+    {
+        "id": 32,
+        "codepointHex": "\\uE21F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/32.png",
+        "order": 57
+    },
+    {
+        "id": 33,
+        "codepointHex": "\\uE220",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/33.png",
+        "order": 58
+    },
+    {
+        "id": 34,
+        "codepointHex": "\\uE221",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/34.png",
+        "order": 59
+    },
+    {
+        "id": 35,
+        "codepointHex": "\\uE222",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/35.png",
+        "order": 60
+    },
+    {
+        "id": 36,
+        "codepointHex": "\\uE223",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/36.png",
+        "order": 61
+    },
+    {
+        "id": 37,
+        "codepointHex": "\\uE224",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/37.png",
+        "order": 62
+    },
+    {
+        "id": 38,
+        "codepointHex": "\\uE225",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/38.png",
+        "order": 63
+    },
+    {
+        "id": 39,
+        "codepointHex": "\\uE226",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/39.png",
+        "order": 64
+    },
+    {
+        "id": 40,
+        "codepointHex": "\\uE227",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/40.png",
+        "order": 65
+    },
+    {
+        "id": 41,
+        "codepointHex": "\\uE228",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/41.png",
+        "order": 66
+    },
+    {
+        "id": 42,
+        "codepointHex": "\\uE229",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/42.png",
+        "order": 67
+    },
+    {
+        "id": 43,
+        "codepointHex": "\\uE22A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/43.png",
+        "order": 68
+    },
+    {
+        "id": 44,
+        "codepointHex": "\\uE22B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/44.png",
+        "order": 69
+    },
+    {
+        "id": 45,
+        "codepointHex": "\\uE22C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/45.png",
+        "order": 70
+    },
+    {
+        "id": 46,
+        "codepointHex": "\\uE22D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/46.png",
+        "order": 71
+    },
+    {
+        "id": 47,
+        "codepointHex": "\\uE22E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/47.png",
+        "order": 72
+    },
+    {
+        "id": 48,
+        "codepointHex": "\\uE22F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/48.png",
+        "order": 73
+    },
+    {
+        "id": 49,
+        "codepointHex": "\\uE230",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/49.png",
+        "order": 74
+    },
+    {
+        "id": 50,
+        "codepointHex": "\\uE231",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/50.png",
+        "order": 75
+    },
+    {
+        "id": 51,
+        "codepointHex": "\\uE232",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/51.png",
+        "order": 76
+    },
+    {
+        "id": 52,
+        "codepointHex": "\\uE233",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/52.png",
+        "order": 77
+    },
+    {
+        "id": 53,
+        "codepointHex": "\\uE234",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/IMG_1653.png",
+        "order": 78
+    },
+    {
+        "id": 54,
+        "codepointHex": "\\uE235",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/54.png",
+        "order": 79
+    },
+    {
+        "id": 55,
+        "codepointHex": "\\uE236",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/55.png",
+        "order": 80
+    },
+    {
+        "id": 56,
+        "codepointHex": "\\uE237",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/56.png",
+        "order": 81
+    },
+    {
+        "id": 57,
+        "codepointHex": "\\uE238",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/57.png",
+        "order": 82
+    },
+    {
+        "id": 58,
+        "codepointHex": "\\uE239",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/58.png",
+        "order": 83
+    },
+    {
+        "id": 59,
+        "codepointHex": "\\uE23A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/59.png",
+        "order": 84
+    },
+    {
+        "id": 60,
+        "codepointHex": "\\uE23B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/60.png",
+        "order": 85
+    },
+    {
+        "id": 61,
+        "codepointHex": "\\uE23C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/61.png",
+        "order": 86
+    },
+    {
+        "id": 62,
+        "codepointHex": "\\uE23D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/100.gif",
+        "order": 87
+    },
+    {
+        "id": 63,
+        "codepointHex": "\\uE23E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/101.gif",
+        "order": 88
+    },
+    {
+        "id": 64,
+        "codepointHex": "\\uE23F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/102.gif",
+        "order": 89
+    },
+    {
+        "id": 65,
+        "codepointHex": "\\uE240",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/103.gif",
+        "order": 90
+    },
+    {
+        "id": 66,
+        "codepointHex": "\\uE241",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/104.gif",
+        "order": 91
+    },
+    {
+        "id": 67,
+        "codepointHex": "\\uE242",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/105.gif",
+        "order": 92
+    },
+    {
+        "id": 68,
+        "codepointHex": "\\uE243",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/106.gif",
+        "order": 93
+    },
+    {
+        "id": 69,
+        "codepointHex": "\\uE244",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/107.gif",
+        "order": 94
+    },
+    {
+        "id": 70,
+        "codepointHex": "\\uE245",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/108.gif",
+        "order": 95
+    },
+    {
+        "id": 71,
+        "codepointHex": "\\uE246",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/109.gif",
+        "order": 96
+    },
+    {
+        "id": 72,
+        "codepointHex": "\\uE247",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/110.gif",
+        "order": 97
+    },
+    {
+        "id": 73,
+        "codepointHex": "\\uE248",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/111.gif",
+        "order": 98
+    },
+    {
+        "id": 74,
+        "codepointHex": "\\uE249",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/112.gif",
+        "order": 99
+    },
+    {
+        "id": 75,
+        "codepointHex": "\\uE24A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/113.gif",
+        "order": 100
+    },
+    {
+        "id": 76,
+        "codepointHex": "\\uE24B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/114.gif",
+        "order": 101
+    },
+    {
+        "id": 77,
+        "codepointHex": "\\uE24C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/115.gif",
+        "order": 102
+    },
+    {
+        "id": 78,
+        "codepointHex": "\\uE24D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/116.gif",
+        "order": 103
+    },
+    {
+        "id": 79,
+        "codepointHex": "\\uE24E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/117.gif",
+        "order": 104
+    },
+    {
+        "id": 80,
+        "codepointHex": "\\uE24F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/118.gif",
+        "order": 105
+    },
+    {
+        "id": 81,
+        "codepointHex": "\\uE250",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/119.gif",
+        "order": 106
+    },
+    {
+        "id": 82,
+        "codepointHex": "\\uE251",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/120.gif",
+        "order": 107
+    },
+    {
+        "id": 83,
+        "codepointHex": "\\uE252",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/121.gif",
+        "order": 108
+    },
+    {
+        "id": 84,
+        "codepointHex": "\\uE253",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/122.gif",
+        "order": 109
+    },
+    {
+        "id": 85,
+        "codepointHex": "\\uE254",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/123.gif",
+        "order": 110
+    },
+    {
+        "id": 86,
+        "codepointHex": "\\uE255",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/124.gif",
+        "order": 111
+    },
+    {
+        "id": 87,
+        "codepointHex": "\\uE256",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/125.gif",
+        "order": 112
+    },
+    {
+        "id": 88,
+        "codepointHex": "\\uE257",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/126.gif",
+        "order": 113
+    },
+    {
+        "id": 89,
+        "codepointHex": "\\uE258",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/127.gif",
+        "order": 114
+    },
+    {
+        "id": 90,
+        "codepointHex": "\\uE259",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/128.gif",
+        "order": 115
+    },
+    {
+        "id": 91,
+        "codepointHex": "\\uE25A",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/129.gif",
+        "order": 116
+    },
+    {
+        "id": 92,
+        "codepointHex": "\\uE25B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/130.gif",
+        "order": 117
+    },
+    {
+        "id": 93,
+        "codepointHex": "\\uE25C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/131.gif",
+        "order": 118
+    },
+    {
+        "id": 94,
+        "codepointHex": "\\uE25D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/132.gif",
+        "order": 119
+    },
+    {
+        "id": 95,
+        "codepointHex": "\\uE25E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/133.gif",
+        "order": 120
+    },
+    {
+        "id": 96,
+        "codepointHex": "\\uE25F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/134.gif",
+        "order": 121
+    },
+    {
+        "id": 97,
+        "codepointHex": "\\uE260",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/135.gif",
+        "order": 122
+    },
+    {
+        "id": 98,
+        "codepointHex": "\\uE261",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/136.gif",
+        "order": 123
+    },
+    {
+        "id": 157,
+        "codepointHex": "\\uE27B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/53688f652de949e3a77763c289c3a46420260820091408734.png",
+        "order": 124
+    },
+    {
+        "id": 158,
+        "codepointHex": "\\uE27C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/608d496703e4475c9f6489517e0fc40020260820091530809.png",
+        "order": 125
+    },
+    {
+        "id": 159,
+        "codepointHex": "\\uE27D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/0e117079c30a4627ada5a8cc6458680a20260820091618796.png",
+        "order": 126
+    },
+    {
+        "id": 160,
+        "codepointHex": "\\uE27E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/74be8ba7033d436ba808b2ba70542b1420260820091644520.png",
+        "order": 127
+    },
+    {
+        "id": 161,
+        "codepointHex": "\\uE27F",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/69543342018c4399bd5944b17fb1af9f20260820091656048.png",
+        "order": 128
+    },
+    {
+        "id": 162,
+        "codepointHex": "\\uE280",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/58e0764035174996b7652034698a096e20260820091707500.png",
+        "order": 129
+    },
+    {
+        "id": 163,
+        "codepointHex": "\\uE281",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/b68cdab190a741ae8b0784c3cb25b72520260820091742903.png",
+        "order": 130
+    },
+    {
+        "id": 164,
+        "codepointHex": "\\uE282",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/8e6adc50e189440e94eeb842b0c00d5d20260820091753815.png",
+        "order": 131
+    },
+    {
+        "id": 165,
+        "codepointHex": "\\uE283",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/a65844889fbc43cbb3e25c7f2cba476a20260820091803880.png",
+        "order": 132
+    },
+    {
+        "id": 166,
+        "codepointHex": "\\uE284",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/eb6e95d1a9e644418f25ae20575df15020260820091817998.png",
+        "order": 133
+    },
+    {
+        "id": 167,
+        "codepointHex": "\\uE285",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/8f4c2ebaf76b4cb2a0facba1faa1b7f820260820091829265.png",
+        "order": 134
+    },
+    {
+        "id": 168,
+        "codepointHex": "\\uE286",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/3e1b5f00a2204796bb04fc9c996958c520260820091841579.png",
+        "order": 135
+    },
+    {
+        "id": 170,
+        "codepointHex": "\\uE288",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/a04d6632c3a34c0c9044c12da7c0c3fa20260820091902182.png",
+        "order": 136
+    },
+    {
+        "id": 171,
+        "codepointHex": "\\uE289",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/bca41312dde741f19296f52db78e45ed20260820091913568.png",
+        "order": 137
+    },
+    {
+        "id": 173,
+        "codepointHex": "\\uE28B",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/d634ab639e084c19b15e1de60f3b8a9920260820091935742.png",
+        "order": 138
+    },
+    {
+        "id": 174,
+        "codepointHex": "\\uE28C",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/86668dd6e5e649d5a7d4cb8302087e8e20260820091946032.png",
+        "order": 139
+    },
+    {
+        "id": 175,
+        "codepointHex": "\\uE28D",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/24e698228bff449c84e1f7f5b408c00520260820092011347.png",
+        "order": 140
+    },
+    {
+        "id": 176,
+        "codepointHex": "\\uE28E",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/9a2c11896f564fa5bdd742ea8f49c7d020260820092024501.png",
+        "order": 141
+    },
+    {
+        "id": 178,
+        "codepointHex": "\\uE290",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/3cd76333ad2548e0a429063a7d835f8c20260820092059193.png",
+        "order": 142
+    },
+    {
+        "id": 179,
+        "codepointHex": "\\uE291",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/900cc682621640a1b2784dbafb9c540a20260820092111003.png",
+        "order": 143
+    },
+    {
+        "id": 181,
+        "codepointHex": "\\uE293",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/b2ecb5e77f55446fb963d8285394c81f20260820092139108.png",
+        "order": 144
+    },
+    {
+        "id": 182,
+        "codepointHex": "\\uE294",
+        "imageUrl": "https://resources.cosmo.fans/images/stickers/53fb86c22100485cb98aa9df1d87797e20260820092150828.png",
+        "order": 145
+    }
+]
